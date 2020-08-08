@@ -12,6 +12,7 @@ type
     clDisabled: TColor;
     clDisabledModified: TColor;
     clRemoved: TColor;
+    clIntegrity: TColor;
   end;
 
 var
@@ -21,6 +22,7 @@ var
     clDisabled: $E0E0F0;
     clDisabledModified: $D0D0F0;
     clRemoved: $E0E0E0;
+    clIntegrity: $F0E0E0;
   );
 
 implementation
