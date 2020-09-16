@@ -69,7 +69,7 @@ object AccessMaskFrame: TAccessMaskFrame
       item
         Header = 'Generic'
         GroupID = 5
-        State = [lgsNormal]
+        State = [lgsNormal, lgsCollapsible]
         HeaderAlign = taLeftJustify
         FooterAlign = taLeftJustify
         TitleImage = -1
@@ -77,7 +77,7 @@ object AccessMaskFrame: TAccessMaskFrame
       item
         Header = 'Miscellaneous'
         GroupID = 6
-        State = [lgsNormal]
+        State = [lgsNormal, lgsCollapsible]
         HeaderAlign = taLeftJustify
         FooterAlign = taLeftJustify
         TitleImage = -1
