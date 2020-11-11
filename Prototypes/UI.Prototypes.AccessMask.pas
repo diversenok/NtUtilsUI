@@ -38,7 +38,8 @@ type
 implementation
 
 uses
-  System.Rtti, DelphiUtils.Arrays, DelphiUiLib.Strings;
+  System.Rtti, DelphiUtils.Arrays, DelphiUiLib.Strings,
+  DelphiUiLib.Reflection.Strings;
 
 {$R *.dfm}
 

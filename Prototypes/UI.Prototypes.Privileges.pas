@@ -44,7 +44,8 @@ implementation
 
 uses
   Winapi.WinNt, Winapi.ntlsa, NtUtils.Lsa, DelphiUtils.Arrays,
-  DelphiUiLib.Strings, DelphiUiLib.Reflection.Numeric, UI.Colors;
+  DelphiUiLib.Strings, DelphiUiLib.Reflection.Strings,
+  DelphiUiLib.Reflection.Numeric, UI.Colors;
 
 {$R *.dfm}
 
