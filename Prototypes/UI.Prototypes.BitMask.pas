@@ -120,7 +120,7 @@ begin
 
   // Check the corresponding items
   for i := 0 to High(FFlags) do
-    ListViewEx.Items[i].Checked := LongBool(FFlags[i].Value and FValue);
+    ListViewEx.Items[i].Checked := LongBool(FFlags[i].Value and Value);
 
   FValue := Value;
   FShadowValue := Value;
