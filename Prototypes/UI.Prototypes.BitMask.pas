@@ -16,7 +16,7 @@ type
     FValue, FShadowValue: Cardinal;
     FOnValueChange: TNotifyEvent;
     FReadOnly: Boolean;
-    procedure SetValue(const Value: Cardinal);
+    procedure SetValue(const NewValue: Cardinal);
     procedure UpdateHighlighting;
   public
     procedure Initialize(Flags: TArray<TFlagName>; Groups: TArray<TFlagName> = nil);
@@ -111,7 +111,7 @@ begin
     OnValueChange(Self);
 end;
 
-procedure TBitMaskFrame.SetValue(const Value: Cardinal);
+procedure TBitMaskFrame.SetValue(const NewValue: Cardinal);
 var
   i: Integer;
 begin
@@ -120,10 +120,10 @@ begin
 
   // Check the corresponding items
   for i := 0 to High(FFlags) do
-    ListViewEx.Items[i].Checked := LongBool(FFlags[i].Value and Value);
+    ListViewEx.Items[i].Checked := LongBool(FFlags[i].Value and NewValue);
 
-  FValue := Value;
-  FShadowValue := Value;
+  FValue := NewValue;
+  FShadowValue := NewValue;
   UpdateHighlighting;
   ListViewEx.OnItemChecked := ListViewExItemChecked;
 end;

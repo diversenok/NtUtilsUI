@@ -28,6 +28,7 @@ object BitMaskFrame: TBitMaskFrame
     ShowColumnHeaders = False
     TabOrder = 0
     ViewStyle = vsReport
+    ClipboardSourceColumn = 0
     ColoringItems = True
   end
 end
