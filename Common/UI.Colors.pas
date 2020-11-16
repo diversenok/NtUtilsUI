@@ -16,6 +16,10 @@ type
     clIntegrity: TColor;
     clSuspended: TColor;
     clGuiThread: TColor;
+    clSystem: TColor;
+    clUser: TColor;
+    clProcess: TColor;
+    clDebug: TColor;
   end;
 
 var
@@ -29,6 +33,10 @@ var
     clIntegrity: $F0E0E0;
     clSuspended: $AAAAAA;
     clGuiThread: $77FFFF;
+    clSystem: $FFDDBB;
+    clUser: $AAFFFF;
+    clProcess: $FFFFCC;
+    clDebug: $FFBBCC;
   );
 
 implementation
