@@ -25,7 +25,7 @@ implementation
 
 uses
   Vcl.ImgList, Vcl.Graphics, Winapi.WinUser, Winapi.Shell, Winapi.WinNt,
-  NtUtils, NtUtils.Files, NtUtils.Processes.Query;
+  NtUtils, NtUtils.SysUtils, NtUtils.Processes.Query;
 
 { TProcessIcons }
 
@@ -88,7 +88,7 @@ var
 begin
   // Querying NT filename almost never fails
   if NtxQueryImageNameProcessId(PID, NtImageName).IsSuccess then
-    NtImageName := RtlxNtPathToDosPathUnsafe(NtImageName);
+    NtImageName := RtlxNtPathToDosPath(NtImageName);
 
   Result := GetIcon(NtImageName);
 end;

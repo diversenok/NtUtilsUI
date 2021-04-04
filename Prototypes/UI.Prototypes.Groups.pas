@@ -121,7 +121,7 @@ begin
   ListViewEx.Items.BeginUpdate;
 
   // SID + hint
-  with RepresentSidWorker(Ptr.RefOrNil<PSid>(Group.Sid), Group.Attributes,
+  with RepresentSidWorker(IMem.RefOrNil<PSid>(Group.Sid), Group.Attributes,
     True, hxPolicy) do
   begin
     Item.Cell[0] := Text;

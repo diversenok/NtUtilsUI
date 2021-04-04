@@ -182,7 +182,7 @@ var
   hxPolicy: IHandle;
   i: Integer;
   NewItem: TListItemEx;
-  HintSections: array of THintSection;
+  HintSections: TArray<THintSection>;
 begin
   with ListViewEx.Items do
   begin
