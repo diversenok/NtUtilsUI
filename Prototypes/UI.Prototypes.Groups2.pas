@@ -5,7 +5,7 @@ interface
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes,
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, VirtualTrees,
-  NtUtils, DelphiUtils.Arrays, NtUtils.Lsa.Sid, Vcl.Menus;
+  NtUtils, DelphiUtils.Arrays, NtUtils.Lsa.Sid, Vcl.Menus, DelphiUtils.Events;
 
 type
   TFrameGroups = class(TFrame)
@@ -14,6 +14,7 @@ type
     cmCopy: TMenuItem;
     cmCopyColumn: TMenuItem;
     cmSeparator: TMenuItem;
+    cmInspect: TMenuItem;
     procedure VSTGetHint(Sender: TBaseVirtualTree; Node: PVirtualNode;
       Column: TColumnIndex; var LineBreakStyle: TVTTooltipLineBreakStyle;
       var HintText: string);
@@ -32,6 +33,7 @@ type
     procedure cmCopyColumnClick(Sender: TObject);
     procedure VSTCompareNodes(Sender: TBaseVirtualTree; Node1,
       Node2: PVirtualNode; Column: TColumnIndex; var Result: Integer);
+    procedure cmInspectClick(Sender: TObject);
   private type
     TColumn = (colFriendly, colSid, colSidType, colFlags, colState);
     TGroupNodeData = record
@@ -46,6 +48,7 @@ type
     FGroups: TArray<TGroupNodeData>;
     FPopupColumn: TColumnIndex;
     FNodePopupMenu: TPopupMenu;
+    FOnDefaultAction: TEventListener<TGroup>;
     function NodeToGroup(const Node: PVirtualNode): TGroup;
     function NodeToColumnText(const Node: PVirtualNode): String;
     procedure SetNodePopupMenu(const Value: TPopupMenu);
@@ -67,6 +70,7 @@ type
     procedure Add(Groups: TArray<TGroup>);
   published
     property NodePopupMenu: TPopupMenu read FNodePopupMenu write SetNodePopupMenu;
+    property OnDefaultAction: TEventListener<TGroup> read FOnDefaultAction write FOnDefaultAction;
   end;
 
 implementation
@@ -178,6 +182,19 @@ begin
   Clipboard.SetTextBuf(PWideChar(string.Join(#$D#$A,
     TArray.Map<PVirtualNode, String>(CollectNodes(VST.SelectedNodes),
     NodeToColumnText))));
+end;
+
+procedure TFrameGroups.cmInspectClick;
+var
+  Node: PVirtualNode;
+begin
+  if Assigned(FOnDefaultAction) and (VST.SelectedCount = 1) then
+    for Node in VST.Nodes do
+      if VST.Selected[Node] then
+      begin
+        FOnDefaultAction(FGroups[Node.GetData<Integer>].Group);
+        Exit;
+      end;
 end;
 
 function TFrameGroups.GetAllGroups: TArray<TGroup>;
@@ -296,11 +313,11 @@ end;
 procedure TFrameGroups.SetNodePopupMenu;
 begin
   FNodePopupMenu := Value;
-  cmSeparator.Visible := Assigned(Value);
 
   if Assigned(FNodePopupMenu) then
   begin
     // Move our default popup menu items to the new menu
+    cmInspect.SetParentComponent(FNodePopupMenu);
     cmSeparator.SetParentComponent(FNodePopupMenu);
     cmCopy.SetParentComponent(FNodePopupMenu);
     cmCopyColumn.SetParentComponent(FNodePopupMenu);
@@ -337,6 +354,9 @@ begin
   else
     PopupMenu := DefaultPopupMenu;
 
+  cmInspect.Visible := Assigned(FOnDefaultAction) and (VST.SelectedCount = 1);
+  cmSeparator.Visible := Assigned(FNodePopupMenu) or cmInspect.Visible;
+
   // Column-specific copying
   FPopupColumn := Column;
   cmCopyColumn.Visible := Column >= 0;
@@ -355,8 +375,13 @@ end;
 
 procedure TFrameGroups.VSTKeyDown;
 begin
+  // Ctrl+C to copy all columns
   if (Shift = [ssCtrl]) and (Key = Ord('C')) then
-    VST.CopyToClipboard;
+    VST.CopyToClipboard
+
+  // Enter to inspect the entry
+  else if (Shift = []) and (Key = VK_RETURN) then
+    cmInspectClick(Sender);
 end;
 
 end.

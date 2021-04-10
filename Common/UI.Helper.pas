@@ -24,7 +24,7 @@ function BeginUpdateAuto;
 begin
   VST.BeginUpdate;
 
-  Result := TDelayedOperation.Create(
+  Result := TDelayedOperation.Delay(
     procedure
     begin
       VST.EndUpdate;

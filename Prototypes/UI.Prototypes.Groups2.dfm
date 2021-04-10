@@ -34,6 +34,7 @@ object FrameGroups: TFrameGroups
     TreeOptions.SelectionOptions = [toFullRowSelect, toMultiSelect, toRightClickSelect]
     OnBeforeItemErase = VSTBeforeItemErase
     OnCompareNodes = VSTCompareNodes
+    OnDblClick = cmInspectClick
     OnGetCellText = VSTGetCellText
     OnGetHint = VSTGetHint
     OnGetPopupMenu = VSTGetPopupMenu
@@ -74,6 +75,13 @@ object FrameGroups: TFrameGroups
   object DefaultPopupMenu: TPopupMenu
     Left = 96
     Top = 104
+    object cmInspect: TMenuItem
+      Caption = 'Inspect'
+      Default = True
+      ShortCut = 13
+      Visible = False
+      OnClick = cmInspectClick
+    end
     object cmSeparator: TMenuItem
       Caption = '-'
       Visible = False
