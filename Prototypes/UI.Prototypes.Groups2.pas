@@ -4,7 +4,7 @@ interface
 
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes,
-  Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, VirtualTrees,
+  Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, VirtualTrees, UI.Helper,
   NtUtils, DelphiUtils.Arrays, NtUtils.Lsa.Sid, Vcl.Menus, DelphiUtils.Events;
 
 type
@@ -49,6 +49,7 @@ type
     FPopupColumn: TColumnIndex;
     FNodePopupMenu: TPopupMenu;
     FOnDefaultAction: TEventListener<TGroup>;
+    FShortcuts: TArray<TMenuShortCut>;
     function NodeToGroup(const Node: PVirtualNode): TGroup;
     function NodeToColumnText(const Node: PVirtualNode): String;
     procedure SetNodePopupMenu(const Value: TPopupMenu);
@@ -68,6 +69,7 @@ type
     property IsChecked[Group: TGroup]: Boolean read GetIsChecked write SetIsChecked;
     procedure Load(Groups: TArray<TGroup>);
     procedure Add(Groups: TArray<TGroup>);
+    constructor Create(AOwner: TComponent); override;
   published
     property NodePopupMenu: TPopupMenu read FNodePopupMenu write SetNodePopupMenu;
     property OnDefaultAction: TEventListener<TGroup> read FOnDefaultAction write FOnDefaultAction;
@@ -80,7 +82,7 @@ uses
   NtUtils.Security.Sid, NtUtils.Lsa, NtUtils.SysUtils,
   DelphiUiLib.Reflection.Strings, DelphiUiLib.Reflection.Numeric,
   NtUiLib.Reflection.Types,
-  UI.Helper, UI.Colors, Vcl.Clipbrd;
+  UI.Colors, Vcl.Clipbrd;
 
 {$R *.dfm}
 
@@ -181,7 +183,7 @@ procedure TFrameGroups.cmCopyColumnClick(Sender: TObject);
 begin
   Clipboard.SetTextBuf(PWideChar(string.Join(#$D#$A,
     TArray.Map<PVirtualNode, String>(CollectNodes(VST.SelectedNodes),
-    NodeToColumnText))));
+      NodeToColumnText))));
 end;
 
 procedure TFrameGroups.cmInspectClick;
@@ -195,6 +197,14 @@ begin
         FOnDefaultAction(FGroups[Node.GetData<Integer>].Group);
         Exit;
       end;
+end;
+
+constructor TFrameGroups.Create;
+begin
+  inherited Create(AOwner);
+
+  // Populate the shortcut list with default popup menu
+  NodePopupMenu := nil;
 end;
 
 function TFrameGroups.GetAllGroups: TArray<TGroup>;
@@ -311,17 +321,24 @@ begin
     end;
 end;
 procedure TFrameGroups.SetNodePopupMenu;
+var
+  NewParent: TPopupMenu;
 begin
   FNodePopupMenu := Value;
 
   if Assigned(FNodePopupMenu) then
-  begin
-    // Move our default popup menu items to the new menu
-    cmInspect.SetParentComponent(FNodePopupMenu);
-    cmSeparator.SetParentComponent(FNodePopupMenu);
-    cmCopy.SetParentComponent(FNodePopupMenu);
-    cmCopyColumn.SetParentComponent(FNodePopupMenu);
-  end;
+    NewParent := FNodePopupMenu
+  else
+    NewParent := DefaultPopupMenu;
+
+  // Move predefined items
+  cmInspect.SetParentComponent(NewParent);
+  cmSeparator.SetParentComponent(NewParent);
+  cmCopy.SetParentComponent(NewParent);
+  cmCopyColumn.SetParentComponent(NewParent);
+
+  // Find all shortcuts
+  FShortcuts := TMenuShortCut.Collect(NewParent.Items);
 end;
 
 procedure TFrameGroups.VSTBeforeItemErase;
@@ -374,14 +391,12 @@ begin
 end;
 
 procedure TFrameGroups.VSTKeyDown;
+var
+  i: Integer;
 begin
-  // Ctrl+C to copy all columns
-  if (Shift = [ssCtrl]) and (Key = Ord('C')) then
-    VST.CopyToClipboard
-
-  // Enter to inspect the entry
-  else if (Shift = []) and (Key = VK_RETURN) then
-    cmInspectClick(Sender);
+  for i := 0 to High(FShortcuts) do
+    if (FShortcuts[i].ShiftState = Shift) and (FShortcuts[i].Key = Key) then
+      FShortcuts[i].Menu.Click;
 end;
 
 end.
