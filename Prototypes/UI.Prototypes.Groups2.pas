@@ -5,9 +5,18 @@ interface
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes,
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, VirtualTrees, UI.Helper,
-  NtUtils, DelphiUtils.Arrays, NtUtils.Lsa.Sid, Vcl.Menus, DelphiUtils.Events;
+  NtUtils, DelphiUtils.Arrays, NtUtils.Lsa.Sid, Vcl.Menus, DelphiUtils.Events,
+  Ntapi.ntseapi;
 
 type
+  TEditGroupCallback = reference to procedure (var Group: TGroup);
+
+  TEditAttributesCallback = reference to procedure (
+    const Groups: TArray<TGroup>;
+    var AttributesToClear: TGroupAttributes;
+    var AttributesToSet: TGroupAttributes
+  );
+
   TFrameGroups = class(TFrame)
     VST: TVirtualStringTree;
     DefaultPopupMenu: TPopupMenu;
@@ -38,10 +47,11 @@ type
     TColumn = (colFriendly, colSid, colSidType, colFlags, colState);
     TGroupNodeData = record
       Group: TGroup;
+      Lookup: TTranslatedName;
       Cell: array [TColumn] of String;
       Hint: String;
       Color: TColor;
-      constructor Create(const Src: TGroup; const Lookup: TTranslatedName);
+      constructor Create(const Src: TGroup; const LookupSrc: TTranslatedName);
       class function CreateMany(Src: TArray<TGroup>): TArray<TGroupNodeData>; static;
     end;
   private
@@ -58,19 +68,22 @@ type
     function GetSelected: TArray<TGroup>;
     function GetChecked: TArray<TGroup>;
     procedure SetChecked(const Value: TArray<TGroup>);
-    function GetIsChecked(Group: TGroup): Boolean;
-    procedure SetIsChecked(Group: TGroup; const Value: Boolean);
+    function GetIsChecked(const Group: TGroup): Boolean;
+    procedure SetIsChecked(const Group: TGroup; const Value: Boolean);
     function GetAllGroups: TArray<TGroup>;
   public
-    property Checkboxes: Boolean read GetChechboxes write SetCheckboxes;
-    property Selected: TArray<TGroup> read GetSelected;
-    property Checked: TArray<TGroup> read GetChecked write SetChecked;
-    property Groups: TArray<TGroup> read GetAllGroups;
-    property IsChecked[Group: TGroup]: Boolean read GetIsChecked write SetIsChecked;
     procedure Load(Groups: TArray<TGroup>);
     procedure Add(Groups: TArray<TGroup>);
+    procedure EditSelectedGroup(Callback: TEditGroupCallback);
+    procedure EditSelectedGroups(Callback: TEditAttributesCallback);
+    procedure RemoveSelected;
+    property All: TArray<TGroup> read GetAllGroups;
+    property Selected: TArray<TGroup> read GetSelected;
+    property Checked: TArray<TGroup> read GetChecked write SetChecked;
+    property IsChecked[const Group: TGroup]: Boolean read GetIsChecked write SetIsChecked;
     constructor Create(AOwner: TComponent); override;
   published
+    property Checkboxes: Boolean read GetChechboxes write SetCheckboxes;
     property NodePopupMenu: TPopupMenu read FNodePopupMenu write SetNodePopupMenu;
     property OnDefaultAction: TEventListener<TGroup> read FOnDefaultAction write FOnDefaultAction;
   end;
@@ -78,7 +91,7 @@ type
 implementation
 
 uses
-  Winapi.WinNt, Winapi.ntlsa, Ntapi.ntrtl, Ntapi.ntseapi, DelphiApi.Reflection,
+  Winapi.WinNt, Winapi.ntlsa, Ntapi.ntrtl, DelphiApi.Reflection,
   NtUtils.Security.Sid, NtUtils.Lsa, NtUtils.SysUtils,
   DelphiUiLib.Reflection.Strings, DelphiUiLib.Reflection.Numeric,
   NtUiLib.Reflection.Types,
@@ -93,6 +106,7 @@ var
   HintSections: TArray<THintSection>;
 begin
   Group := Src;
+  Lookup := LookupSrc;
   Cell[colSid] := RtlxSidToString(Group.Sid.Data);
 
   if Lookup.SidType <> SidTypeUndefined then
@@ -112,7 +126,11 @@ begin
 
   // Colors
   if BitTest(Group.Attributes and SE_GROUP_INTEGRITY_ENABLED) then
-    Color := ColorSettings.clIntegrity
+    if BitTest(Group.Attributes and SE_GROUP_ENABLED) xor
+      BitTest(Group.Attributes and SE_GROUP_ENABLED_BY_DEFAULT) then
+      Color := ColorSettings.clIntegrityModified
+    else
+      Color := ColorSettings.clIntegrity
   else
     if BitTest(Group.Attributes and SE_GROUP_ENABLED) then
       if BitTest(Group.Attributes and SE_GROUP_ENABLED_BY_DEFAULT) then
@@ -207,6 +225,72 @@ begin
   NodePopupMenu := nil;
 end;
 
+procedure TFrameGroups.EditSelectedGroup;
+var
+  Node: PVirtualNode;
+  Index: Integer;
+  NewGroup: TGroup;
+  Lookup: TTranslatedName;
+begin
+  if VST.SelectedCount <> 1 then
+    Exit;
+
+  for Node in VST.SelectedNodes do
+  begin
+    Index := Node.GetData<Integer>;
+    NewGroup := FGroups[Index].Group;
+    Callback(NewGroup);
+
+    if not RtlEqualSid(FGroups[Index].Group.Sid.Data, NewGroup.Sid.Data) then
+    begin
+      // We got a new SID, look it up
+      if not LsaxLookupSid(NewGroup.Sid.Data, Lookup).IsSuccess then
+        Lookup := Default(TTranslatedName);
+
+      FGroups[Index] := TGroupNodeData.Create(NewGroup, Lookup);
+    end
+    else
+    begin
+      // We can reuse lookup since we only need to update attributes
+      FGroups[Index].Group.Attributes := NewGroup.Attributes;
+      FGroups[Index] := TGroupNodeData.Create(NewGroup, FGroups[Index].Lookup);
+    end;
+
+    VST.InvalidateNode(Node);
+    Break;
+  end;
+end;
+
+procedure TFrameGroups.EditSelectedGroups;
+var
+  Node: PVirtualNode;
+  Index: Integer;
+  AttributesToClear: TGroupAttributes;
+  AttributesToSet: TGroupAttributes;
+begin
+  if VST.SelectedCount = 0 then
+    Exit;
+
+  AttributesToClear := 0;
+  AttributesToSet := 0;
+  Callback(Selected, AttributesToClear, AttributesToSet);
+
+  BeginUpdateAuto(VST);
+
+  for Node in VST.SelectedNodes do
+  begin
+    Index := Node.GetData<Integer>;
+
+    // Adjust atrributes and reuse SID lookup
+    FGroups[Index].Group.Attributes := (FGroups[Index].Group.Attributes
+      and not AttributesToClear) or AttributesToSet;
+    FGroups[Index] := TGroupNodeData.Create(FGroups[Index].Group,
+      FGroups[Index].Lookup);
+
+    VST.InvalidateNode(Node);
+  end;
+end;
+
 function TFrameGroups.GetAllGroups: TArray<TGroup>;
 begin
   Result := TArray.Map<TGroupNodeData, TGroup>(FGroups,
@@ -262,6 +346,23 @@ end;
 function TFrameGroups.NodeToGroup;
 begin
   Result := FGroups[Node.GetData<Integer>].Group;
+end;
+
+procedure TFrameGroups.RemoveSelected;
+var
+  Nodes: TArray<PVirtualNode>;
+  Nodes2: TNodeArray absolute Nodes;
+  i: Integer;
+begin
+  Nodes := CollectNodes(VST.SelectedNodes);
+  BeginUpdateAuto(VST);
+
+  // Remove node-backing data
+  for i := High(Nodes) downto 0 do
+    Delete(FGroups, Nodes[i].GetData<Integer>, 1);
+
+  // And nodes as well
+  VST.DeleteNodes(Nodes2);
 end;
 
 procedure TFrameGroups.SetCheckboxes;

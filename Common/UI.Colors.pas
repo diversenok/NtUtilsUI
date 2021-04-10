@@ -14,6 +14,7 @@ type
     clRemoved: TColor;
     clStale: TColor;
     clIntegrity: TColor;
+    clIntegrityModified: TColor;
     clSuspended: TColor;
     clGuiThread: TColor;
     clSystem: TColor;
@@ -31,6 +32,7 @@ var
     clRemoved: $E0E0E0;
     clStale: $F5DCC2;
     clIntegrity: $F0E0E0;
+    clIntegrityModified: $F0C0C0;
     clSuspended: $AAAAAA;
     clGuiThread: $77FFFF;
     clSystem: $FFDDBB;
