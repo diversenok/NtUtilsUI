@@ -3,13 +3,19 @@ unit UI.Helper;
 interface
 
 uses
-  VirtualTrees, Vcl.StdCtrls, Vcl.Menus, System.Classes, NtUtils;
+  VirtualTrees, Vcl.StdCtrls, Vcl.Menus, System.Classes, NtUtils,
+  DelphiUtils.Arrays;
+
+// Convert virtual node enumeration into an array
+function CollectNodes(Nodes: TVTVirtualNodeEnumeration): TArray<PVirtualNode>;
 
 // Call BeginUpdate and queue a deferred EndUpdate
 function BeginUpdateAuto(VST: TBaseVirtualTree): IAutoReleasable;
 
-// Convert virtual node enumeration into an array
-function CollectNodes(Nodes: TVTVirtualNodeEnumeration): TArray<PVirtualNode>;
+function BackupSelectionAuto(
+  VST: TBaseVirtualTree;
+  Comparer: TMapRoutine<PVirtualNode, TCondition<PVirtualNode>>
+): IAutoReleasable;
 
 type
   // Change of checkbox state that does not issue OnClick event
@@ -29,18 +35,6 @@ type
 
 implementation
 
-function BeginUpdateAuto;
-begin
-  VST.BeginUpdate;
-
-  Result := TDelayedOperation.Delay(
-    procedure
-    begin
-      VST.EndUpdate;
-    end
-  );
-end;
-
 function CollectNodes;
 var
   Node: PVirtualNode;
@@ -58,6 +52,47 @@ begin
     Result[Count] := Node;
     Inc(Count);
   end;
+end;
+
+function BeginUpdateAuto;
+begin
+  VST.BeginUpdate;
+
+  Result := TDelayedOperation.Delay(
+    procedure
+    begin
+      VST.EndUpdate;
+    end
+  );
+end;
+
+function BackupSelectionAuto;
+var
+  Conditions: TArray<TCondition<PVirtualNode>>;
+begin
+  // For each selected node, capture necessary data for later comparison
+  Conditions := TArray.Map<PVirtualNode, TCondition<PVirtualNode>>(
+    CollectNodes(VST.SelectedNodes), Comparer);
+
+  // Restore selection afterwards
+  Result := TDelayedOperation.Delay(
+    procedure
+    var
+      i: Integer;
+      Node: PVirtualNode;
+    begin
+      BeginUpdateAuto(VST);
+
+      // Check if each new node matches any conditions for selection
+      for Node in VST.Nodes do
+        for i := 0 to High(Conditions) do
+          if Boolean(Conditions[i](Node)) then
+          begin
+            VST.Selected[Node] := True;
+            Break;
+          end;
+    end
+  );
 end;
 
 { TCheckBoxHack }

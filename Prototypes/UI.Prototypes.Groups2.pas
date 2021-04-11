@@ -5,7 +5,7 @@ interface
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes,
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, VirtualTrees, UI.Helper,
-  NtUtils, NtUtils.Lsa.Sid, Vcl.Menus, DelphiUtils.Events,
+  NtUtils, NtUtils.Lsa.Sid, Vcl.Menus, DelphiUtils.Events, DelphiUtils.Arrays,
   Ntapi.ntseapi;
 
 type
@@ -66,6 +66,7 @@ type
     function GetChecked: TArray<TGroup>;
     function GetIsChecked(const Group: TGroup): Boolean;
     function GetSelected: TArray<TGroup>;
+    function NodeComparer(const Node: PVirtualNode): TCondition<PVirtualNode>;
     function NodeToColumnText(const Node: PVirtualNode): String;
     function NodeToGroup(const Node: PVirtualNode): TGroup;
     procedure SetCheckboxes(const Value: Boolean);
@@ -95,7 +96,7 @@ uses
   Winapi.WinNt, Winapi.ntlsa, Ntapi.ntrtl, DelphiApi.Reflection,
   NtUtils.Security.Sid, NtUtils.Lsa, NtUtils.SysUtils,
   DelphiUiLib.Reflection.Strings, DelphiUiLib.Reflection.Numeric,
-  NtUiLib.Reflection.Types, DelphiUtils.Arrays,
+  NtUiLib.Reflection.Types,
   UI.Colors, Vcl.Clipbrd;
 
 {$R *.dfm}
@@ -287,8 +288,6 @@ begin
 
   for Node in VST.SelectedNodes do
   begin
-    Index := Node.GetData<Integer>;
-
     // Adjust atrributes and reuse SID lookup
     TGroupNodeData(Node.GetData^).Group.Attributes :=
       (TGroupNodeData(Node.GetData^).Group.Attributes and not AttributesToClear)
@@ -341,8 +340,23 @@ end;
 procedure TFrameGroups.Load;
 begin
   BeginUpdateAuto(VST);
+  BackupSelectionAuto(VST, NodeComparer);
   VST.RootNodeCount := 0;
   Add(Groups);
+end;
+
+function TFrameGroups.NodeComparer;
+var
+  Sid: ISid;
+begin
+  // We compare nodes via their SIDs
+  Sid := TGroupNodeData(Node.GetData^).Group.Sid;
+
+  Result := function (const Node: PVirtualNode): Boolean
+    begin
+      Result := RtlEqualSid(Sid.Data,
+        TGroupNodeData(Node.GetData^).Group.Sid.Data);
+    end;
 end;
 
 function TFrameGroups.NodeToColumnText;
