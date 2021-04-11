@@ -17,7 +17,7 @@ type
     var AttributesToSet: TGroupAttributes
   );
 
-  TGroupColumn = (colFriendly, colSid, colSidType, colFlags, colState);
+  TGroupColumn = (colFriendly, colSid, colSidType, colState, colFlags);
 
   TGroupNodeData = record
     Group: TGroup;
