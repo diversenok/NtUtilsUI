@@ -1,4 +1,4 @@
-unit UI.Prototypes.Groups2;
+unit UI.Prototypes.Groups;
 
 interface
 
@@ -273,7 +273,6 @@ end;
 procedure TFrameGroups.EditSelectedGroups;
 var
   Node: PVirtualNode;
-  Index: Integer;
   AttributesToClear: TGroupAttributes;
   AttributesToSet: TGroupAttributes;
 begin
