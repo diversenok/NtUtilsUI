@@ -24,7 +24,6 @@ object FrameGroups: TFrameGroups
     Header.Height = 24
     Header.Options = [hoColumnResize, hoDblClickResize, hoDrag, hoHotTrack, hoRestrictDrag, hoShowSortGlyphs, hoVisible, hoDisableAnimatedResize, hoHeaderClickAutoSort, hoAutoColumnPopupMenu, hoAutoResizeInclCaption]
     HintMode = hmHint
-    NodeDataSize = 4
     SelectionBlendFactor = 64
     TabOrder = 0
     TreeOptions.AutoOptions = [toAutoDropExpand, toAutoScrollOnExpand, toAutoTristateTracking, toAutoDeleteMovedNodes, toAutoChangeScale]
@@ -35,6 +34,7 @@ object FrameGroups: TFrameGroups
     OnBeforeItemErase = VSTBeforeItemErase
     OnCompareNodes = VSTCompareNodes
     OnDblClick = cmInspectClick
+    OnFreeNode = VSTFreeNode
     OnGetCellText = VSTGetCellText
     OnGetHint = VSTGetHint
     OnGetPopupMenu = VSTGetPopupMenu
