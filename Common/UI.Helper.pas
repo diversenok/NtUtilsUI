@@ -58,7 +58,7 @@ function BeginUpdateAuto;
 begin
   VST.BeginUpdate;
 
-  Result := TDelayedOperation.Delay(
+  Result := Auto.Delay(
     procedure
     begin
       VST.EndUpdate;
@@ -75,7 +75,7 @@ begin
     CollectNodes(VST.SelectedNodes), Comparer);
 
   // Restore selection afterwards
-  Result := TDelayedOperation.Delay(
+  Result := Auto.Delay(
     procedure
     var
       i: Integer;
