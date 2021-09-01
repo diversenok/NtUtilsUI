@@ -4,9 +4,9 @@ interface
 
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes,
-  Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, VirtualTrees, UI.Helper,
-  NtUtils, NtUtils.Lsa.Sid, Vcl.Menus, DelphiUtils.Events, DelphiUtils.Arrays,
-  Ntapi.ntseapi;
+  Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, VirtualTrees,
+  VirtualTrees.Types, UI.Helper, NtUtils, NtUtils.Lsa.Sid, Vcl.Menus,
+  DelphiUtils.Events, DelphiUtils.Arrays, Ntapi.ntseapi;
 
 type
   TEditGroupCallback = reference to procedure (var Group: TGroup);
