@@ -24,7 +24,7 @@ type
 implementation
 
 uses
-  Vcl.ImgList, Vcl.Graphics, Winapi.WinUser, Winapi.Shell, Winapi.WinNt,
+  Vcl.ImgList, Vcl.Graphics, Ntapi.WinUser, Ntapi.ShellApi, Ntapi.WinNt,
   NtUtils, NtUtils.SysUtils, NtUtils.Processes.Info;
 
 { TProcessIcons }
@@ -50,7 +50,7 @@ end;
 class function TProcessIcons.GetIcon(FileName: string): Integer;
 var
   ObjIcon: TIcon;
-  SmallHIcon: HICON;
+  SmallHIcon: THIcon;
 begin
   // Start with the default icon
   Result := 0;

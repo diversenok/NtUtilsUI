@@ -93,7 +93,7 @@ type
 implementation
 
 uses
-  Winapi.WinNt, Winapi.ntlsa, Ntapi.ntrtl, DelphiApi.Reflection,
+  Ntapi.WinNt, Ntapi.ntlsa, Ntapi.ntrtl, DelphiApi.Reflection,
   NtUtils.Security.Sid, NtUtils.Lsa, NtUtils.SysUtils,
   DelphiUiLib.Reflection.Strings, DelphiUiLib.Reflection.Numeric,
   NtUiLib.Reflection.Types,

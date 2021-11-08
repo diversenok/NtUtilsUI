@@ -43,7 +43,7 @@ type
 implementation
 
 uses
-  Winapi.WinNt, Winapi.ntlsa, NtUtils.Lsa, DelphiUtils.Arrays,
+  Ntapi.WinNt, Ntapi.ntlsa, NtUtils.Lsa, DelphiUtils.Arrays,
   DelphiUiLib.Strings, DelphiUiLib.Reflection.Strings,
   DelphiUiLib.Reflection.Numeric, UI.Colors;
 
@@ -91,6 +91,9 @@ begin
 end;
 
 function GetAllPrivileges: TArray<TPrivilege>;
+const
+  SE_MIN_WELL_KNOWN_PRIVILEGE = Integer(SE_CREATE_TOKEN_PRIVILEGE);
+  SE_MAX_WELL_KNOWN_PRIVILEGE = Integer(High(TSeWellKnownPrivilege));
 var
   New: TArray<TPrivilegeDefinition>;
   i: Integer;

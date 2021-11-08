@@ -5,7 +5,7 @@ interface
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.ComCtrls,
-  VclEx.ListView, DelphiApi.Reflection, Winapi.WinNt, Vcl.ExtCtrls;
+  VclEx.ListView, DelphiApi.Reflection, Ntapi.WinNt, Vcl.ExtCtrls;
 
 type
   TAccessMaskFrame = class(TFrame)
