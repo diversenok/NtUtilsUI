@@ -38,7 +38,7 @@ type
   end;
 
 // Prepare default groupping of environment variables by their origin
-function GroupByOrigin(hToken: THandle): TArray<TEnvironmentGroup>;
+function GroupByOrigin(hxToken: IHandle): TArray<TEnvironmentGroup>;
 
 // Highlight internal environment variables that start with the equal sign
 function HighlightCmd: TArray<TEnvironmentHightligter>;
@@ -137,13 +137,13 @@ end;
 
 { Functions }
 
-function GroupByOrigin(hToken: THandle): TArray<TEnvironmentGroup>;
+function GroupByOrigin;
 var
   SystemEnv, UserEnv: IEnvironment;
 begin
   // Prepare the canonical environment for the system and the user
-  UnvxCreateUserEnvironment(SystemEnv, 0);
-  UnvxCreateUserEnvironment(UserEnv, hToken);
+  UnvxCreateUserEnvironment(SystemEnv, nil);
+  UnvxCreateUserEnvironment(UserEnv, hxToken);
 
   SetLength(Result, 3);
 
