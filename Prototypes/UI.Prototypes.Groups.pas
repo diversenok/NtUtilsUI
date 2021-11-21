@@ -109,7 +109,7 @@ var
 begin
   Group := Src;
   Lookup := LookupSrc;
-  Cell[colSid] := RtlxSidToString(Group.Sid.Data);
+  Cell[colSid] := RtlxSidToString(Group.Sid);
 
   if Lookup.SidType <> SidTypeUndefined then
     Cell[colSidType] := TNumeric.Represent(Lookup.SidType).Text;
@@ -165,9 +165,9 @@ begin
   Hint := BuildHint(HintSections);
 end;
 
-function GroupToSid(const Group: TGroup): PSid;
+function GroupToSid(const Group: TGroup): ISid;
 begin
-  Result := Group.Sid.Data;
+  Result := Group.Sid;
 end;
 
 class function TGroupNodeData.CreateMany;
@@ -176,7 +176,7 @@ var
   i: Integer;
 begin
   // Lookup all SIDs at once to speed things up
-  if not LsaxLookupSids(TArray.Map<TGroup, PSid>(Src, GroupToSid),
+  if not LsaxLookupSids(TArray.Map<TGroup, ISid>(Src, GroupToSid),
     Lookup).IsSuccess then
     SetLength(Lookup, Length(Src));
 
@@ -252,7 +252,7 @@ begin
       NewGroup.Sid.Data) then
     begin
       // We got a new SID, look it up
-      if not LsaxLookupSid(NewGroup.Sid.Data, Lookup).IsSuccess then
+      if not LsaxLookupSid(NewGroup.Sid, Lookup).IsSuccess then
         Lookup := Default(TTranslatedName);
 
       TGroupNodeData(Node.GetData^) := TGroupNodeData.Create(NewGroup, Lookup);
