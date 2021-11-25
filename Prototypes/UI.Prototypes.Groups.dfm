@@ -8,7 +8,7 @@ object FrameGroups: TFrameGroups
   ParentShowHint = False
   ShowHint = True
   TabOrder = 0
-  object VST: TVirtualStringTree
+  object VST: TVirtualStringTreeEx
     Left = 0
     Top = 0
     Width = 493
@@ -33,13 +33,12 @@ object FrameGroups: TFrameGroups
     TreeOptions.SelectionOptions = [toFullRowSelect, toMultiSelect, toRightClickSelect]
     OnBeforeItemErase = VSTBeforeItemErase
     OnCompareNodes = VSTCompareNodes
-    OnDblClick = cmInspectClick
     OnFreeNode = VSTFreeNode
     OnGetCellText = VSTGetCellText
     OnGetHint = VSTGetHint
-    OnGetPopupMenu = VSTGetPopupMenu
     OnInitNode = VSTInitNode
-    OnKeyDown = VSTKeyDown
+    Touch.InteractiveGestures = [igPan, igPressAndTap]
+    Touch.InteractiveGestureOptions = [igoPanSingleFingerHorizontal, igoPanSingleFingerVertical, igoPanInertia, igoPanGutter, igoParentPassthrough]
     Columns = <
       item
         Options = [coAllowClick, coDraggable, coEnabled, coParentBidiMode, coParentColor, coResizable, coVisible, coAutoSpring, coSmartResize, coAllowFocus, coDisableAnimatedResize, coEditable, coStyleColor]
@@ -71,29 +70,5 @@ object FrameGroups: TFrameGroups
         Text = 'Flags'
         Width = 120
       end>
-  end
-  object DefaultPopupMenu: TPopupMenu
-    Left = 96
-    Top = 104
-    object cmInspect: TMenuItem
-      Caption = 'Inspect'
-      Default = True
-      ShortCut = 13
-      Visible = False
-      OnClick = cmInspectClick
-    end
-    object cmSeparator: TMenuItem
-      Caption = '-'
-      Visible = False
-    end
-    object cmCopy: TMenuItem
-      Caption = 'Copy'
-      ShortCut = 16451
-      OnClick = cmCopyClick
-    end
-    object cmCopyColumn: TMenuItem
-      Caption = 'Copy "%s"'
-      OnClick = cmCopyColumnClick
-    end
   end
 end
