@@ -8,6 +8,14 @@ uses
   VirtualTrees.Types, UI.Helper, NtUtils, NtUtils.Lsa.Sid, Vcl.Menus,
   DelphiUtils.Events, DelphiUtils.Arrays, Ntapi.ntseapi, VirtualTreesEx;
 
+const
+  colFriendly = 0;
+  colSid = 1;
+  colSidType = 2;
+  colState = 3;
+  colFlags = 4;
+  colMax = 5;
+
 type
   TEditGroupCallback = reference to procedure (var Group: TGroup);
 
@@ -17,62 +25,47 @@ type
     var AttributesToSet: TGroupAttributes
   );
 
-  TGroupColumn = (colFriendly, colSid, colSidType, colState, colFlags);
+  IGroup = interface (INodeData)
+    ['{1D70B85E-99E9-4F21-B298-8928AD2DBDAE}']
+    function GetGroup: TGroup;
+    function GetLookup: TTranslatedName;
+    function Matches(const Sid: ISid): Boolean;
+  end;
 
-  TGroupNodeData = record
+  TGroupNodeData = class (TCustomNodeData, IGroup, INodeData)
     Group: TGroup;
     Lookup: TTranslatedName;
-    Cell: array [TGroupColumn] of String;
-    Hint: String;
-    Color: TColor;
     constructor Create(const Src: TGroup; const LookupSrc: TTranslatedName);
-    class function CreateMany(Src: TArray<TGroup>): TArray<TGroupNodeData>; static;
+    class function CreateMany(Src: TArray<TGroup>): TArray<INodeData>; static;
+    function GetGroup: TGroup;
+    function GetLookup: TTranslatedName;
+    function Matches(const Sid: ISid): Boolean;
   end;
 
   TFrameGroups = class(TFrame)
     VST: TVirtualStringTreeEx;
-    procedure VSTGetHint(Sender: TBaseVirtualTree; Node: PVirtualNode;
-      Column: TColumnIndex; var LineBreakStyle: TVTTooltipLineBreakStyle;
-      var HintText: string);
-    procedure VSTGetCellText(Sender: TCustomVirtualStringTree;
-      var E: TVSTGetCellTextEventArgs);
-    procedure VSTInitNode(Sender: TBaseVirtualTree; ParentNode,
-      Node: PVirtualNode; var InitialStates: TVirtualNodeInitStates);
-    procedure VSTBeforeItemErase(Sender: TBaseVirtualTree;
-      TargetCanvas: TCanvas; Node: PVirtualNode; ItemRect: TRect;
-      var ItemColor: TColor; var EraseAction: TItemEraseAction);
-    procedure VSTCompareNodes(Sender: TBaseVirtualTree; Node1,
-      Node2: PVirtualNode; Column: TColumnIndex; var Result: Integer);
-    procedure VSTFreeNode(Sender: TBaseVirtualTree; Node: PVirtualNode);
  private
     FDefaultAction: TEventListener<TGroup>;
     function GetAllGroups: TArray<TGroup>;
-    function GetChechboxes: Boolean;
     function GetChecked: TArray<TGroup>;
     function GetIsChecked(const Group: TGroup): Boolean;
     function GetSelected: TArray<TGroup>;
     function NodeComparer(const Node: PVirtualNode): TCondition<PVirtualNode>;
     function NodeToGroup(const Node: PVirtualNode): TGroup;
-    procedure SetCheckboxes(const Value: Boolean);
     procedure SetChecked(const Value: TArray<TGroup>);
     procedure SetIsChecked(const Group: TGroup; const Value: Boolean);
-    function GetNodePopup: TPopupMenu;
-    procedure SetNodePopupMenu(const Value: TPopupMenu);
     procedure DoDefaultAction(Node: PVirtualNode);
   public
     procedure Load(Groups: TArray<TGroup>);
     procedure Add(Groups: TArray<TGroup>);
     procedure EditSelectedGroup(Callback: TEditGroupCallback);
     procedure EditSelectedGroups(Callback: TEditAttributesCallback);
-    procedure RemoveSelected;
     property All: TArray<TGroup> read GetAllGroups;
     property Selected: TArray<TGroup> read GetSelected;
     property Checked: TArray<TGroup> read GetChecked write SetChecked;
     property IsChecked[const Group: TGroup]: Boolean read GetIsChecked write SetIsChecked;
     constructor Create(AOwner: TComponent); override;
   published
-    property Checkboxes: Boolean read GetChechboxes write SetCheckboxes;
-    property NodePopupMenu: TPopupMenu read GetNodePopup write SetNodePopupMenu;
     property OnDefaultAction: TEventListener<TGroup> read FDefaultAction write FDefaultAction;
   end;
 
@@ -92,6 +85,8 @@ constructor TGroupNodeData.Create;
 var
   HintSections: TArray<THintSection>;
 begin
+  inherited Create(colMax);
+
   Group := Src;
   Lookup := LookupSrc;
   Cell[colSid] := RtlxSidToString(Group.Sid);
@@ -112,6 +107,7 @@ begin
     SE_GROUP_STATE_MASK).Text;
 
   // Colors
+  HasColor := True;
   if BitTest(Group.Attributes and SE_GROUP_INTEGRITY_ENABLED) then
     if BitTest(Group.Attributes and SE_GROUP_ENABLED) xor
       BitTest(Group.Attributes and SE_GROUP_ENABLED_BY_DEFAULT) then
@@ -150,19 +146,18 @@ begin
   Hint := BuildHint(HintSections);
 end;
 
-function GroupToSid(const Group: TGroup): ISid;
-begin
-  Result := Group.Sid;
-end;
-
 class function TGroupNodeData.CreateMany;
 var
+  Sids: TArray<ISid>;
   Lookup: TArray<TTranslatedName>;
   i: Integer;
 begin
+  SetLength(Sids, Length(Src));
+  for i := 0 to High(Sids) do
+    Sids[i] := Src[i].Sid;
+
   // Lookup all SIDs at once to speed things up
-  if not LsaxLookupSids(TArray.Map<TGroup, ISid>(Src, GroupToSid),
-    Lookup).IsSuccess then
+  if not LsaxLookupSids(Sids, Lookup).IsSuccess then
     SetLength(Lookup, Length(Src));
 
   SetLength(Result, Length(Src));
@@ -170,32 +165,44 @@ begin
     Result[i] := TGroupNodeData.Create(Src[i], Lookup[i]);
 end;
 
+function TGroupNodeData.GetGroup;
+begin
+  Result := Group;
+end;
+
+function TGroupNodeData.GetLookup;
+begin
+  Result := Lookup;
+end;
+
+function TGroupNodeData.Matches;
+begin
+  Result := RtlEqualSid(Group.Sid.Data, Sid.Data);
+end;
+
 { TFrameGroups }
 
 procedure TFrameGroups.Add;
 var
-  i: Integer;
-  NewData: TArray<TGroupNodeData>;
+  NewData: INodeData;
 begin
-  NewData := TGroupNodeData.CreateMany(Groups);
   BeginUpdateAuto(VST);
 
-  for i := 0 to High(NewData) do
-    TGroupNodeData(VST.AddChild(VST.RootNode).GetData^) := NewData[i];
+  for NewData in TGroupNodeData.CreateMany(Groups) do
+    VST.AddChild(VST.RootNode).SetINodeData(NewData);
 end;
 
 constructor TFrameGroups.Create;
 begin
   inherited Create(AOwner);
-  VST.NodeDataSize := SizeOf(TGroupNodeData);
-  VST.RootNodeCount := 0;
+  VST.UseINodeDataMode;
   VST.OnInspectNode := DoDefaultAction;
 end;
 
 procedure TFrameGroups.DoDefaultAction;
 begin
   if Assigned(FDefaultAction) then
-    FDefaultAction(TGroupNodeData(Node.GetData^).Group);
+    FDefaultAction(IGroup(Node.GetINodeData).GetGroup);
 end;
 
 procedure TFrameGroups.EditSelectedGroup;
@@ -209,26 +216,16 @@ begin
 
   for Node in VST.SelectedNodes do
   begin
-    NewGroup := TGroupNodeData(Node.GetData^).Group;
+    NewGroup := IGroup(Node.GetINodeData).GetGroup;
     Callback(NewGroup);
 
-    if not RtlEqualSid(TGroupNodeData(Node.GetData^).Group.Sid.Data,
-      NewGroup.Sid.Data) then
-    begin
-      // We got a new SID, look it up
-      if not LsaxLookupSid(NewGroup.Sid, Lookup).IsSuccess then
-        Lookup := Default(TTranslatedName);
+    // Reuse previous lookup if the SID haven't changed
+    if IGroup(Node.GetINodeData).Matches(NewGroup.Sid) then
+      Lookup := IGroup(Node.GetINodeData).GetLookup
+    else if not LsaxLookupSid(NewGroup.Sid, Lookup).IsSuccess then
+      Lookup := Default(TTranslatedName);
 
-      TGroupNodeData(Node.GetData^) := TGroupNodeData.Create(NewGroup, Lookup);
-    end
-    else
-    begin
-      // We can reuse lookup since we only need to update attributes
-      TGroupNodeData(Node.GetData^).Group.Attributes := NewGroup.Attributes;
-      TGroupNodeData(Node.GetData^) := TGroupNodeData.Create(NewGroup,
-        TGroupNodeData(Node.GetData^).Lookup);
-    end;
-
+    Node.SetINodeData(TGroupNodeData.Create(NewGroup, Lookup));
     VST.InvalidateNode(Node);
     Break;
   end;
@@ -239,6 +236,7 @@ var
   Node: PVirtualNode;
   AttributesToClear: TGroupAttributes;
   AttributesToSet: TGroupAttributes;
+  NewGroup: TGroup;
 begin
   if VST.SelectedCount = 0 then
     Exit;
@@ -251,15 +249,13 @@ begin
 
   for Node in VST.SelectedNodes do
   begin
-    // Adjust atrributes and reuse SID lookup
-    TGroupNodeData(Node.GetData^).Group.Attributes :=
-      (TGroupNodeData(Node.GetData^).Group.Attributes and not AttributesToClear)
+    NewGroup := IGroup(Node.GetINodeData).GetGroup;
+    NewGroup.Attributes := (NewGroup.Attributes and not AttributesToClear)
       or AttributesToSet;
 
-    TGroupNodeData(Node.GetData^) := TGroupNodeData.Create(
-      TGroupNodeData(Node.GetData^).Group,
-      TGroupNodeData(Node.GetData^).Lookup
-    );
+    // Reuse SID lookup
+    Node.SetINodeData(TGroupNodeData.Create(NewGroup,
+      IGroup(Node.GetINodeData).GetLookup));
 
     VST.InvalidateNode(Node);
   end;
@@ -269,11 +265,6 @@ function TFrameGroups.GetAllGroups: TArray<TGroup>;
 begin
   Result := TArray.Map<PVirtualNode, TGroup>(CollectNodes(VST.Nodes),
     NodeToGroup);
-end;
-
-function TFrameGroups.GetChechboxes;
-begin
-  Result := toCheckSupport in VST.TreeOptions.MiscOptions;
 end;
 
 function TFrameGroups.GetChecked;
@@ -287,16 +278,10 @@ var
   Node: PVirtualNode;
 begin
   for Node in VST.Nodes do
-    if RtlEqualSid(TGroupNodeData(Node.GetData^).Group.Sid.Data,
-      Group.Sid.Data) then
+    if IGroup(Node.GetINodeData).Matches(Group.Sid) then
       Exit(VST.CheckState[Node] = csCheckedNormal);
 
   Result := False;
-end;
-
-function TFrameGroups.GetNodePopup;
-begin
-  Result := VST.NodePopupMenu;
 end;
 
 function TFrameGroups.GetSelected;
@@ -318,39 +303,17 @@ var
   Sid: ISid;
 begin
   // We compare nodes via their SIDs
-  Sid := TGroupNodeData(Node.GetData^).Group.Sid;
+  Sid := IGroup(Node.GetINodeData).GetGroup.Sid;
 
   Result := function (const Node: PVirtualNode): Boolean
     begin
-      Result := RtlEqualSid(Sid.Data,
-        TGroupNodeData(Node.GetData^).Group.Sid.Data);
+      Result := IGroup(Node.GetINodeData).Matches(Sid);
     end;
 end;
 
 function TFrameGroups.NodeToGroup;
 begin
-  Result := TGroupNodeData(Node.GetData^).Group;
-end;
-
-procedure TFrameGroups.RemoveSelected;
-begin
-  BeginUpdateAuto(VST);
-  VST.DeleteSelectedNodes;
-end;
-
-procedure TFrameGroups.SetCheckboxes;
-const
-  CHECKBOX_TYPE: array [Boolean] of TCheckType = (ctNone, ctCheckBox);
-var
-  Node: PVirtualNode;
-begin
-  if Value then
-    VST.TreeOptions.MiscOptions := VST.TreeOptions.MiscOptions + [toCheckSupport]
-  else
-    VST.TreeOptions.MiscOptions := VST.TreeOptions.MiscOptions - [toCheckSupport];
-
-  for Node in VST.Nodes do
-    VST.CheckType[Node] := CHECKBOX_TYPE[Value <> False];
+  Result := IGroup(Node.GetINodeData).GetGroup;
 end;
 
 procedure TFrameGroups.SetChecked;
@@ -364,8 +327,7 @@ begin
     NeedToCheck := False;
 
     for i := 0 to High(Value) do
-      if RtlEqualSid(TGroupNodeData(Node.GetData^).Group.Sid.Data,
-        Value[i].Sid.Data) then
+      if IGroup(Node.GetINodeData).Matches(Value[i].Sid) then
       begin
         NeedToCheck := True;
         Break;
@@ -379,56 +341,17 @@ begin
 end;
 
 procedure TFrameGroups.SetIsChecked;
-const
-  CHECKBOX_STATES: array [Boolean] of TCheckState = (
-    csUncheckedNormal, csCheckedNormal
-  );
 var
   Node: PVirtualNode;
 begin
   for Node in VST.Nodes do
-    if RtlEqualSid(TGroupNodeData(Node.GetData^).Group.Sid.Data,
-      Group.Sid.Data) then
+    if IGroup(Node.GetINodeData).Matches(Group.Sid) then
     begin
-      VST.CheckState[Node] := CHECKBOX_STATES[Value <> False];
-      Break;
+      if Value then
+        VST.CheckState[Node] := csCheckedNormal
+      else
+        VST.CheckState[Node] := csUncheckedNormal;
     end;
-end;
-
-procedure TFrameGroups.SetNodePopupMenu;
-begin
-  VST.NodePopupMenu := Value;
-end;
-
-procedure TFrameGroups.VSTBeforeItemErase;
-begin
-  ItemColor := TGroupNodeData(Node.GetData^).Color;
-end;
-
-procedure TFrameGroups.VSTCompareNodes;
-begin
-  Result := RtlxCompareStrings(VST.Text[Node1, Column], VST.Text[Node2, Column])
-end;
-
-procedure TFrameGroups.VSTFreeNode;
-begin
-  Finalize(TGroupNodeData(Node.GetData^));
-end;
-
-procedure TFrameGroups.VSTGetCellText;
-begin
-  E.CellText := TGroupNodeData(E.Node.GetData^).Cell[TGroupColumn(E.Column)];
-end;
-
-procedure TFrameGroups.VSTGetHint;
-begin
-  HintText := TGroupNodeData(Node.GetData^).Hint;
-end;
-
-procedure TFrameGroups.VSTInitNode;
-begin
-  if toCheckSupport in VST.TreeOptions.MiscOptions then
-    VST.CheckType[Node] := ctCheckBox;
 end;
 
 end.

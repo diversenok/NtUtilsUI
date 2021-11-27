@@ -4,9 +4,42 @@ interface
 
 uses
   System.SysUtils, System.Classes, System.Types, Vcl.Controls, Vcl.Menus,
-  VirtualTrees;
+  Vcl.Graphics, VirtualTrees, VirtualTrees.Types;
 
 type
+  INodeData = interface
+    ['{70C56741-E4E7-4D76-BE76-0653599DDB1F}']
+    procedure Attach(Node: PVirtualNode);
+    function GetColumnText(Index: Integer): String;
+    function GetHint: String;
+    function GetColor(out ItemColor: TColor): Boolean;
+    property Text[Index: Integer]: String read GetColumnText;
+    property Hint: String read GetHint;
+  end;
+
+  TCustomNodeData = class (TInterfacedObject, INodeData)
+  protected
+    Node: PVirtualNode;
+    Cell: TArray<String>;
+    Hint: String;
+    HasColor: Boolean;
+    Color: TColor;
+    procedure Attach(Node: PVirtualNode); virtual;
+    function GetColumnText(Index: Integer): String; virtual;
+    function GetHint: String; virtual;
+    function GetColor(out ItemColor: TColor): Boolean; virtual;
+  public
+    constructor Create(ColumnCount: Integer); overload;
+    constructor Create(ColumnText: TArray<String>; ItemHint: String = ''); overload;
+    constructor Create(ColumnText: TArray<String>; ItemHint: String; BacgroundColor: TColor); overload;
+  end;
+
+  TVirtualNodeHelper = record helper for TVirtualNode
+    function HasData: Boolean;
+    function GetINodeData: INodeData;
+    procedure SetINodeData(const Provider: INodeData);
+  end;
+
   TNodeEvent = procedure (Node: PVirtualNode) of object;
 
   TMenuShortCut = record
@@ -35,13 +68,26 @@ type
     procedure MakeDefaultMenu;
     procedure AttachDefaultMenuItems(Menu: TPopupMenu);
     procedure SetNodePopupMenu(const Value: TPopupMenu);
+  private
+    procedure GetINodeCellText(Sender: TCustomVirtualStringTree;
+      var E: TVSTGetCellTextEventArgs);
+    procedure GetINodeHint(Sender: TBaseVirtualTree; Node: PVirtualNode;
+      Column: TColumnIndex; var LineBreakStyle: TVTTooltipLineBreakStyle;
+      var HintText: string);
+    procedure DoINodeBeforeItemErase(Sender: TBaseVirtualTree;
+      TargetCanvas: TCanvas; Node: PVirtualNode; ItemRect: TRect;
+      var ItemColor: TColor; var EraseAction: TItemEraseAction);
+    procedure DoINodeCompare(Sender: TBaseVirtualTree; Node1,
+      Node2: PVirtualNode; Column: TColumnIndex; var Result: Integer);
   protected
     function CollectNodes(Nodes: TVTVirtualNodeEnumeration): TArray<PVirtualNode>;
     function DoGetPopupMenu(Node: PVirtualNode; Column: TColumnIndex; Position: TPoint): TPopupMenu; override;
+    procedure DoInitNode(Parent, Node: PVirtualNode; var InitStates: TVirtualNodeInitStates); override;
     procedure DblClick; override;
     procedure KeyDown(var Key: Word; Shift: TShiftState); override;
   public
     constructor Create(AOwner: TComponent); override;
+    procedure UseINodeDataMode;
   published
     property OnInspectNode: TNodeEvent read FOnInspectNode write FOnInspectNode;
     property NodePopupMenu: TPopupMenu read FNodePopupMenu write SetNodePopupMenu;
@@ -57,6 +103,75 @@ uses
 procedure Register;
 begin
   RegisterComponents('Virtual Controls', [TVirtualStringTreeEx]);
+end;
+
+{ TCustomNodeData }
+
+procedure TCustomNodeData.Attach;
+begin
+  Self.Node := Node;
+end;
+
+constructor TCustomNodeData.Create(ColumnCount: Integer);
+begin
+  SetLength(Cell, ColumnCount);
+end;
+
+constructor TCustomNodeData.Create(ColumnText: TArray<String>; ItemHint: String);
+begin
+  Cell := ColumnText;
+  Hint := ItemHint;
+end;
+
+constructor TCustomNodeData.Create(
+  ColumnText: TArray<String>;
+  ItemHint: String;
+  BacgroundColor: TColor
+);
+begin
+  Create(ColumnText, ItemHint);
+  HasColor := True;
+  Color := BacgroundColor;
+end;
+
+function TCustomNodeData.GetColor;
+begin
+  Result := HasColor;
+  ItemColor := Color;
+end;
+
+function TCustomNodeData.GetColumnText;
+begin
+  if (Index >= Low(Cell)) and (Index <= High(Cell)) then
+    Result := Cell[Index]
+  else
+    Result := '';
+end;
+
+function TCustomNodeData.GetHint;
+begin
+  Result := Hint;
+end;
+
+{ TVirtualNodeHelper }
+
+function TVirtualNodeHelper.GetINodeData;
+begin
+  Result := INodeData(GetData^);
+end;
+
+function TVirtualNodeHelper.HasData;
+begin
+  Result := Assigned(@Self) and Assigned(Pointer(GetData^));
+end;
+
+procedure TVirtualNodeHelper.SetINodeData;
+begin
+  if HasData then
+    GetINodeData._Release;
+
+  SetData(IInterface(Provider));
+  Provider.Attach(@Self);
 end;
 
 { TMenuShortCut }
@@ -132,7 +247,7 @@ end;
 
 constructor TVirtualStringTreeEx.Create;
 begin
-  inherited Create(AOwner);
+  inherited;
   MakeDefaultMenu;
 end;
 
@@ -168,6 +283,38 @@ begin
 
   if FMenuCopyColumn.Visible then
     FMenuCopyColumn.Caption := 'Copy "' + Header.Columns[Column].CaptionText + '"';
+end;
+
+procedure TVirtualStringTreeEx.DoInitNode;
+begin
+  // Pre-populate checkboxes by default when the feature is enabled
+  if toCheckSupport in TreeOptions.MiscOptions then
+    CheckType[Node] := ctCheckBox;
+
+  inherited;
+end;
+
+procedure TVirtualStringTreeEx.DoINodeBeforeItemErase;
+var
+  NewColor: TColor;
+begin
+  if Node.GetINodeData.GetColor(NewColor) then
+    ItemColor := NewColor;
+end;
+
+procedure TVirtualStringTreeEx.DoINodeCompare;
+begin
+  Result := String.Compare(Text[Node1, Column], Text[Node2, Column]);
+end;
+
+procedure TVirtualStringTreeEx.GetINodeCellText;
+begin
+  E.CellText := E.Node.GetINodeData.Text[E.Column];
+end;
+
+procedure TVirtualStringTreeEx.GetINodeHint;
+begin
+  HintText := Node.GetINodeData.Hint;
 end;
 
 procedure TVirtualStringTreeEx.KeyDown(var Key: Word; Shift: TShiftState);
@@ -247,10 +394,24 @@ procedure TVirtualStringTreeEx.SetNodePopupMenu;
 begin
   FNodePopupMenu := Value;
 
+  if csDesigning in ComponentState then
+    Exit;
+
   if Assigned(FNodePopupMenu) then
     AttachDefaultMenuItems(FNodePopupMenu)
   else
     AttachDefaultMenuItems(FDefaultMenu);
+end;
+
+procedure TVirtualStringTreeEx.UseINodeDataMode;
+begin
+  RootNodeCount := 0;
+  NodeDataSize := SizeOf(INodeData);
+
+  OnGetCellText := GetINodeCellText;
+  OnGetHint := GetINodeHint;
+  OnBeforeItemErase := DoINodeBeforeItemErase;
+  OnCompareNodes := DoINodeCompare;
 end;
 
 end.

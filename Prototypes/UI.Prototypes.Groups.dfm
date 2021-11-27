@@ -31,12 +31,6 @@ object FrameGroups: TFrameGroups
     TreeOptions.MiscOptions = [toAcceptOLEDrop, toFullRepaintOnResize, toInitOnSave, toToggleOnDblClick, toWheelPanning]
     TreeOptions.PaintOptions = [toHideFocusRect, toHotTrack, toShowButtons, toShowDropmark, toThemeAware, toUseBlendedImages, toUseExplorerTheme]
     TreeOptions.SelectionOptions = [toFullRowSelect, toMultiSelect, toRightClickSelect]
-    OnBeforeItemErase = VSTBeforeItemErase
-    OnCompareNodes = VSTCompareNodes
-    OnFreeNode = VSTFreeNode
-    OnGetCellText = VSTGetCellText
-    OnGetHint = VSTGetHint
-    OnInitNode = VSTInitNode
     Touch.InteractiveGestures = [igPan, igPressAndTap]
     Touch.InteractiveGestureOptions = [igoPanSingleFingerHorizontal, igoPanSingleFingerVertical, igoPanInertia, igoPanGutter, igoParentPassthrough]
     Columns = <
