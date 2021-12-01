@@ -44,7 +44,7 @@ type
 
   TFrameGroups = class(TFrame)
     VST: TVirtualStringTreeEx;
- private
+  private
     FDefaultAction: TEventListener<TGroup>;
     function GetAllGroups: TArray<TGroup>;
     function GetChecked: TArray<TGroup>;

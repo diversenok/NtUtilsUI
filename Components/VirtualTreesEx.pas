@@ -8,8 +8,8 @@ uses
 
 type
   INodeData = interface
-    ['{70C56741-E4E7-4D76-BE76-0653599DDB1F}']
-    procedure Attach(Node: PVirtualNode);
+    ['{94376202-9372-4539-8112-BEE16D041A9C}']
+    procedure Attach(TreeView: TVirtualStringTree; Node: PVirtualNode);
     function GetColumnText(Index: Integer): String;
     function GetHint: String;
     function GetColor(out ItemColor: TColor): Boolean;
@@ -19,12 +19,13 @@ type
 
   TCustomNodeData = class (TInterfacedObject, INodeData)
   protected
+    TreeView: TVirtualStringTree;
     Node: PVirtualNode;
     Cell: TArray<String>;
     Hint: String;
     HasColor: Boolean;
     Color: TColor;
-    procedure Attach(Node: PVirtualNode); virtual;
+    procedure Attach(TreeView: TVirtualStringTree; Node: PVirtualNode); virtual;
     function GetColumnText(Index: Integer): String; virtual;
     function GetHint: String; virtual;
     function GetColor(out ItemColor: TColor): Boolean; virtual;
@@ -69,6 +70,7 @@ type
     procedure AttachDefaultMenuItems(Menu: TPopupMenu);
     procedure SetNodePopupMenu(const Value: TPopupMenu);
   private
+    FUseingINodeData: Boolean;
     procedure GetINodeCellText(Sender: TCustomVirtualStringTree;
       var E: TVSTGetCellTextEventArgs);
     procedure GetINodeHint(Sender: TBaseVirtualTree; Node: PVirtualNode;
@@ -109,6 +111,7 @@ end;
 
 procedure TCustomNodeData.Attach;
 begin
+  Self.TreeView := TreeView;
   Self.Node := Node;
 end;
 
@@ -171,7 +174,6 @@ begin
     GetINodeData._Release;
 
   SetData(IInterface(Provider));
-  Provider.Attach(@Self);
 end;
 
 { TMenuShortCut }
@@ -290,6 +292,9 @@ begin
   // Pre-populate checkboxes by default when the feature is enabled
   if toCheckSupport in TreeOptions.MiscOptions then
     CheckType[Node] := ctCheckBox;
+
+  if FUseingINodeData then
+    Node.GetINodeData.Attach(Self, Node);
 
   inherited;
 end;
