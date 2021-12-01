@@ -91,6 +91,9 @@ begin
             VST.Selected[Node] := True;
             Break;
           end;
+
+      // Re-apply sorting
+      VST.Sort(VST.RootNode, VST.Header.SortColumn, VST.Header.SortDirection);
     end
   );
 end;
