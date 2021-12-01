@@ -11,39 +11,49 @@ type
     class var OnMainFormClose: TNotifyEventHandler;
   end;
 
+  TChildFormMode = (
+    cfmNormal,      // A child of the owner form
+    cfmApplication, // A child of the Application form
+    cfmDesktop      // A child of the desktop that appers on the taskbar
+  );
+
   TChildForm = class abstract (TFormEx)
   private
-    FShowOnTaskbar: Boolean;
+    FChildMode: TChildFormMode;
     procedure PerformClose(const Sender: TObject);
   protected
     procedure CreateParams(var Params: TCreateParams); override;
     procedure DoClose(var Action: TCloseAction); override;
     procedure DoCreate; override;
   public
-    constructor CreateChild(AOwner: TComponent; ShowOnTaskbar: Boolean);
+    constructor CreateChild(AOwner: TComponent; Mode: TChildFormMode);
+    property ChildMode: TChildFormMode read FChildMode;
   end;
 
 implementation
 
 { TChildForm }
 
-constructor TChildForm.CreateChild(AOwner: TComponent; ShowOnTaskbar: Boolean);
+constructor TChildForm.CreateChild;
 begin
-  FShowOnTaskbar := ShowOnTaskbar;
+  FChildMode := Mode;
   inherited Create(AOwner);
 
-  if not FShowOnTaskbar then
+  if FChildMode <> cfmDesktop then
     BorderIcons := BorderIcons - [biMinimize];
 end;
 
-procedure TChildForm.CreateParams(var Params: TCreateParams);
+procedure TChildForm.CreateParams;
 begin
   inherited;
-  if FShowOnTaskbar then
-    Params.WndParent := HWND_DESKTOP;
+
+  case FChildMode of
+    cfmApplication: Params.WndParent := Application.Handle;
+    cfmDesktop:     Params.WndParent := HWND_DESKTOP
+  end;
 end;
 
-procedure TChildForm.DoClose(var Action: TCloseAction);
+procedure TChildForm.DoClose;
 begin
   inherited;
   TFormEvents.OnMainFormClose.Unsubscribe(PerformClose);
@@ -55,7 +65,7 @@ begin
   TFormEvents.OnMainFormClose.Subscribe(PerformClose);
 end;
 
-procedure TChildForm.PerformClose(const Sender: TObject);
+procedure TChildForm.PerformClose;
 begin
   Close;
 end;
