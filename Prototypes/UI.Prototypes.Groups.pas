@@ -214,6 +214,8 @@ begin
   if VST.SelectedCount <> 1 then
     Exit;
 
+  BeginUpdateAuto(VST);
+
   for Node in VST.SelectedNodes do
   begin
     NewGroup := IGroup(Node.GetINodeData).GetGroup;
