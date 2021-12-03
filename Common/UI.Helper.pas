@@ -68,11 +68,18 @@ end;
 
 function BackupSelectionAuto;
 var
-  Conditions: TArray<TCondition<PVirtualNode>>;
+  SelectionConditions: TArray<TCondition<PVirtualNode>>;
+  FocusCondition: TCondition<PVirtualNode>;
 begin
   // For each selected node, capture necessary data for later comparison
-  Conditions := TArray.Map<PVirtualNode, TCondition<PVirtualNode>>(
+  SelectionConditions := TArray.Map<PVirtualNode, TCondition<PVirtualNode>>(
     CollectNodes(VST.SelectedNodes), Comparer);
+
+  // Same for the focused node
+  if Assigned(VST.FocusedNode) then
+    FocusCondition := Comparer(VST.FocusedNode)
+  else
+    FocusCondition := nil;
 
   // Restore selection afterwards
   Result := Auto.Delay(
@@ -85,12 +92,18 @@ begin
 
       // Check if each new node matches any conditions for selection
       for Node in VST.Nodes do
-        for i := 0 to High(Conditions) do
-          if Boolean(Conditions[i](Node)) then
+      begin
+        for i := 0 to High(SelectionConditions) do
+          if SelectionConditions[i](Node) then
           begin
             VST.Selected[Node] := True;
             Break;
           end;
+
+        // Same for the focus
+        if Assigned(FocusCondition) and FocusCondition(Node) then
+          VST.FocusedNode := Node;
+      end;
 
       // Re-apply sorting
       VST.Sort(VST.RootNode, VST.Header.SortColumn, VST.Header.SortDirection);
