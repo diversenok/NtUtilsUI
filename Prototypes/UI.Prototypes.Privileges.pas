@@ -1,4 +1,4 @@
-unit UI.Prototypes.Privileges2;
+unit UI.Prototypes.Privileges;
 
 interface
 
@@ -39,7 +39,7 @@ type
     class function CreateMany(const Privileges: TArray<TPrivilege>): TArray<IPrivilege>;
   end;
 
-  TFramePrivileges2 = class(TFrame)
+  TFramePrivileges = class(TFrame)
     VST: TVirtualStringTreeEx;
     procedure VSTChecked(Sender: TBaseVirtualTree; Node: PVirtualNode);
   private
@@ -189,9 +189,9 @@ begin
     TreeView.InvalidateNode(Node);
 end;
 
-{ TFramePrivileges2 }
+{ TFramePrivileges }
 
-procedure TFramePrivileges2.AdjustSelected;
+procedure TFramePrivileges.AdjustSelected;
 var
   Node: PVirtualNode;
 begin
@@ -201,25 +201,25 @@ begin
     IPrivilege(Node.GetINodeData).Adjust(NewAttributes);
 end;
 
-constructor TFramePrivileges2.Create;
+constructor TFramePrivileges.Create;
 begin
   inherited;
   VST.UseINodeDataMode;
 end;
 
-function TFramePrivileges2.ListChecked;
+function TFramePrivileges.ListChecked;
 begin
   Result := TArray.Map<PVirtualNode, TPrivilege>(CollectNodes(VST.CheckedNodes),
     NodeToPrivilege);
 end;
 
-function TFramePrivileges2.ListSelected;
+function TFramePrivileges.ListSelected;
 begin
   Result := TArray.Map<PVirtualNode, TPrivilege>(
     CollectNodes(VST.SelectedNodes), NodeToPrivilege);
 end;
 
-procedure TFramePrivileges2.Load;
+procedure TFramePrivileges.Load;
 var
   NodeData: IPrivilege;
 begin
@@ -236,12 +236,12 @@ begin
   end;
 end;
 
-procedure TFramePrivileges2.LoadEvery;
+procedure TFramePrivileges.LoadEvery;
 begin
   Load(GetAllPrivileges);
 end;
 
-function TFramePrivileges2.NodeComparer;
+function TFramePrivileges.NodeComparer;
 var
   Luid: TPrivilegeId;
 begin
@@ -254,12 +254,12 @@ begin
     end;
 end;
 
-function TFramePrivileges2.NodeToPrivilege;
+function TFramePrivileges.NodeToPrivilege;
 begin
   Result := IPrivilege(Node.GetINodeData).Privilege;
 end;
 
-procedure TFramePrivileges2.SetChecked;
+procedure TFramePrivileges.SetChecked;
 var
   Node: PVirtualNode;
   Privilege: TPrivilege;
@@ -276,7 +276,7 @@ begin
       end;
 end;
 
-procedure TFramePrivileges2.VSTChecked;
+procedure TFramePrivileges.VSTChecked;
 var
   Mode: TPrivilegeColoring;
 begin

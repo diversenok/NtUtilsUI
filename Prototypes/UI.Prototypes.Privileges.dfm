@@ -1,4 +1,4 @@
-object FramePrivileges2: TFramePrivileges2
+object FramePrivileges: TFramePrivileges
   Left = 0
   Top = 0
   Width = 446
