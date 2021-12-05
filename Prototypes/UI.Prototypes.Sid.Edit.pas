@@ -16,6 +16,7 @@ type
     procedure btnDsPickerClick(Sender: TObject);
     procedure tbxSidChange(Sender: TObject);
   private
+    FInitialized: Boolean;
     FImages: TImageList;
     FOnDsObjectPicked: TNotifyEvent;
     FOnSidChanged: TNotifyEvent;
@@ -33,21 +34,22 @@ uses
   UI.Builtin.DsObjectPicker, UI.Prototypes.Sid.Cheatsheet, UI.Prototypes.Forms;
 
 {$R *.dfm}
-{$R '..\Icons\DsObjectPicker.res'}
-{$R '..\Icons\SidCheatsheet.res'}
+{$R '..\Icons\SidEditor.res'}
 
 { TSidFrame }
 
 procedure TSidEditor.btnCheatsheetClick;
 begin
   tbxSid.SetFocus;
-  TSidCheatsheet.CreateChild(Self, cfmDesktop).Show;
+  TSidCheatsheet.CreateChild(Application, cfmDesktop).Show;
 end;
 
 procedure TSidEditor.btnDsPickerClick;
 var
   AccountName: String;
 begin
+  tbxSid.SetFocus;
+
   with ComxCallDsObjectPicker(Handle, AccountName) do
     if IsHResult and (HResult = S_FALSE) then
       Abort
@@ -55,7 +57,6 @@ begin
       RaiseOnError;
 
   tbxSid.Text := AccountName;
-  tbxSid.SetFocus;
 
   if Assigned(FOnDsObjectPicked) then
     FOnDsObjectPicked(Self);
@@ -67,7 +68,10 @@ var
 begin
   inherited;
 
-  // Enable SID suggestions
+  if FInitialized then
+    Exit;
+
+  FInitialized := True;
   ShlxEnableSidSuggestions(tbxSid.Handle);
 
   // Add icons to the buttons
@@ -80,18 +84,14 @@ begin
 
   try
     Icon := Auto.From(TIcon.Create).Data;
-    Icon.LoadFromResourceName(HInstance, 'DsObjectPicker');
+    Icon.LoadFromResourceName(HInstance, 'SidEditor.DsObjectPicker');
     btnDsPicker.ImageIndex := FImages.AddIcon(Icon);
-  except
-    ; // Missing icons should not prevent loading
-  end;
 
-  try
     Icon := Auto.From(TIcon.Create).Data;
-    Icon.LoadFromResourceName(HInstance, 'SidCheatsheet');
+    Icon.LoadFromResourceName(HInstance, 'SidEditor.Cheatsheet');
     btnCheatsheet.ImageIndex := FImages.AddIcon(Icon);
   except
-    ;
+    ; // Missing icons should not prevent loading
   end;
 end;
 
