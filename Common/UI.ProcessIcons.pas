@@ -25,7 +25,7 @@ implementation
 
 uses
   Vcl.ImgList, Vcl.Graphics, Ntapi.WinUser, Ntapi.ShellApi, Ntapi.WinNt,
-  NtUtils, NtUtils.SysUtils, NtUtils.Processes.Info;
+  NtUtils, NtUtils.Files, NtUtils.Processes.Info;
 
 { TProcessIcons }
 
@@ -55,7 +55,7 @@ begin
   // Start with the default icon
   Result := 0;
 
-  // Unknown filename means defalut icon
+  // Unknown filename means default icon
   if FileName = '' then
     Exit;
 
@@ -88,7 +88,9 @@ var
 begin
   // Querying NT filename almost never fails
   if NtxQueryImageNameProcessId(PID, NtImageName).IsSuccess then
-    NtImageName := RtlxNtPathToDosPath(NtImageName);
+    NtImageName := RtlxNativePathToDosPath(NtImageName)
+  else
+    NtImageName := '';
 
   Result := GetIcon(NtImageName);
 end;
