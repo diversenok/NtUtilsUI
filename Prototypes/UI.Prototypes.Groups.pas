@@ -6,7 +6,7 @@ uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes,
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, VirtualTrees,
   VirtualTrees.Types, UI.Helper, NtUtils, NtUtils.Lsa.Sid, Vcl.Menus,
-  DelphiUtils.Events, DelphiUtils.Arrays, Ntapi.ntseapi, VirtualTreesEx;
+  DelphiUtils.Arrays, Ntapi.ntseapi, VirtualTreesEx;
 
 const
   colFriendly = 0;
@@ -42,10 +42,12 @@ type
     function Matches(const Sid: ISid): Boolean;
   end;
 
+  TDefaultAction = procedure(const Group: TGroup) of object;
+
   TFrameGroups = class(TFrame)
     VST: TVirtualStringTreeEx;
   private
-    FDefaultAction: TEventListener<TGroup>;
+    FDefaultAction: TDefaultAction;
     function GetAllGroups: TArray<TGroup>;
     function GetChecked: TArray<TGroup>;
     function GetIsChecked(const Group: TGroup): Boolean;
@@ -66,7 +68,7 @@ type
     property IsChecked[const Group: TGroup]: Boolean read GetIsChecked write SetIsChecked;
     constructor Create(AOwner: TComponent); override;
   published
-    property OnDefaultAction: TEventListener<TGroup> read FDefaultAction write FDefaultAction;
+    property OnDefaultAction: TDefaultAction read FDefaultAction write FDefaultAction;
   end;
 
 implementation

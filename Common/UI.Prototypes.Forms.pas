@@ -4,11 +4,12 @@ interface
 
 uses
   Winapi.Windows, System.Classes, Vcl.Controls, Vcl.Forms,
-  DelphiUtils.Events, VclEx.Form;
+  DelphiUtils.AutoEvents, VclEx.Form;
 
 type
   TFormEvents = class abstract
-    class var OnMainFormClose: TNotifyEventHandler;
+    class var OnMainFormClose: TAutoEvent;
+    class constructor Create;
   end;
 
   TChildFormMode = (
@@ -20,10 +21,9 @@ type
   TChildForm = class abstract (TFormEx)
   private
     FChildMode: TChildFormMode;
-    procedure PerformClose(const Sender: TObject);
+    FMainFormCloseSubscription: IAutoReleasable;
   protected
     procedure CreateParams(var Params: TCreateParams); override;
-    procedure DoClose(var Action: TCloseAction); override;
     procedure DoCreate; override;
   public
     constructor CreateChild(AOwner: TComponent; Mode: TChildFormMode);
@@ -31,6 +31,9 @@ type
   end;
 
 implementation
+
+uses
+  System.SysUtils, UI.Exceptions;
 
 { TChildForm }
 
@@ -53,21 +56,28 @@ begin
   end;
 end;
 
-procedure TChildForm.DoClose;
-begin
-  inherited;
-  TFormEvents.OnMainFormClose.Unsubscribe(PerformClose);
-end;
-
 procedure TChildForm.DoCreate;
 begin
   inherited;
-  TFormEvents.OnMainFormClose.Subscribe(PerformClose);
+  FMainFormCloseSubscription := TFormEvents.OnMainFormClose.Subscribe(Close);
 end;
 
-procedure TChildForm.PerformClose;
+{ TFormEvents }
+
+procedure SafeInvoker(const Callback: TEventCallback);
 begin
-  Close;
+  try
+    Callback;
+  except
+    on E: Exception do
+      ReportException(E);
+  end;
+end;
+
+class constructor TFormEvents.Create;
+begin
+  // Make sure exceptions cannot prevent the program from closing
+  OnMainFormClose.SetCustomInvoker(SafeInvoker);
 end;
 
 end.
