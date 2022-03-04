@@ -64,20 +64,10 @@ end;
 
 { TFormEvents }
 
-procedure SafeInvoker(const Callback: TEventCallback);
-begin
-  try
-    Callback;
-  except
-    on E: Exception do
-      ReportException(E);
-  end;
-end;
-
 class constructor TFormEvents.Create;
 begin
   // Make sure exceptions cannot prevent the program from closing
-  OnMainFormClose.SetCustomInvoker(SafeInvoker);
+  OnMainFormClose.SetCustomInvoker(TExceptionSafeInvoker.NoParameters);
 end;
 
 end.
