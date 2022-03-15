@@ -6,7 +6,7 @@ uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes,
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, VirtualTrees,
   VirtualTrees.Types, UI.Helper, NtUtils, NtUtils.Lsa.Sid, Vcl.Menus,
-  DelphiUtils.Arrays, Ntapi.ntseapi, VirtualTreesEx;
+  DelphiUtils.Arrays, Ntapi.ntseapi, VirtualTreesEx, VirtualTreesEx.NodeProvider;
 
 const
   colFriendly = 0;
@@ -25,18 +25,18 @@ type
     var AttributesToSet: TGroupAttributes
   );
 
-  IGroup = interface (INodeData)
+  IGroup = interface (INodeProvider)
     ['{1D70B85E-99E9-4F21-B298-8928AD2DBDAE}']
     function GetGroup: TGroup;
     function GetLookup: TTranslatedName;
     function Matches(const Sid: ISid): Boolean;
   end;
 
-  TGroupNodeData = class (TCustomNodeData, IGroup, INodeData)
+  TGroupNodeData = class (TCustomNodeProvider, IGroup, INodeProvider)
     Group: TGroup;
     Lookup: TTranslatedName;
     constructor Create(const Src: TGroup; const LookupSrc: TTranslatedName);
-    class function CreateMany(Src: TArray<TGroup>): TArray<INodeData>; static;
+    class function CreateMany(Src: TArray<TGroup>): TArray<INodeProvider>; static;
     function GetGroup: TGroup;
     function GetLookup: TTranslatedName;
     function Matches(const Sid: ISid): Boolean;
@@ -91,50 +91,50 @@ begin
 
   Group := Src;
   Lookup := LookupSrc;
-  Cell[colSid] := RtlxSidToString(Group.Sid);
+  FColumns[colSid] := RtlxSidToString(Group.Sid);
 
   if Lookup.SidType <> SidTypeUndefined then
-    Cell[colSidType] := TNumeric.Represent(Lookup.SidType).Text;
+    FColumns[colSidType] := TNumeric.Represent(Lookup.SidType).Text;
 
   if Lookup.IsValid then
-    Cell[colFriendly] := Lookup.FullName
+    FColumns[colFriendly] := Lookup.FullName
   else
-    Cell[colFriendly] := Cell[colSid];
+    FColumns[colFriendly] := FColumns[colSid];
 
-  Cell[colFlags] := TNumeric.Represent<TGroupAttributes>(Group.Attributes and
+  FColumns[colFlags] := TNumeric.Represent<TGroupAttributes>(Group.Attributes and
     not SE_GROUP_STATE_MASK, [Auto.From(IgnoreSubEnumsAttribute.Create).Data]
   ).Text;
 
-  Cell[colState] := TNumeric.Represent<TGroupAttributes>(Group.Attributes and
+  FColumns[colState] := TNumeric.Represent<TGroupAttributes>(Group.Attributes and
     SE_GROUP_STATE_MASK).Text;
 
   // Colors
-  HasColor := True;
+  FHasColor := True;
   if BitTest(Group.Attributes and SE_GROUP_INTEGRITY_ENABLED) then
     if BitTest(Group.Attributes and SE_GROUP_ENABLED) xor
       BitTest(Group.Attributes and SE_GROUP_ENABLED_BY_DEFAULT) then
-      Color := ColorSettings.clIntegrityModified
+      FColor := ColorSettings.clIntegrityModified
     else
-      Color := ColorSettings.clIntegrity
+      FColor := ColorSettings.clIntegrity
   else
     if BitTest(Group.Attributes and SE_GROUP_ENABLED) then
       if BitTest(Group.Attributes and SE_GROUP_ENABLED_BY_DEFAULT) then
-        Color := ColorSettings.clEnabled
+        FColor := ColorSettings.clEnabled
       else
-        Color := ColorSettings.clEnabledModified
+        FColor := ColorSettings.clEnabledModified
     else
       if BitTest(Group.Attributes and SE_GROUP_ENABLED_BY_DEFAULT) then
-        Color := ColorSettings.clDisabledModified
+        FColor := ColorSettings.clDisabledModified
       else
-        Color := ColorSettings.clDisabled;
+        FColor := ColorSettings.clDisabled;
 
   // Hint
   HintSections := [
-    THintSection.New('Friendly Name', Cell[colFriendly]),
-    THintSection.New('SID', Cell[colSid]),
-    THintSection.New('Type', Cell[colSidType]),
-    THintSection.New('State', Cell[colState]),
-    THintSection.New('Flags', Cell[colFlags])
+    THintSection.New('Friendly Name', FColumns[colFriendly]),
+    THintSection.New('SID', FColumns[colSid]),
+    THintSection.New('Type', FColumns[colSidType]),
+    THintSection.New('State', FColumns[colState]),
+    THintSection.New('Flags', FColumns[colFlags])
   ];
 
   // Show SID type only for successful lookups
@@ -145,7 +145,7 @@ begin
   if not Lookup.IsValid then
     Delete(HintSections, 0, 1);
 
-  Hint := BuildHint(HintSections);
+  FHint := BuildHint(HintSections);
 end;
 
 class function TGroupNodeData.CreateMany;
@@ -186,12 +186,12 @@ end;
 
 procedure TFrameGroups.Add;
 var
-  NewData: INodeData;
+  NewData: INodeProvider;
 begin
   BeginUpdateAuto(VST);
 
   for NewData in TGroupNodeData.CreateMany(Groups) do
-    VST.AddChild(VST.RootNode).SetINodeData(NewData);
+    VST.AddChild(VST.RootNode).SetProvider(NewData);
 end;
 
 constructor TFrameGroups.Create;
@@ -204,7 +204,7 @@ end;
 procedure TFrameGroups.DoDefaultAction;
 begin
   if Assigned(FDefaultAction) then
-    FDefaultAction(IGroup(Node.GetINodeData).GetGroup);
+    FDefaultAction(IGroup(Node.GetProvider).GetGroup);
 end;
 
 procedure TFrameGroups.EditSelectedGroup;
@@ -220,16 +220,16 @@ begin
 
   for Node in VST.SelectedNodes do
   begin
-    NewGroup := IGroup(Node.GetINodeData).GetGroup;
+    NewGroup := IGroup(Node.GetProvider).GetGroup;
     Callback(NewGroup);
 
     // Reuse previous lookup if the SID haven't changed
-    if IGroup(Node.GetINodeData).Matches(NewGroup.Sid) then
-      Lookup := IGroup(Node.GetINodeData).GetLookup
+    if IGroup(Node.GetProvider).Matches(NewGroup.Sid) then
+      Lookup := IGroup(Node.GetProvider).GetLookup
     else if not LsaxLookupSid(NewGroup.Sid, Lookup).IsSuccess then
       Lookup := Default(TTranslatedName);
 
-    Node.SetINodeData(TGroupNodeData.Create(NewGroup, Lookup));
+    Node.SetProvider(TGroupNodeData.Create(NewGroup, Lookup));
     VST.InvalidateNode(Node);
     Break;
   end;
@@ -253,13 +253,13 @@ begin
 
   for Node in VST.SelectedNodes do
   begin
-    NewGroup := IGroup(Node.GetINodeData).GetGroup;
+    NewGroup := IGroup(Node.GetProvider).GetGroup;
     NewGroup.Attributes := (NewGroup.Attributes and not AttributesToClear)
       or AttributesToSet;
 
     // Reuse SID lookup
-    Node.SetINodeData(TGroupNodeData.Create(NewGroup,
-      IGroup(Node.GetINodeData).GetLookup));
+    Node.SetProvider(TGroupNodeData.Create(NewGroup,
+      IGroup(Node.GetProvider).GetLookup));
 
     VST.InvalidateNode(Node);
   end;
@@ -282,7 +282,7 @@ var
   Node: PVirtualNode;
 begin
   for Node in VST.Nodes do
-    if IGroup(Node.GetINodeData).Matches(Group.Sid) then
+    if IGroup(Node.GetProvider).Matches(Group.Sid) then
       Exit(VST.CheckState[Node] = csCheckedNormal);
 
   Result := False;
@@ -307,17 +307,17 @@ var
   Sid: ISid;
 begin
   // We compare nodes via their SIDs
-  Sid := IGroup(Node.GetINodeData).GetGroup.Sid;
+  Sid := IGroup(Node.GetProvider).GetGroup.Sid;
 
   Result := function (const Node: PVirtualNode): Boolean
     begin
-      Result := IGroup(Node.GetINodeData).Matches(Sid);
+      Result := IGroup(Node.GetProvider).Matches(Sid);
     end;
 end;
 
 function TFrameGroups.NodeToGroup;
 begin
-  Result := IGroup(Node.GetINodeData).GetGroup;
+  Result := IGroup(Node.GetProvider).GetGroup;
 end;
 
 procedure TFrameGroups.SetChecked;
@@ -331,7 +331,7 @@ begin
     NeedToCheck := False;
 
     for i := 0 to High(Value) do
-      if IGroup(Node.GetINodeData).Matches(Value[i].Sid) then
+      if IGroup(Node.GetProvider).Matches(Value[i].Sid) then
       begin
         NeedToCheck := True;
         Break;
@@ -349,7 +349,7 @@ var
   Node: PVirtualNode;
 begin
   for Node in VST.Nodes do
-    if IGroup(Node.GetINodeData).Matches(Group.Sid) then
+    if IGroup(Node.GetProvider).Matches(Group.Sid) then
     begin
       if Value then
         VST.CheckState[Node] := csCheckedNormal

@@ -5,8 +5,8 @@ interface
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes,
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, VirtualTrees,
-  VirtualTreesEx, NtUtils.Security.Acl, NtUtils.Lsa.Sid, NtUtils,
-  Ntapi.WinNt;
+  VirtualTreesEx, VirtualTreesEx.NodeProvider, NtUtils.Security.Acl,
+  NtUtils.Lsa.Sid, NtUtils, Ntapi.WinNt;
 
 const
   colPrincipal = 0;
@@ -17,12 +17,12 @@ const
   colMax = 5;
 
 type
-  IAceNode = interface (INodeData)
+  IAceNode = interface (INodeProvider)
     ['{FB3F8975-D27F-4413-A288-C8FCEA16E0EA}']
     function GetAce: TAceData;
   end;
 
-  TAceNodeData = class (TCustomNodeData, IAceNode, INodeData)
+  TAceNodeData = class (TCustomNodeProvider, IAceNode, INodeProvider)
     Ace: TAceData;
     Lookup: TTranslatedName;
     function GetAce: TAceData;
@@ -62,25 +62,25 @@ begin
 
   Lookup := LookupSrc;
   Ace := AceSrc;
-  Cell[colSid] := RtlxSidToString(Ace.Sid);
+  FColumns[colSid] := RtlxSidToString(Ace.Sid);
 
   if Lookup.IsValid then
-    Cell[colPrincipal] := Lookup.FullName
+    FColumns[colPrincipal] := Lookup.FullName
   else
-    Cell[colPrincipal] := Cell[colSid];
+    FColumns[colPrincipal] := FColumns[colSid];
 
-  Cell[colAccess] := FormatAccess(Ace.Mask, MaskType);
-  Cell[colFlags] := TNumeric.Represent(Ace.AceFlags).Text;
-  Cell[colAceType] := TNumeric.Represent(Ace.AceType).Text;
+  FColumns[colAccess] := FormatAccess(Ace.Mask, MaskType);
+  FColumns[colFlags] := TNumeric.Represent(Ace.AceFlags).Text;
+  FColumns[colAceType] := TNumeric.Represent(Ace.AceType).Text;
 
-  HasColor := True;
+  FHasColor := True;
 
   if Ace.AceType in AccessAllowedAces then
-    Color := ColorSettings.clEnabled
+    FColor := ColorSettings.clEnabled
   else if Ace.AceType in AccessDeniedAces then
-    Color := ColorSettings.clDisabled
+    FColor := ColorSettings.clDisabled
   else
-    Color := ColorSettings.clIntegrity;
+    FColor := ColorSettings.clIntegrity;
 
 end;
 
@@ -122,7 +122,7 @@ begin
     Aces := nil;
 
   for Ace in TAceNodeData.CreateMany(Aces, MaskType) do
-    VST.AddChild(VST.RootNode).SetINodeData(Ace);
+    VST.AddChild(VST.RootNode).SetProvider(Ace);
 end;
 
 end.

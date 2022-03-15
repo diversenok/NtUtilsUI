@@ -3,74 +3,40 @@ unit VirtualTreesEx;
 interface
 
 uses
-  System.SysUtils, System.Classes, System.Types, Vcl.Controls, Vcl.Menus,
-  Vcl.Graphics, VirtualTrees, VirtualTrees.Types;
+  System.SysUtils, System.Classes, System.Types, Vcl.Menus,
+  Vcl.Graphics, VirtualTrees, VirtualTrees.Types, VirtualTreesEx.DefaultMenu;
 
 type
-  INodeData = interface
-    ['{94376202-9372-4539-8112-BEE16D041A9C}']
-    procedure Attach(TreeView: TVirtualStringTree; Node: PVirtualNode);
-    function GetColumnText(Index: Integer): String;
+  INodeProvider = interface
+    ['{E9C3AFD4-FDCA-45E5-9DD3-7CD027E0AC1D}']
+    procedure Invalidate;
+    procedure Attach(Node: PVirtualNode);
+    function GetColumn(Index: Integer): String;
+    procedure SetColumn(Index: Integer; const Value: String);
     function GetHint: String;
+    procedure SetHint(const Value: String);
     function GetColor(out ItemColor: TColor): Boolean;
-    property Text[Index: Integer]: String read GetColumnText;
-    property Hint: String read GetHint;
-  end;
+    procedure SetColor(Value: TColor);
+    procedure ResetColor;
 
-  TCustomNodeData = class (TInterfacedObject, INodeData)
-  protected
-    TreeView: TVirtualStringTree;
-    Node: PVirtualNode;
-    Cell: TArray<String>;
-    Hint: String;
-    HasColor: Boolean;
-    Color: TColor;
-    procedure Attach(TreeView: TVirtualStringTree; Node: PVirtualNode); virtual;
-    function GetColumnText(Index: Integer): String; virtual;
-    function GetHint: String; virtual;
-    function GetColor(out ItemColor: TColor): Boolean; virtual;
-  public
-    constructor Create(ColumnCount: Integer); overload;
-    constructor Create(ColumnText: TArray<String>; ItemHint: String = ''); overload;
-    constructor Create(ColumnText: TArray<String>; ItemHint: String; BacgroundColor: TColor); overload;
+    property Column[Index: Integer]: String read GetColumn write SetColumn;
+    property Hint: String read GetHint write SetHint;
   end;
 
   TVirtualNodeHelper = record helper for TVirtualNode
-    function HasData: Boolean;
-    function GetINodeData: INodeData;
-    procedure SetINodeData(const Provider: INodeData);
+    function HasProvider: Boolean;
+    function GetProvider: INodeProvider;
+    procedure SetProvider(const Provider: INodeProvider);
   end;
 
-  TNodeEvent = procedure (Node: PVirtualNode) of object;
-
-  TMenuShortCut = record
-    Menu: TMenuItem;
-    ShiftState: TShiftState;
-    Key: Word;
-    function Matches(ShiftState: TShiftState; Key: Word): Boolean;
-    constructor Create(Item: TMenuItem);
-    class function Collect(Item: TMenuItem): TArray<TMenuShortCut>; static;
-  end;
+  TNodeEvent = VirtualTreesEx.DefaultMenu.TNodeEvent;
 
   TVirtualStringTreeEx = class(TVirtualStringTree)
   private
-    FOnInspectNode: TNodeEvent;
-    FDefaultMenu: TPopupMenu;
+    FDefaultMenus: TDefaultTreeMenu;
     FNodePopupMenu: TPopupMenu;
-    FShortcuts: TArray<TMenuShortCut>;
-    FMenuInspect: TMenuItem;
-    FMenuSeparator: TMenuItem;
-    FMenuCopy: TMenuItem;
-    FMenuCopyColumn: TMenuItem;
-    FPopupColumnIndex: Integer;
-    procedure MenuInspectClick(Sender: TObject);
-    procedure MenuCopyClick(Sender: TObject);
-    procedure MenuCopyColumnClick(Sender: TObject);
-    procedure MakeDefaultMenu;
-    procedure AttachDefaultMenuItems(Menu: TPopupMenu);
     procedure SetNodePopupMenu(const Value: TPopupMenu);
   private
-    FUseingINodeData: Boolean;
     procedure GetINodeCellText(Sender: TCustomVirtualStringTree;
       var E: TVSTGetCellTextEventArgs);
     procedure GetINodeHint(Sender: TBaseVirtualTree; Node: PVirtualNode;
@@ -81,6 +47,8 @@ type
       var ItemColor: TColor; var EraseAction: TItemEraseAction);
     procedure DoINodeCompare(Sender: TBaseVirtualTree; Node1,
       Node2: PVirtualNode; Column: TColumnIndex; var Result: Integer);
+    function GetOnInspectNode: TNodeEvent;
+    procedure SetOnInspectNode(const Value: TNodeEvent);
   protected
     function CollectNodes(Nodes: TVTVirtualNodeEnumeration): TArray<PVirtualNode>;
     function DoGetPopupMenu(Node: PVirtualNode; Column: TColumnIndex; Position: TPoint): TPopupMenu; override;
@@ -89,9 +57,10 @@ type
     procedure KeyDown(var Key: Word; Shift: TShiftState); override;
   public
     constructor Create(AOwner: TComponent); override;
+    destructor Destroy; override;
     procedure UseINodeDataMode;
   published
-    property OnInspectNode: TNodeEvent read FOnInspectNode write FOnInspectNode;
+    property OnInspectNode: TNodeEvent read GetOnInspectNode write SetOnInspectNode;
     property NodePopupMenu: TPopupMenu read FNodePopupMenu write SetNodePopupMenu;
   end;
 
@@ -100,133 +69,35 @@ procedure Register;
 implementation
 
 uses
-  Winapi.Windows, Vcl.Clipbrd;
+  Winapi.Windows;
 
 procedure Register;
 begin
   RegisterComponents('Virtual Controls', [TVirtualStringTreeEx]);
 end;
 
-{ TCustomNodeData }
-
-procedure TCustomNodeData.Attach;
-begin
-  Self.TreeView := TreeView;
-  Self.Node := Node;
-end;
-
-constructor TCustomNodeData.Create(ColumnCount: Integer);
-begin
-  SetLength(Cell, ColumnCount);
-end;
-
-constructor TCustomNodeData.Create(ColumnText: TArray<String>; ItemHint: String);
-begin
-  Cell := ColumnText;
-  Hint := ItemHint;
-end;
-
-constructor TCustomNodeData.Create(
-  ColumnText: TArray<String>;
-  ItemHint: String;
-  BacgroundColor: TColor
-);
-begin
-  Create(ColumnText, ItemHint);
-  HasColor := True;
-  Color := BacgroundColor;
-end;
-
-function TCustomNodeData.GetColor;
-begin
-  Result := HasColor;
-  ItemColor := Color;
-end;
-
-function TCustomNodeData.GetColumnText;
-begin
-  if (Index >= Low(Cell)) and (Index <= High(Cell)) then
-    Result := Cell[Index]
-  else
-    Result := '';
-end;
-
-function TCustomNodeData.GetHint;
-begin
-  Result := Hint;
-end;
-
 { TVirtualNodeHelper }
 
-function TVirtualNodeHelper.GetINodeData;
+function TVirtualNodeHelper.GetProvider;
 begin
-  Result := INodeData(GetData^);
+  Result := INodeProvider(GetData^);
 end;
 
-function TVirtualNodeHelper.HasData;
+function TVirtualNodeHelper.HasProvider;
 begin
   Result := Assigned(@Self) and Assigned(Pointer(GetData^));
 end;
 
-procedure TVirtualNodeHelper.SetINodeData;
+procedure TVirtualNodeHelper.SetProvider;
 begin
-  if HasData then
-    GetINodeData._Release;
+  if HasProvider then
+    GetProvider._Release;
 
   SetData(IInterface(Provider));
-end;
-
-{ TMenuShortCut }
-
-class function TMenuShortCut.Collect;
-begin
-  Result := nil;
-
-  if Item.ShortCut <> 0 then
-  begin
-    SetLength(Result, Length(Result) + 1);
-    Result[High(Result)] := TMenuShortCut.Create(Item);
-  end;
-
-  for Item in Item do
-    Result := Result + TMenuShortCut.Collect(Item);
-end;
-
-constructor TMenuShortCut.Create;
-begin
-  Menu := Item;
-  Key := Item.ShortCut and $FFF;
-  ShiftState := [];
-
-  if LongBool(Item.ShortCut and scCommand) then
-    Include(ShiftState, ssCommand);
-
-  if LongBool(Item.ShortCut and scCtrl) then
-    Include(ShiftState, ssCtrl);
-
-  if LongBool(Item.ShortCut and scShift) then
-    Include(ShiftState, ssShift);
-
-  if LongBool(Item.ShortCut and scAlt) then
-    Include(ShiftState, ssAlt);
-end;
-
-function TMenuShortCut.Matches;
-begin
-  Result := (Self.ShiftState = ShiftState) and (Self.Key = Key);
+  Provider.Attach(@Self);
 end;
 
 { TVirtualStringTreeEx }
-
-procedure TVirtualStringTreeEx.AttachDefaultMenuItems;
-begin
-  FMenuInspect.SetParentComponent(Menu);
-  FMenuSeparator.SetParentComponent(Menu);
-  FMenuCopy.SetParentComponent(Menu);
-  FMenuCopyColumn.SetParentComponent(Menu);
-
-  FShortcuts := TMenuShortCut.Collect(Menu.Items);
-end;
 
 function TVirtualStringTreeEx.CollectNodes;
 var
@@ -250,15 +121,21 @@ end;
 constructor TVirtualStringTreeEx.Create;
 begin
   inherited;
-  MakeDefaultMenu;
+
+  // Always include a menu for copying and inspecting items
+  FDefaultMenus := TDefaultTreeMenu.Create(Self);
 end;
 
 procedure TVirtualStringTreeEx.DblClick;
 begin
   inherited;
+  FDefaultMenus.InvokeInspect;
+end;
 
-  if not Assigned(OnDblClick) then
-    MenuInspectClick(Self);
+destructor TVirtualStringTreeEx.Destroy;
+begin
+  FDefaultMenus.Free;
+  inherited;
 end;
 
 function TVirtualStringTreeEx.DoGetPopupMenu;
@@ -268,23 +145,15 @@ begin
   if Header.InHeader(Position) or (SelectedCount = 0) then
     Exit;
 
-  // Allow inspecting a single selected item
-  FMenuInspect.Visible := Assigned(FOnInspectNode) and (SelectedCount = 1);
-  FMenuSeparator.Visible := Assigned(Result) or FMenuInspect.Visible;
-
   // Choose a context menu
   if not Assigned(Result) then
     if Assigned(FNodePopupMenu) then
       Result := FNodePopupMenu
     else
-      Result := FDefaultMenu;
+      Result := FDefaultMenus.FallbackMenu;
 
-  // Enable column-specific copying
-  FPopupColumnIndex := Column;
-  FMenuCopyColumn.Visible := Column >= 0;
-
-  if FMenuCopyColumn.Visible then
-    FMenuCopyColumn.Caption := 'Copy "' + Header.Columns[Column].CaptionText + '"';
+  // Update visibility of the built-in items
+  FDefaultMenus.NotifyPopup(Node, Result, Column);
 end;
 
 procedure TVirtualStringTreeEx.DoInitNode;
@@ -293,9 +162,6 @@ begin
   if toCheckSupport in TreeOptions.MiscOptions then
     CheckType[Node] := ctCheckBox;
 
-  if FUseingINodeData then
-    Node.GetINodeData.Attach(Self, Node);
-
   inherited;
 end;
 
@@ -303,7 +169,7 @@ procedure TVirtualStringTreeEx.DoINodeBeforeItemErase;
 var
   NewColor: TColor;
 begin
-  if Node.GetINodeData.GetColor(NewColor) then
+  if Node.GetProvider.GetColor(NewColor) then
     ItemColor := NewColor;
 end;
 
@@ -314,85 +180,25 @@ end;
 
 procedure TVirtualStringTreeEx.GetINodeCellText;
 begin
-  E.CellText := E.Node.GetINodeData.Text[E.Column];
+  E.CellText := E.Node.GetProvider.Column[E.Column];
 end;
 
 procedure TVirtualStringTreeEx.GetINodeHint;
 begin
-  HintText := Node.GetINodeData.Hint;
+  HintText := Node.GetProvider.Hint;
+end;
+
+function TVirtualStringTreeEx.GetOnInspectNode;
+begin
+  Result := FDefaultMenus.OnInspect;
 end;
 
 procedure TVirtualStringTreeEx.KeyDown(var Key: Word; Shift: TShiftState);
-var
-  Shortcut: TMenuShortCut;
 begin
   inherited;
 
-  // Invoke events on all menu items with matching shortcuts
-  if SelectedCount > 0 then
-    for Shortcut in FShortcuts do
-      if Shortcut.Matches(Shift, Key) and Assigned(Shortcut.Menu.OnClick) then
-        Shortcut.Menu.OnClick(Self);
-end;
-
-procedure TVirtualStringTreeEx.MakeDefaultMenu;
-begin
-  FDefaultMenu := TPopupMenu.Create(Self);
-
-  FMenuInspect := TMenuItem.Create(Self);
-  FMenuInspect.Caption := 'Inspect';
-  FMenuInspect.Default := True;
-  FMenuInspect.ShortCut := VK_RETURN;
-  FMenuInspect.Visible := False;
-  FMenuInspect.OnClick := MenuInspectClick;
-
-  FMenuSeparator := TMenuItem.Create(Self);
-  FMenuSeparator.Caption := '-';
-  FMenuSeparator.Visible := False;
-
-  FMenuCopy := TMenuItem.Create(Self);
-  FMenuCopy.Caption := 'Copy';
-  FMenuCopy.ShortCut := scCtrl or Ord('C');
-  FMenuCopy.OnClick := MenuCopyClick;
-
-  FMenuCopyColumn := TMenuItem.Create(Self);
-  FMenuCopyColumn.Caption := 'Copy "%s"';
-  FMenuCopyColumn.OnClick := MenuCopyColumnClick;
-
-  AttachDefaultMenuItems(FDefaultMenu);
-end;
-
-procedure TVirtualStringTreeEx.MenuCopyClick;
-begin
-  CopyToClipboard;
-end;
-
-procedure TVirtualStringTreeEx.MenuCopyColumnClick;
-var
-  Nodes: TArray<PVirtualNode>;
-  Texts: TArray<String>;
-  i: Integer;
-begin
-  Nodes := CollectNodes(SelectedNodes);
-  SetLength(Texts, Length(Nodes));
-
-  for i := 0 to High(Texts) do
-    Texts[i] := Text[Nodes[i], FPopupColumnIndex];
-
-  Clipboard.SetTextBuf(PWideChar(string.Join(#$D#$A, Texts)));
-end;
-
-procedure TVirtualStringTreeEx.MenuInspectClick;
-var
-  Node: PVirtualNode;
-begin
-  if Assigned(FOnInspectNode) then
-    for Node in Nodes do
-      if Selected[Node] then
-      begin
-        FOnInspectNode(Node);
-        Exit;
-      end;
+  // Process shortcuts on all menu items
+  FDefaultMenus.InvokeShortcuts(Key, Shift);
 end;
 
 procedure TVirtualStringTreeEx.SetNodePopupMenu;
@@ -402,16 +208,19 @@ begin
   if csDesigning in ComponentState then
     Exit;
 
-  if Assigned(FNodePopupMenu) then
-    AttachDefaultMenuItems(FNodePopupMenu)
-  else
-    AttachDefaultMenuItems(FDefaultMenu);
+  // Note: attaching to nil moves items back to the fallback menu
+  FDefaultMenus.AttachItemsTo(FNodePopupMenu);
+end;
+
+procedure TVirtualStringTreeEx.SetOnInspectNode;
+begin
+  FDefaultMenus.OnInspect := Value;
 end;
 
 procedure TVirtualStringTreeEx.UseINodeDataMode;
 begin
   RootNodeCount := 0;
-  NodeDataSize := SizeOf(INodeData);
+  NodeDataSize := SizeOf(INodeProvider);
 
   OnGetCellText := GetINodeCellText;
   OnGetHint := GetINodeHint;

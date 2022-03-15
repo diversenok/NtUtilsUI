@@ -5,8 +5,8 @@ interface
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, VirtualTrees,
-  VirtualTreesEx, UI.Prototypes.Forms, NtUtils, NtUtils.Security.Sid,
-  NtUtils.Lsa.Sid;
+  VirtualTreesEx, VirtualTreesEx.NodeProvider, UI.Prototypes.Forms, NtUtils,
+  NtUtils.Security.Sid, NtUtils.Lsa.Sid;
 
 const
   colSddl = 0;
@@ -26,7 +26,7 @@ type
     Sids: TArray<ISid>;
     Lookup: TArray<TTranslatedName>;
     procedure FindAbbreviations;
-    function MakeINodeData(Index: Integer): INodeData;
+    function MakeINodeData(Index: Integer): INodeProvider;
   end;
 
 implementation
@@ -80,7 +80,7 @@ begin
   VST.UseINodeDataMode;
 
   for i := 0 to High(Names) do
-    VST.AddChild(VST.RootNode).SetINodeData(MakeINodeData(i));
+    VST.AddChild(VST.RootNode).SetProvider(MakeINodeData(i));
 end;
 
 function TSidCheatsheet.MakeINodeData;
@@ -115,7 +115,7 @@ begin
     ]);
   end;
 
-  Result := TCustomNodeData.Create(Cells, Hint);
+  Result := TCustomNodeProvider.Create(Cells, Hint);
 end;
 
 end.
