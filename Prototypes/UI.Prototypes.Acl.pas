@@ -5,8 +5,8 @@ interface
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes,
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, VirtualTrees,
-  VirtualTreesEx, VirtualTreesEx.NodeProvider, NtUtils.Security.Acl,
-  NtUtils.Lsa.Sid, NtUtils, Ntapi.WinNt;
+  DevirtualizedTree, DevirtualizedTree.Provider, NtUtils.Security.Acl,
+  NtUtils.Lsa.Sid, NtUtils, Ntapi.WinNt, VirtualTreesEx;
 
 const
   colPrincipal = 0;
@@ -41,7 +41,7 @@ type
 
 type
   TFrameAcl = class(TFrame)
-    VST: TVirtualStringTreeEx;
+    VST: TDevirtualizedTree;
   public
     procedure Load(Acl: PAcl; MaskType: Pointer);
   end;
@@ -62,26 +62,25 @@ begin
 
   Lookup := LookupSrc;
   Ace := AceSrc;
-  FColumns[colSid] := RtlxSidToString(Ace.Sid);
+  Cells[colSid] := RtlxSidToString(Ace.Sid);
 
   if Lookup.IsValid then
-    FColumns[colPrincipal] := Lookup.FullName
+    Cells[colPrincipal] := Lookup.FullName
   else
-    FColumns[colPrincipal] := FColumns[colSid];
+    Cells[colPrincipal] := Cells[colSid];
 
-  FColumns[colAccess] := FormatAccess(Ace.Mask, MaskType);
-  FColumns[colFlags] := TNumeric.Represent(Ace.AceFlags).Text;
-  FColumns[colAceType] := TNumeric.Represent(Ace.AceType).Text;
+  Cells[colAccess] := FormatAccess(Ace.Mask, MaskType);
+  Cells[colFlags] := TNumeric.Represent(Ace.AceFlags).Text;
+  Cells[colAceType] := TNumeric.Represent(Ace.AceType).Text;
 
-  FHasColor := True;
+  HasColor := True;
 
   if Ace.AceType in AccessAllowedAces then
-    FColor := ColorSettings.clEnabled
+    Color := ColorSettings.clEnabled
   else if Ace.AceType in AccessDeniedAces then
-    FColor := ColorSettings.clDisabled
+    Color := ColorSettings.clDisabled
   else
-    FColor := ColorSettings.clIntegrity;
-
+    Color := ColorSettings.clIntegrity;
 end;
 
 class function TAceNodeData.CreateMany;
@@ -115,8 +114,7 @@ var
   Aces: TArray<TAceData>;
   Ace: IAceNode;
 begin
-  VST.UseINodeDataMode;
-  BeginUpdateAuto(VST);
+  VST.BeginUpdateAuto;
 
   if not RtlxDumpAcl(Acl, Aces).IsSuccess then
     Aces := nil;

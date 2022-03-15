@@ -8,7 +8,7 @@ object FrameGroups: TFrameGroups
   ParentShowHint = False
   ShowHint = True
   TabOrder = 0
-  object VST: TVirtualStringTreeEx
+  object VST: TDevirtualizedTree
     Left = 0
     Top = 0
     Width = 493
@@ -18,14 +18,10 @@ object FrameGroups: TFrameGroups
       'CSV'
       'Plain text'
       'Unicode text')
-    DrawSelectionMode = smBlendedRectangle
     Header.AutoSizeIndex = 0
     Header.DefaultHeight = 24
     Header.Height = 24
     Header.Options = [hoColumnResize, hoDblClickResize, hoDrag, hoHotTrack, hoRestrictDrag, hoShowSortGlyphs, hoVisible, hoDisableAnimatedResize, hoHeaderClickAutoSort, hoAutoColumnPopupMenu, hoAutoResizeInclCaption]
-    HintMode = hmHint
-    IncrementalSearch = isAll
-    SelectionBlendFactor = 64
     TabOrder = 0
     TreeOptions.AutoOptions = [toAutoDropExpand, toAutoScrollOnExpand, toAutoTristateTracking, toAutoDeleteMovedNodes, toAutoChangeScale]
     TreeOptions.ExportMode = emSelected

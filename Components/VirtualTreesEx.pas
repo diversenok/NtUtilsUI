@@ -1,56 +1,31 @@
 unit VirtualTreesEx;
 
+{
+  This module provides a sligtly improved virtual tree view.
+}
+
 interface
 
 uses
-  System.SysUtils, System.Classes, System.Types, Vcl.Menus,
-  Vcl.Graphics, VirtualTrees, VirtualTrees.Types, VirtualTreesEx.DefaultMenu;
+  System.Classes, System.Types, Vcl.Menus, Vcl.Graphics, VirtualTrees,
+  VirtualTrees.Types, VirtualTrees.Header, VirtualTreesEx.DefaultMenu;
 
 type
-  INodeProvider = interface
-    ['{E9C3AFD4-FDCA-45E5-9DD3-7CD027E0AC1D}']
-    procedure Invalidate;
-    procedure Attach(Node: PVirtualNode);
-    function GetColumn(Index: Integer): String;
-    procedure SetColumn(Index: Integer; const Value: String);
-    function GetHint: String;
-    procedure SetHint(const Value: String);
-    function GetColor(out ItemColor: TColor): Boolean;
-    procedure SetColor(Value: TColor);
-    procedure ResetColor;
-
-    property Column[Index: Integer]: String read GetColumn write SetColumn;
-    property Hint: String read GetHint write SetHint;
-  end;
-
-  TVirtualNodeHelper = record helper for TVirtualNode
-    function HasProvider: Boolean;
-    function GetProvider: INodeProvider;
-    procedure SetProvider(const Provider: INodeProvider);
-  end;
-
   TNodeEvent = VirtualTreesEx.DefaultMenu.TNodeEvent;
+
+  TVTVirtualNodeEnumerationHelper = record helper for TVTVirtualNodeEnumeration
+    function ToArray: TArray<PVirtualNode>;
+  end;
 
   TVirtualStringTreeEx = class(TVirtualStringTree)
   private
     FDefaultMenus: TDefaultTreeMenu;
     FNodePopupMenu: TPopupMenu;
     procedure SetNodePopupMenu(const Value: TPopupMenu);
-  private
-    procedure GetINodeCellText(Sender: TCustomVirtualStringTree;
-      var E: TVSTGetCellTextEventArgs);
-    procedure GetINodeHint(Sender: TBaseVirtualTree; Node: PVirtualNode;
-      Column: TColumnIndex; var LineBreakStyle: TVTTooltipLineBreakStyle;
-      var HintText: string);
-    procedure DoINodeBeforeItemErase(Sender: TBaseVirtualTree;
-      TargetCanvas: TCanvas; Node: PVirtualNode; ItemRect: TRect;
-      var ItemColor: TColor; var EraseAction: TItemEraseAction);
-    procedure DoINodeCompare(Sender: TBaseVirtualTree; Node1,
-      Node2: PVirtualNode; Column: TColumnIndex; var Result: Integer);
     function GetOnInspectNode: TNodeEvent;
     procedure SetOnInspectNode(const Value: TNodeEvent);
   protected
-    function CollectNodes(Nodes: TVTVirtualNodeEnumeration): TArray<PVirtualNode>;
+    function DoCompare(Node1, Node2: PVirtualNode; Column: TColumnIndex): Integer; override;
     function DoGetPopupMenu(Node: PVirtualNode; Column: TColumnIndex; Position: TPoint): TPopupMenu; override;
     procedure DoInitNode(Parent, Node: PVirtualNode; var InitStates: TVirtualNodeInitStates); override;
     procedure DblClick; override;
@@ -58,8 +33,11 @@ type
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
-    procedure UseINodeDataMode;
   published
+    property DrawSelectionMode default smBlendedRectangle;
+    property HintMode default hmHint;
+    property IncrementalSearch default isAll;
+    property SelectionBlendFactor default 64;
     property OnInspectNode: TNodeEvent read GetOnInspectNode write SetOnInspectNode;
     property NodePopupMenu: TPopupMenu read FNodePopupMenu write SetNodePopupMenu;
   end;
@@ -69,54 +47,35 @@ procedure Register;
 implementation
 
 uses
-  Winapi.Windows;
+  System.SysUtils;
 
 procedure Register;
 begin
   RegisterComponents('Virtual Controls', [TVirtualStringTreeEx]);
 end;
 
-{ TVirtualNodeHelper }
+{ TVTVirtualNodeEnumerationHelper }
 
-function TVirtualNodeHelper.GetProvider;
-begin
-  Result := INodeProvider(GetData^);
-end;
-
-function TVirtualNodeHelper.HasProvider;
-begin
-  Result := Assigned(@Self) and Assigned(Pointer(GetData^));
-end;
-
-procedure TVirtualNodeHelper.SetProvider;
-begin
-  if HasProvider then
-    GetProvider._Release;
-
-  SetData(IInterface(Provider));
-  Provider.Attach(@Self);
-end;
-
-{ TVirtualStringTreeEx }
-
-function TVirtualStringTreeEx.CollectNodes;
+function TVTVirtualNodeEnumerationHelper.ToArray;
 var
   Node: PVirtualNode;
   Count: Integer;
 begin
   Count := 0;
-  for Node in Nodes do
+  for Node in Self do
     Inc(Count);
 
   SetLength(Result, Count);
 
   Count := 0;
-  for Node in Nodes do
+  for Node in Self do
   begin
     Result[Count] := Node;
     Inc(Count);
   end;
 end;
+
+{ TVirtualStringTreeEx }
 
 constructor TVirtualStringTreeEx.Create;
 begin
@@ -124,11 +83,37 @@ begin
 
   // Always include a menu for copying and inspecting items
   FDefaultMenus := TDefaultTreeMenu.Create(Self);
+
+  // Adjust some defaults
+  DrawSelectionMode := smBlendedRectangle;
+  HintMode := hmHint;
+  IncrementalSearch := isAll;
+  SelectionBlendFactor := 64;
+  TreeOptions.AutoOptions := [toAutoDropExpand, toAutoScrollOnExpand,
+    toAutoTristateTracking, toAutoDeleteMovedNodes, toAutoChangeScale];
+  TreeOptions.ExportMode := emSelected;
+  TreeOptions.MiscOptions := [toAcceptOLEDrop, toFullRepaintOnResize,
+    toInitOnSave, toToggleOnDblClick, toWheelPanning];
+  TreeOptions.PaintOptions := [toHideFocusRect, toHotTrack, toShowButtons,
+    toShowDropmark, toThemeAware, toUseBlendedImages, toUseExplorerTheme];
+  TreeOptions.SelectionOptions := [toFullRowSelect, toMultiSelect,
+    toRightClickSelect];
+  Header.DefaultHeight := 24;
+  Header.Height := 24;
+  Header.Options := [hoColumnResize, hoDblClickResize, hoDrag, hoHotTrack,
+    hoRestrictDrag, hoShowSortGlyphs, hoVisible, hoDisableAnimatedResize,
+    hoHeaderClickAutoSort, hoAutoColumnPopupMenu, hoAutoResizeInclCaption];
+
+  ClipboardFormats.Add('CSV');
+  ClipboardFormats.Add('Plain text');
+  ClipboardFormats.Add('Unicode text');
 end;
 
 procedure TVirtualStringTreeEx.DblClick;
 begin
   inherited;
+
+  // Enter, Double Click, and Inspect should yield the same result
   FDefaultMenus.InvokeInspect;
 end;
 
@@ -136,6 +121,15 @@ destructor TVirtualStringTreeEx.Destroy;
 begin
   FDefaultMenus.Free;
   inherited;
+end;
+
+function TVirtualStringTreeEx.DoCompare;
+begin
+  Result := inherited;
+
+  // Fallback to text comparison by default
+  if not Assigned(OnCompareNodes) then
+    Result := String.Compare(Text[Node1, Column], Text[Node2, Column]);
 end;
 
 function TVirtualStringTreeEx.DoGetPopupMenu;
@@ -165,29 +159,6 @@ begin
   inherited;
 end;
 
-procedure TVirtualStringTreeEx.DoINodeBeforeItemErase;
-var
-  NewColor: TColor;
-begin
-  if Node.GetProvider.GetColor(NewColor) then
-    ItemColor := NewColor;
-end;
-
-procedure TVirtualStringTreeEx.DoINodeCompare;
-begin
-  Result := String.Compare(Text[Node1, Column], Text[Node2, Column]);
-end;
-
-procedure TVirtualStringTreeEx.GetINodeCellText;
-begin
-  E.CellText := E.Node.GetProvider.Column[E.Column];
-end;
-
-procedure TVirtualStringTreeEx.GetINodeHint;
-begin
-  HintText := Node.GetProvider.Hint;
-end;
-
 function TVirtualStringTreeEx.GetOnInspectNode;
 begin
   Result := FDefaultMenus.OnInspect;
@@ -215,17 +186,6 @@ end;
 procedure TVirtualStringTreeEx.SetOnInspectNode;
 begin
   FDefaultMenus.OnInspect := Value;
-end;
-
-procedure TVirtualStringTreeEx.UseINodeDataMode;
-begin
-  RootNodeCount := 0;
-  NodeDataSize := SizeOf(INodeProvider);
-
-  OnGetCellText := GetINodeCellText;
-  OnGetHint := GetINodeHint;
-  OnBeforeItemErase := DoINodeBeforeItemErase;
-  OnCompareNodes := DoINodeCompare;
 end;
 
 end.

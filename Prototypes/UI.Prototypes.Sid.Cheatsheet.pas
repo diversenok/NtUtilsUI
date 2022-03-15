@@ -5,8 +5,8 @@ interface
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, VirtualTrees,
-  VirtualTreesEx, VirtualTreesEx.NodeProvider, UI.Prototypes.Forms, NtUtils,
-  NtUtils.Security.Sid, NtUtils.Lsa.Sid;
+  DevirtualizedTree, DevirtualizedTree.Provider, UI.Prototypes.Forms, NtUtils,
+  NtUtils.Security.Sid, NtUtils.Lsa.Sid, VirtualTreesEx;
 
 const
   colSddl = 0;
@@ -18,7 +18,7 @@ const
 type
   TSidCheatsheet = class (TChildForm)
     btnClose: TButton;
-    VST: TVirtualStringTreeEx;
+    VST: TDevirtualizedTree;
     procedure FormCreate(Sender: TObject);
     procedure btnCloseClick(Sender: TObject);
   private
@@ -26,7 +26,7 @@ type
     Sids: TArray<ISid>;
     Lookup: TArray<TTranslatedName>;
     procedure FindAbbreviations;
-    function MakeINodeData(Index: Integer): INodeProvider;
+    function MakeProvider(Index: Integer): INodeProvider;
   end;
 
 implementation
@@ -76,46 +76,40 @@ var
   i: Integer;
 begin
   FindAbbreviations;
-  BeginUpdateAuto(VST);
-  VST.UseINodeDataMode;
+  VST.BeginUpdateAuto;
 
   for i := 0 to High(Names) do
-    VST.AddChild(VST.RootNode).SetProvider(MakeINodeData(i));
+    VST.AddChild(VST.RootNode).SetProvider(MakeProvider(i));
 end;
 
-function TSidCheatsheet.MakeINodeData;
-var
-  Cells: TArray<String>;
-  Hint: String;
+function TSidCheatsheet.MakeProvider;
 begin
-  SetLength(Cells, colCount);
+  Result := TCustomNodeProvider.Create(colCount);
 
-  Cells[colSddl] := Names[Index];
-  Cells[colSid] := RtlxSidToString(Sids[Index]);
-  Cells[colSidType] := TNumeric.Represent(Lookup[Index].SidType).Text;
+  Result.Column[colSddl] := Names[Index];
+  Result.Column[colSid] := RtlxSidToString(Sids[Index]);
+  Result.Column[colSidType] := TNumeric.Represent(Lookup[Index].SidType).Text;
 
   if Lookup[Index].IsValid then
   begin
-    Cells[colFullName] := Lookup[Index].FullName;
+    Result.Column[colFullName] := Lookup[Index].FullName;
 
-    Hint := BuildHint([
-      THintSection.New('Short Name', Cells[colSddl]),
-      THintSection.New('Full Name', Cells[colFullName]),
-      THintSection.New('SID', Cells[colSid]),
-      THintSection.New('SID Type', Cells[colSidType])
+    Result.Hint := BuildHint([
+      THintSection.New('Short Name', Result.Column[colSddl]),
+      THintSection.New('Full Name', Result.Column[colFullName]),
+      THintSection.New('SID', Result.Column[colSid]),
+      THintSection.New('SID Type', Result.Column[colSidType])
     ]);
   end
   else
   begin
-    Cells[colFullName] := Cells[colSid];
+    Result.Column[colFullName] := Result.Column[colSid];
 
-    Hint := BuildHint([
-      THintSection.New('Short Name', Cells[colSddl]),
-      THintSection.New('SID', Cells[colSid])
+    Result.Hint := BuildHint([
+      THintSection.New('Short Name', Result.Column[colSddl]),
+      THintSection.New('SID', Result.Column[colSid])
     ]);
   end;
-
-  Result := TCustomNodeProvider.Create(Cells, Hint);
 end;
 
 end.

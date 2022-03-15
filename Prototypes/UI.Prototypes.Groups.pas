@@ -6,7 +6,8 @@ uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes,
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, VirtualTrees,
   VirtualTrees.Types, UI.Helper, NtUtils, NtUtils.Lsa.Sid, Vcl.Menus,
-  DelphiUtils.Arrays, Ntapi.ntseapi, VirtualTreesEx, VirtualTreesEx.NodeProvider;
+  DelphiUtils.Arrays, Ntapi.ntseapi, DevirtualizedTree,
+  DevirtualizedTree.Provider, VirtualTreesEx;
 
 const
   colFriendly = 0;
@@ -45,7 +46,7 @@ type
   TDefaultAction = procedure(const Group: TGroup) of object;
 
   TFrameGroups = class(TFrame)
-    VST: TVirtualStringTreeEx;
+    VST: TDevirtualizedTree;
   private
     FDefaultAction: TDefaultAction;
     function GetAllGroups: TArray<TGroup>;
@@ -91,50 +92,50 @@ begin
 
   Group := Src;
   Lookup := LookupSrc;
-  FColumns[colSid] := RtlxSidToString(Group.Sid);
+  Cells[colSid] := RtlxSidToString(Group.Sid);
 
   if Lookup.SidType <> SidTypeUndefined then
-    FColumns[colSidType] := TNumeric.Represent(Lookup.SidType).Text;
+    Cells[colSidType] := TNumeric.Represent(Lookup.SidType).Text;
 
   if Lookup.IsValid then
-    FColumns[colFriendly] := Lookup.FullName
+    Cells[colFriendly] := Lookup.FullName
   else
-    FColumns[colFriendly] := FColumns[colSid];
+    Cells[colFriendly] := Cells[colSid];
 
-  FColumns[colFlags] := TNumeric.Represent<TGroupAttributes>(Group.Attributes and
+  Cells[colFlags] := TNumeric.Represent<TGroupAttributes>(Group.Attributes and
     not SE_GROUP_STATE_MASK, [Auto.From(IgnoreSubEnumsAttribute.Create).Data]
   ).Text;
 
-  FColumns[colState] := TNumeric.Represent<TGroupAttributes>(Group.Attributes and
+  Cells[colState] := TNumeric.Represent<TGroupAttributes>(Group.Attributes and
     SE_GROUP_STATE_MASK).Text;
 
   // Colors
-  FHasColor := True;
+  HasColor := True;
   if BitTest(Group.Attributes and SE_GROUP_INTEGRITY_ENABLED) then
     if BitTest(Group.Attributes and SE_GROUP_ENABLED) xor
       BitTest(Group.Attributes and SE_GROUP_ENABLED_BY_DEFAULT) then
-      FColor := ColorSettings.clIntegrityModified
+      Color := ColorSettings.clIntegrityModified
     else
-      FColor := ColorSettings.clIntegrity
+      Color := ColorSettings.clIntegrity
   else
     if BitTest(Group.Attributes and SE_GROUP_ENABLED) then
       if BitTest(Group.Attributes and SE_GROUP_ENABLED_BY_DEFAULT) then
-        FColor := ColorSettings.clEnabled
+        Color := ColorSettings.clEnabled
       else
-        FColor := ColorSettings.clEnabledModified
+        Color := ColorSettings.clEnabledModified
     else
       if BitTest(Group.Attributes and SE_GROUP_ENABLED_BY_DEFAULT) then
-        FColor := ColorSettings.clDisabledModified
+        Color := ColorSettings.clDisabledModified
       else
-        FColor := ColorSettings.clDisabled;
+        Color := ColorSettings.clDisabled;
 
   // Hint
   HintSections := [
-    THintSection.New('Friendly Name', FColumns[colFriendly]),
-    THintSection.New('SID', FColumns[colSid]),
-    THintSection.New('Type', FColumns[colSidType]),
-    THintSection.New('State', FColumns[colState]),
-    THintSection.New('Flags', FColumns[colFlags])
+    THintSection.New('Friendly Name', Cells[colFriendly]),
+    THintSection.New('SID', Cells[colSid]),
+    THintSection.New('Type', Cells[colSidType]),
+    THintSection.New('State', Cells[colState]),
+    THintSection.New('Flags', Cells[colFlags])
   ];
 
   // Show SID type only for successful lookups
@@ -145,7 +146,7 @@ begin
   if not Lookup.IsValid then
     Delete(HintSections, 0, 1);
 
-  FHint := BuildHint(HintSections);
+  Hint := BuildHint(HintSections);
 end;
 
 class function TGroupNodeData.CreateMany;
@@ -188,16 +189,15 @@ procedure TFrameGroups.Add;
 var
   NewData: INodeProvider;
 begin
-  BeginUpdateAuto(VST);
+  VST.BeginUpdateAuto;
 
   for NewData in TGroupNodeData.CreateMany(Groups) do
-    VST.AddChild(VST.RootNode).SetProvider(NewData);
+    VST.AddChild(VST.RootNode, NewData);
 end;
 
 constructor TFrameGroups.Create;
 begin
   inherited Create(AOwner);
-  VST.UseINodeDataMode;
   VST.OnInspectNode := DoDefaultAction;
 end;
 
@@ -216,7 +216,7 @@ begin
   if VST.SelectedCount <> 1 then
     Exit;
 
-  BeginUpdateAuto(VST);
+  VST.BeginUpdateAuto;
 
   for Node in VST.SelectedNodes do
   begin
@@ -249,7 +249,7 @@ begin
   AttributesToSet := 0;
   Callback(Selected, AttributesToClear, AttributesToSet);
 
-  BeginUpdateAuto(VST);
+  VST.BeginUpdateAuto;
 
   for Node in VST.SelectedNodes do
   begin
@@ -267,13 +267,13 @@ end;
 
 function TFrameGroups.GetAllGroups: TArray<TGroup>;
 begin
-  Result := TArray.Map<PVirtualNode, TGroup>(CollectNodes(VST.Nodes),
+  Result := TArray.Map<PVirtualNode, TGroup>(VST.Nodes.ToArray,
     NodeToGroup);
 end;
 
 function TFrameGroups.GetChecked;
 begin
-  Result := TArray.Map<PVirtualNode, TGroup>(CollectNodes(VST.CheckedNodes),
+  Result := TArray.Map<PVirtualNode, TGroup>(VST.CheckedNodes.ToArray,
     NodeToGroup);
 end;
 
@@ -290,14 +290,14 @@ end;
 
 function TFrameGroups.GetSelected;
 begin
-  Result := TArray.Map<PVirtualNode, TGroup>(CollectNodes(VST.SelectedNodes),
+  Result := TArray.Map<PVirtualNode, TGroup>(VST.SelectedNodes.ToArray,
     NodeToGroup);
 end;
 
 procedure TFrameGroups.Load;
 begin
-  BeginUpdateAuto(VST);
-  BackupSelectionAuto(VST, NodeComparer);
+  VST.BeginUpdateAuto;
+  VST.BackupSelectionAuto(NodeComparer);
   VST.RootNodeCount := 0;
   Add(Groups);
 end;

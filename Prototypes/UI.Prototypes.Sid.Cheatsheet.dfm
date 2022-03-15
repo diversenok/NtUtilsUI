@@ -32,7 +32,7 @@ object SidCheatsheet: TSidCheatsheet
     TabOrder = 1
     OnClick = btnCloseClick
   end
-  object VST: TVirtualStringTreeEx
+  object VST: TDevirtualizedTree
     AlignWithMargins = True
     Left = 0
     Top = 0
@@ -47,13 +47,10 @@ object SidCheatsheet: TSidCheatsheet
       'CSV'
       'Plain text'
       'Unicode text')
-    DrawSelectionMode = smBlendedRectangle
     Header.AutoSizeIndex = 0
     Header.DefaultHeight = 24
     Header.Height = 24
     Header.Options = [hoColumnResize, hoDblClickResize, hoDrag, hoHotTrack, hoRestrictDrag, hoShowSortGlyphs, hoVisible, hoDisableAnimatedResize, hoHeaderClickAutoSort, hoAutoColumnPopupMenu, hoAutoResizeInclCaption]
-    HintMode = hmHint
-    SelectionBlendFactor = 64
     TabOrder = 0
     TreeOptions.AutoOptions = [toAutoDropExpand, toAutoScrollOnExpand, toAutoTristateTracking, toAutoDeleteMovedNodes, toAutoChangeScale]
     TreeOptions.ExportMode = emSelected
