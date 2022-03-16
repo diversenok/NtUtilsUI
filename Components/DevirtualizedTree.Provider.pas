@@ -23,6 +23,10 @@ type
     FontColor: TColor;
     HasFontStyle: Boolean;
     FontStyle: TFontStyles;
+    EnabledInspectMenu: Boolean;
+    OnChecked: TVTChangeEvent;
+    WasSelected, KnownWasSelected: Boolean;
+    OnSelected: TVTChangeEvent;
     procedure Invalidate; virtual;
     procedure Attach(Value: PVirtualNode); virtual;
     function GetTree: TBaseVirtualTree; virtual;
@@ -43,6 +47,14 @@ type
     procedure SetFontStyle(Value: TFontStyles); virtual;
     function GetHasFontStyle: Boolean; virtual;
     procedure ResetFontStyle; virtual;
+    function GetEnabledInspectMenu: Boolean; virtual;
+    procedure SetEnabledInspectMenu(Value: Boolean); virtual;
+    function GetOnChecked: TVTChangeEvent; virtual;
+    procedure SetOnChecked(Value: TVTChangeEvent); virtual;
+    procedure NotifyChecked; virtual;
+    function GetOnSelected: TVTChangeEvent; virtual;
+    procedure SetOnSelected(Value: TVTChangeEvent); virtual;
+    procedure NotifySelected; virtual;
   public
     constructor Create(InitialColumnCount: Integer = 1);
   end;
@@ -64,6 +76,7 @@ end;
 constructor TCustomNodeProvider.Create;
 begin
   SetLength(Cells, InitialColumnCount);
+  EnabledInspectMenu := True;
 end;
 
 function TCustomNodeProvider.GetColor;
@@ -77,6 +90,11 @@ begin
     Result := Cells[Index]
   else
     Result := '';
+end;
+
+function TCustomNodeProvider.GetEnabledInspectMenu;
+begin
+  Result := EnabledInspectMenu;
 end;
 
 function TCustomNodeProvider.GetFontColor;
@@ -114,6 +132,16 @@ begin
   Result := Node;
 end;
 
+function TCustomNodeProvider.GetOnChecked;
+begin
+  Result := OnChecked;
+end;
+
+function TCustomNodeProvider.GetOnSelected;
+begin
+  Result := OnSelected;
+end;
+
 function TCustomNodeProvider.GetTree;
 begin
   Result := Tree;
@@ -123,6 +151,25 @@ procedure TCustomNodeProvider.Invalidate;
 begin
   if Assigned(Tree) then
     Tree.InvalidateNode(Node);
+end;
+
+procedure TCustomNodeProvider.NotifyChecked;
+begin
+  if Assigned(OnChecked) then
+    OnChecked(Tree, Node);
+end;
+
+procedure TCustomNodeProvider.NotifySelected;
+begin
+  // Check if selection actually changed
+  if KnownWasSelected and not (WasSelected xor (vsSelected in Node.States)) then
+    Exit;
+
+  KnownWasSelected := Assigned(OnSelected);
+  WasSelected := vsSelected in Node.States;
+
+  if Assigned(OnSelected) then
+    OnSelected(Tree, Node);
 end;
 
 procedure TCustomNodeProvider.ResetColor;
@@ -174,9 +221,14 @@ begin
   Invalidate;
 end;
 
+procedure TCustomNodeProvider.SetEnabledInspectMenu;
+begin
+  EnabledInspectMenu := Value;  
+end;
+
 procedure TCustomNodeProvider.SetFontColor;
 begin
-  if FontColor = Value then
+  if HasFontColor and (FontColor = Value) then
     Exit;
 
   HasFontColor := True;
@@ -186,7 +238,7 @@ end;
 
 procedure TCustomNodeProvider.SetFontStyle;
 begin
-  if FontStyle = Value then
+  if HasFontStyle and (FontStyle = Value) then
     Exit;
 
   HasFontStyle := True;
@@ -201,6 +253,16 @@ begin
 
   Hint := Value;
   Invalidate;
+end;
+
+procedure TCustomNodeProvider.SetOnChecked;
+begin
+  OnChecked := Value;
+end;
+
+procedure TCustomNodeProvider.SetOnSelected;
+begin
+  OnSelected := Value;
 end;
 
 end.

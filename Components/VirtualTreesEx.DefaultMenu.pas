@@ -51,7 +51,7 @@ type
 implementation
 
 uses
-  Winapi.Windows, Vcl.Clipbrd, System.SysUtils;
+  Winapi.Windows, Vcl.Clipbrd, System.SysUtils, VirtualTreesEx;
 
 { TMenuShortCut }
 
@@ -187,22 +187,23 @@ begin
 end;
 
 procedure TDefaultTreeMenu.MenuInspectClick;
-var
-  Node: PVirtualNode;
 begin
-  if Assigned(FOnInspectNode) then
-    for Node in FTree.Nodes do
-      if FTree.Selected[Node] then
-      begin
-        FOnInspectNode(Node);
-        Exit;
-      end;
+  if Assigned(FOnInspectNode) and Assigned(FTree.FocusedNode) and
+    (FTree.SelectedCount = 1) then
+    FOnInspectNode(FTree.FocusedNode);
 end;
 
 procedure TDefaultTreeMenu.NotifyPopup;
 begin
-  // Allow inspecting a single selected item
-  FMenuInspect.Visible := Assigned(FOnInspectNode) and (FTree.SelectedCount = 1);
+  if (FTree is TVirtualStringTreeEx) and not
+    (FTree as TVirtualStringTreeEx).OverrideInspectMenuEnabled(Node) then
+    // This item shouldn't have the inspect menu
+    FMenuInspect.Visible := False
+  else
+    // Allow inspecting a single selected item
+    FMenuInspect.Visible := Assigned(FOnInspectNode) and
+      (FTree.SelectedCount = 1);
+
   FMenuSeparator.Visible := Assigned(Menu) or FMenuInspect.Visible;
 
   // Enable column-specific copying

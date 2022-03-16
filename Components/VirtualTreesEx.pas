@@ -28,9 +28,11 @@ type
     function DoCompare(Node1, Node2: PVirtualNode; Column: TColumnIndex): Integer; override;
     function DoGetPopupMenu(Node: PVirtualNode; Column: TColumnIndex; Position: TPoint): TPopupMenu; override;
     procedure DoInitNode(Parent, Node: PVirtualNode; var InitStates: TVirtualNodeInitStates); override;
+    procedure DoRemoveFromSelection(Node: PVirtualNode); override;
     procedure DblClick; override;
     procedure KeyDown(var Key: Word; Shift: TShiftState); override;
   public
+    function OverrideInspectMenuEnabled(Node: PVirtualNode): Boolean; virtual;
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
   published
@@ -159,6 +161,14 @@ begin
   inherited;
 end;
 
+procedure TVirtualStringTreeEx.DoRemoveFromSelection;
+begin
+  // Fix errors caused by invoking the OnRemoveFromSelection event on a
+  // half-destroyed form
+  if not (csDestroying in ComponentState) then
+    inherited;
+end;
+
 function TVirtualStringTreeEx.GetOnInspectNode;
 begin
   Result := FDefaultMenus.OnInspect;
@@ -170,6 +180,11 @@ begin
 
   // Process shortcuts on all menu items
   FDefaultMenus.InvokeShortcuts(Key, Shift);
+end;
+
+function TVirtualStringTreeEx.OverrideInspectMenuEnabled;
+begin
+  Result := True;
 end;
 
 procedure TVirtualStringTreeEx.SetNodePopupMenu;

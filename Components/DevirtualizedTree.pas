@@ -32,6 +32,12 @@ type
     function GetFontStyle: TFontStyles;
     procedure SetFontStyle(Value: TFontStyles);
     function GetHasFontStyle: Boolean;
+    function GetEnabledInspectMenu: Boolean;
+    procedure SetEnabledInspectMenu(Value: Boolean);
+    function GetOnChecked: TVTChangeEvent;
+    procedure SetOnChecked(Value: TVTChangeEvent);
+    function GetOnSelected: TVTChangeEvent;
+    procedure SetOnSelected(Value: TVTChangeEvent);
 
     property Tree: TBaseVirtualTree read GetTree;
     property Node: PVirtualNode read GetNode;
@@ -46,6 +52,11 @@ type
     property FontStyle: TFontStyles read GetFontStyle write SetFontStyle;
     property HasFontStyle: Boolean read GetHasFontStyle;
     procedure ResetFontStyle;
+    property EnabledInspectMenu: Boolean read GetEnabledInspectMenu write SetEnabledInspectMenu;
+    property OnChecked: TVTChangeEvent read GetOnChecked write SetOnChecked;
+    procedure NotifyChecked;
+    property OnSelected: TVTChangeEvent read GetOnSelected write SetOnSelected;
+    procedure NotifySelected;
   end;
 
   TVirtualNodeHelper = record helper for TVirtualNode
@@ -61,8 +72,12 @@ type
     function DoGetNodeHint(Node: PVirtualNode; Column: TColumnIndex; var LineBreakStyle: TVTTooltipLineBreakStyle): string; override;
     procedure DoBeforeItemErase(Canvas: TCanvas; Node: PVirtualNode; ItemRect: TRect; var Color: TColor; var EraseAction: TItemEraseAction); override;
     procedure DoPaintText(Node: PVirtualNode; const Canvas: TCanvas; Column: TColumnIndex; TextType: TVSTTextType); override;
+    procedure DoChecked(Node: PVirtualNode); override;
+    procedure DoChange(Node: PVirtualNode); override;
+    procedure DoRemoveFromSelection(Node: PVirtualNode); override;
     procedure ValidateNodeDataSize(var Size: Integer); override;
   public
+    function OverrideInspectMenuEnabled(Node: PVirtualNode): Boolean; override;
     function AddChild(Parent: PVirtualNode; const Provider: INodeProvider): PVirtualNode; overload;
     function InsertNode(Node: PVirtualNode; Mode: TVTNodeAttachMode; const Provider: INodeProvider): PVirtualNode; overload;
   end;
@@ -126,6 +141,35 @@ begin
   inherited;
 end;
 
+procedure TDevirtualizedTree.DoChange;
+begin
+  inherited;
+
+  if Assigned(Node) then
+  begin
+    // Use the supplied node when available
+
+    if Node.HasProvider then
+      Node.Provider.NotifySelected;
+  end
+  else
+  begin
+    // Cannot tell which node changed; need to notify all of them
+
+    for Node in Nodes do
+      if Node.HasProvider then
+        Node.Provider.NotifySelected;
+  end;
+end;
+
+procedure TDevirtualizedTree.DoChecked;
+begin
+  inherited;
+
+  if Node.HasProvider then
+    Node.Provider.NotifyChecked;
+end;
+
 function TDevirtualizedTree.DoGetNodeHint;
 begin
   Result := inherited;
@@ -164,6 +208,15 @@ begin
   inherited;
 end;
 
+procedure TDevirtualizedTree.DoRemoveFromSelection;
+begin
+  inherited;
+
+  // Note: do not invoke events on a half-destroyed form
+  if not (csDestroying in ComponentState) and Node.HasProvider then
+    Node.Provider.NotifySelected;
+end;
+
 function TDevirtualizedTree.InsertNode(
   Node: PVirtualNode;
   Mode: TVTNodeAttachMode;
@@ -173,6 +226,14 @@ begin
   Assert(Assigned(Provider), 'Provider must not be null');
   Result := inherited InsertNode(Node, Mode, Pointer(IInterface(Provider)));
   Provider.Attach(Result);
+end;
+
+function TDevirtualizedTree.OverrideInspectMenuEnabled;
+begin
+  if Node.HasProvider and not Node.Provider.EnabledInspectMenu then
+    Result := False
+  else
+    Result := inherited;
 end;
 
 procedure TDevirtualizedTree.ValidateNodeDataSize(var Size: Integer);
