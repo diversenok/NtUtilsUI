@@ -5,7 +5,7 @@ interface
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes,
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls,
-  VCL.ImgList;
+  VCL.ImgList, NtUtils;
 
 type
   TSidEditor = class(TFrame)
@@ -20,8 +20,14 @@ type
     FImages: TImageList;
     FOnDsObjectPicked: TNotifyEvent;
     FOnSidChanged: TNotifyEvent;
+    SidCache: ISid;
+    function GetSid: ISid;
+    procedure SetSid(const Sid: ISid);
   protected
     procedure Loaded; override;
+  public
+    function TryGetSid(out Sid: ISid): TNtxStatus;
+    property Sid: ISid read GetSid write SetSid;
   published
     property OnDsObjectPicked: TNotifyEvent read FOnDsObjectPicked write FOnDsObjectPicked;
     property OnSidChanged: TNotifyEvent read FOnSidChanged write FOnSidChanged;
@@ -30,8 +36,9 @@ type
 implementation
 
 uses
-  DelphiUtils.AutoObjects, NtUiLib.Errors, NtUiLib.AutoCompletion.Sid,
-  UI.Builtin.DsObjectPicker, UI.Prototypes.Sid.Cheatsheet, UI.Prototypes.Forms;
+  DelphiUtils.AutoObjects, NtUtils.Lsa.Sid, NtUiLib.Errors,
+  NtUiLib.AutoCompletion.Sid, UI.Builtin.DsObjectPicker,
+  UI.Prototypes.Sid.Cheatsheet, UI.Prototypes.Forms;
 
 {$R *.dfm}
 {$R '..\Icons\SidEditor.res'}
@@ -60,6 +67,11 @@ begin
 
   if Assigned(FOnDsObjectPicked) then
     FOnDsObjectPicked(Self);
+end;
+
+function TSidEditor.GetSid;
+begin
+  TryGetSid(Result).RaiseOnError;
 end;
 
 procedure TSidEditor.Loaded;
@@ -95,10 +107,48 @@ begin
   end;
 end;
 
+procedure TSidEditor.SetSid;
+begin
+  tbxSid.OnChange := nil;
+  try
+    SidCache := Sid;
+
+    if Assigned(Sid) then
+      tbxSid.Text := LsaxSidToString(Sid)
+    else
+      tbxSid.Text := '';
+
+    if Assigned(FOnSidChanged) then
+      FOnSidChanged(Self);
+  finally
+    tbxSid.OnChange := tbxSidChange;
+  end;
+end;
+
 procedure TSidEditor.tbxSidChange;
 begin
+  SidCache := nil;
+
   if Assigned(FOnSidChanged) then
     FOnSidChanged(Self);
+end;
+
+function TSidEditor.TryGetSid;
+begin
+  if Assigned(SidCache) then
+  begin
+    // Use cached version
+    Sid := SidCache;
+    Result := Default(TNtxStatus);
+  end
+  else
+  begin
+    Result := LsaxLookupNameOrSddl(tbxSid.Text, Sid);
+
+    // Cache successful lookups
+    if Result.IsSuccess then
+      SidCache := Sid;
+  end;
 end;
 
 end.
