@@ -17,11 +17,14 @@ type
     function ToArray: TArray<PVirtualNode>;
   end;
 
+  TPopupMode = (pmOnItemsOnly, pmAnywhere);
+
   TVirtualStringTreeEx = class(TVirtualStringTree)
   private
     FDefaultMenus: TDefaultTreeMenu;
-    FNodePopupMenu: TPopupMenu;
-    procedure SetNodePopupMenu(const Value: TPopupMenu);
+    FPopupMenuEx: TPopupMenu;
+    FPopupMode: TPopupMode;
+    procedure SetPopupMenuEx(const Value: TPopupMenu);
     function GetOnInspectNode: TNodeEvent;
     procedure SetOnInspectNode(const Value: TNodeEvent);
   protected
@@ -41,7 +44,8 @@ type
     property IncrementalSearch default isAll;
     property SelectionBlendFactor default 64;
     property OnInspectNode: TNodeEvent read GetOnInspectNode write SetOnInspectNode;
-    property NodePopupMenu: TPopupMenu read FNodePopupMenu write SetNodePopupMenu;
+    property PopupMenuEx: TPopupMenu read FPopupMenuEx write SetPopupMenuEx;
+    property PopupMode: TPopupMode read FPopupMode write FPopupMode default pmOnItemsOnly;
   end;
 
 procedure Register;
@@ -138,13 +142,16 @@ function TVirtualStringTreeEx.DoGetPopupMenu;
 begin
   Result := inherited DoGetPopupMenu(Node, Column, Position);
 
-  if Header.InHeader(Position) or (SelectedCount = 0) then
+  if Header.InHeader(Position) then
+    Exit;
+
+  if (FPopupMode = pmOnItemsOnly) and (SelectedCount = 0) then
     Exit;
 
   // Choose a context menu
   if not Assigned(Result) then
-    if Assigned(FNodePopupMenu) then
-      Result := FNodePopupMenu
+    if Assigned(FPopupMenuEx) then
+      Result := FPopupMenuEx
     else
       Result := FDefaultMenus.FallbackMenu;
 
@@ -187,20 +194,20 @@ begin
   Result := True;
 end;
 
-procedure TVirtualStringTreeEx.SetNodePopupMenu;
+procedure TVirtualStringTreeEx.SetOnInspectNode;
 begin
-  FNodePopupMenu := Value;
+  FDefaultMenus.OnInspect := Value;
+end;
+
+procedure TVirtualStringTreeEx.SetPopupMenuEx;
+begin
+  FPopupMenuEx := Value;
 
   if csDesigning in ComponentState then
     Exit;
 
   // Note: attaching to nil moves items back to the fallback menu
-  FDefaultMenus.AttachItemsTo(FNodePopupMenu);
-end;
-
-procedure TVirtualStringTreeEx.SetOnInspectNode;
-begin
-  FDefaultMenus.OnInspect := Value;
+  FDefaultMenus.AttachItemsTo(FPopupMenuEx);
 end;
 
 end.

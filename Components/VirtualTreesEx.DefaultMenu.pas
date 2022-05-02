@@ -103,8 +103,13 @@ begin
   if not Assigned(Menu) then
     Menu := FFallbackMenu;
 
-  // Attach built-in items to the bottom of the popup menu
-  FMenuInspect.SetParentComponent(Menu);
+  // Attach the item for inspecting to the top
+  if Assigned(FMenuInspect.Parent) then
+    FMenuInspect.Parent.Remove(FMenuInspect);
+
+  Menu.Items.Insert(0, FMenuInspect);
+
+  // Attach items for copying text to the bottom of the popup menu
   FMenuSeparator.SetParentComponent(Menu);
   FMenuCopy.SetParentComponent(Menu);
   FMenuCopyColumn.SetParentComponent(Menu);
@@ -152,11 +157,15 @@ var
 begin
   inherited;
 
+  // Ignore item-specific shortcuts when they are no items selected
+  if (FTree.SelectedCount = 0) and (FTree is TVirtualStringTreeEx) and
+    (TVirtualStringTreeEx(FTree).PopupMode = pmOnItemsOnly) then
+    Exit;
+
   // Invoke events on all menu items with matching shortcuts
-  if FTree.SelectedCount > 0 then
-    for Shortcut in FShortcuts do
-      if Shortcut.Matches(Shift, Key) and Assigned(Shortcut.Menu.OnClick) then
-        Shortcut.Menu.OnClick(FTree);
+  for Shortcut in FShortcuts do
+    if Shortcut.Matches(Shift, Key) and Assigned(Shortcut.Menu.OnClick) then
+      Shortcut.Menu.OnClick(FTree);
 end;
 
 procedure TDefaultTreeMenu.MenuCopyClick;
@@ -195,24 +204,28 @@ end;
 
 procedure TDefaultTreeMenu.NotifyPopup;
 begin
-  if (FTree is TVirtualStringTreeEx) and not
-    (FTree as TVirtualStringTreeEx).OverrideInspectMenuEnabled(Node) then
-    // This item shouldn't have the inspect menu
-    FMenuInspect.Visible := False
-  else
-    // Allow inspecting a single selected item
-    FMenuInspect.Visible := Assigned(FOnInspectNode) and
-      (FTree.SelectedCount = 1);
+  // Allow inspecting only single node
+  FMenuInspect.Visible := Assigned(FOnInspectNode) and (FTree.SelectedCount = 1);
 
-  FMenuSeparator.Visible := Assigned(Menu) or FMenuInspect.Visible;
+  // Allow the node selected to explicitly disable the inspect menu
+  if Assigned(Node) and (FTree is TVirtualStringTreeEx) and
+    not TVirtualStringTreeEx(FTree).OverrideInspectMenuEnabled(Node) then
+    FMenuInspect.Visible := False;
+
+  // Enable regular copiying when there are things to copy
+  FMenuCopy.Visible := FTree.SelectedCount > 0;
 
   // Enable column-specific copying
   FPopupColumnIndex := Column;
-  FMenuCopyColumn.Visible := Column >= 0;
+  FMenuCopyColumn.Visible := (FTree.SelectedCount > 0) and (Column >= 0);
 
   if FMenuCopyColumn.Visible then
     FMenuCopyColumn.Caption := Format('Copy "%s"',
       [FTree.Header.Columns[Column].CaptionText]);
+
+  // Enable the separator if there are items to separate
+  FMenuSeparator.Visible := (Assigned(Menu) or FMenuInspect.Visible) and
+    FMenuCopy.Visible;
 end;
 
 end.
