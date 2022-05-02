@@ -8,6 +8,10 @@ uses
 
 
 type
+  TCollectionHelper = class helper for TCollection
+    function BeginUpdateAuto: IAutoReleasable;
+  end;
+
   // Automatic operations on virtual tree views
   TVirtualTreeAutoHelper = class helper for TBaseVirtualTree
     function BeginUpdateAuto: IAutoReleasable;
@@ -30,6 +34,20 @@ type
   end;
 
 implementation
+
+{ TCollectionHelper }
+
+function TCollectionHelper.BeginUpdateAuto;
+begin
+  BeginUpdate;
+
+  Result := Auto.Delay(
+    procedure
+    begin
+      EndUpdate;
+    end
+  );
+end;
 
 { TVirtualTreeAutoHelper }
 

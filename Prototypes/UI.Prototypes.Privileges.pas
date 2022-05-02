@@ -60,6 +60,11 @@ type
     property ColoringChecked: TPrivilegeColoring read FCheckedColoring write FCheckedColoring default pcStateBased;
   end;
 
+// Helper converter
+function PrivilegesToIDs(
+  const Privileges: TArray<TPrivilege>
+): TArray<TPrivilegeId>;
+
 implementation
 
 uses
@@ -67,6 +72,16 @@ uses
   DelphiUiLib.Reflection.Numeric, UI.Colors, UI.Helper, VirtualTrees.Types;
 
 {$R *.dfm}
+
+function PrivilegesToIDs;
+var
+  i: Integer;
+begin
+  SetLength(Result, Length(Privileges));
+
+  for i := 0 to High(Privileges) do
+    Result[i] := Privileges[i].Luid;
+end;
 
 function GetAllPrivileges: TArray<TPrivilege>;
 const

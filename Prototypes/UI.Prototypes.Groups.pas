@@ -72,6 +72,11 @@ type
     property OnDefaultAction: TDefaultAction read FDefaultAction write FDefaultAction;
   end;
 
+// Helper converter
+function GroupsToSids(
+  const Groups: TArray<TGroup>
+): TArray<ISid>;
+
 implementation
 
 uses
@@ -81,6 +86,16 @@ uses
   NtUiLib.Reflection.Types, UI.Colors;
 
 {$R *.dfm}
+
+function GroupsToSids;
+var
+  i: Integer;
+begin
+  SetLength(Result, Length(Groups));
+
+  for i := 0 to High(Groups) do
+    Result[i] := Groups[i].Sid;
+end;
 
 { TGroupNodeData }
 
