@@ -79,7 +79,7 @@ begin
   VST.BeginUpdateAuto;
 
   for i := 0 to High(Names) do
-    VST.AddChild(VST.RootNode).SetProvider(MakeProvider(i));
+    VST.AddChild(VST.RootNode).Provider := MakeProvider(i);
 end;
 
 function TSidCheatsheet.MakeProvider;

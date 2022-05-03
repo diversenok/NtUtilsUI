@@ -60,9 +60,14 @@ type
   end;
 
   TVirtualNodeHelper = record helper for TVirtualNode
-    function HasProvider: Boolean;
-    function GetProvider: INodeProvider;
+  private
     procedure SetProvider(const Value: INodeProvider);
+    function GetProvider: INodeProvider;
+  public
+    function HasProvider: Boolean; overload;
+    function HasProvider(const IID: TGuid): Boolean; overload;
+    function TryGetProvider(out Provider: INodeProvider): Boolean; overload;
+    function TryGetProvider(const IID: TGuid; out Provider): Boolean; overload;
     property Provider: INodeProvider read GetProvider write SetProvider;
   end;
 
@@ -87,7 +92,7 @@ procedure Register;
 implementation
 
 uses
-  System.SysUtils;
+  Winapi.Windows, System.SysUtils;
 
 procedure Register;
 begin
@@ -98,12 +103,20 @@ end;
 
 function TVirtualNodeHelper.GetProvider;
 begin
-  Result := INodeProvider(GetData^);
+  if not TryGetProvider(Result) then
+    Result := nil;
 end;
 
-function TVirtualNodeHelper.HasProvider;
+function TVirtualNodeHelper.HasProvider: Boolean;
 begin
   Result := Assigned(@Self) and Assigned(Pointer(GetData^));
+end;
+
+function TVirtualNodeHelper.HasProvider(const IID: TGuid): Boolean;
+var
+  Provider: IInterface;
+begin
+  Result := TryGetProvider(IID, Provider);
 end;
 
 procedure TVirtualNodeHelper.SetProvider;
@@ -114,10 +127,26 @@ begin
     Exit;
 
   if HasProvider then
-    GetProvider._Release;
+    Provider._Release;
 
   SetData(IInterface(Value));
   Value.Attach(@Self);
+end;
+
+function TVirtualNodeHelper.TryGetProvider(
+  out Provider: INodeProvider
+): Boolean;
+begin
+  Result := TryGetProvider(INodeProvider, Provider);
+end;
+
+function TVirtualNodeHelper.TryGetProvider(
+  const IID: TGuid;
+  out Provider
+): Boolean;
+begin
+  Result := HasProvider and Succeeded(IInterface(GetData^).QueryInterface(IID,
+    Provider));
 end;
 
 { TDevirtualizedTree }

@@ -54,7 +54,7 @@ type
     function GetIsChecked(const Group: TGroup): Boolean;
     function GetSelected: TArray<TGroup>;
     function NodeComparer(const Node: PVirtualNode): TCondition<PVirtualNode>;
-    function NodeToGroup(const Node: PVirtualNode): TGroup;
+    function NodeToGroup(const Node: PVirtualNode; out Group: TGroup): Boolean;
     procedure SetChecked(const Value: TArray<TGroup>);
     procedure SetIsChecked(const Group: TGroup; const Value: Boolean);
     procedure DoDefaultAction(Node: PVirtualNode);
@@ -217,14 +217,18 @@ begin
 end;
 
 procedure TFrameGroups.DoDefaultAction;
+var
+  GroupProvider: IGroup;
 begin
-  if Assigned(FDefaultAction) then
-    FDefaultAction(IGroup(Node.GetProvider).GetGroup);
+  if Assigned(FDefaultAction) and Node.TryGetProvider(IGroup,
+    GroupProvider) then
+    FDefaultAction(GroupProvider.GetGroup);
 end;
 
 procedure TFrameGroups.EditSelectedGroup;
 var
   Node: PVirtualNode;
+  Provider: IGroup;
   NewGroup: TGroup;
   Lookup: TTranslatedName;
 begin
@@ -232,27 +236,28 @@ begin
     Exit;
 
   VST.BeginUpdateAuto;
+  Node := VST.FocusedNode;
 
-  for Node in VST.SelectedNodes do
-  begin
-    NewGroup := IGroup(Node.GetProvider).GetGroup;
-    Callback(NewGroup);
+  if not Node.TryGetProvider(IGroup, Provider) then
+    Exit;
 
-    // Reuse previous lookup if the SID haven't changed
-    if IGroup(Node.GetProvider).Matches(NewGroup.Sid) then
-      Lookup := IGroup(Node.GetProvider).GetLookup
-    else if not LsaxLookupSid(NewGroup.Sid, Lookup).IsSuccess then
-      Lookup := Default(TTranslatedName);
+  NewGroup := Provider.GetGroup;
+  Callback(NewGroup);
 
-    Node.SetProvider(TGroupNodeData.Create(NewGroup, Lookup));
-    VST.InvalidateNode(Node);
-    Break;
-  end;
+  // Reuse previous lookup if the SID haven't changed
+  if Provider.Matches(NewGroup.Sid) then
+    Lookup := Provider.GetLookup
+  else if not LsaxLookupSid(NewGroup.Sid, Lookup).IsSuccess then
+    Lookup := Default(TTranslatedName);
+
+  Node.Provider := TGroupNodeData.Create(NewGroup, Lookup);
+  VST.InvalidateNode(Node);
 end;
 
 procedure TFrameGroups.EditSelectedGroups;
 var
   Node: PVirtualNode;
+  Provider: IGroup;
   AttributesToClear: TGroupAttributes;
   AttributesToSet: TGroupAttributes;
   NewGroup: TGroup;
@@ -268,13 +273,15 @@ begin
 
   for Node in VST.SelectedNodes do
   begin
-    NewGroup := IGroup(Node.GetProvider).GetGroup;
-    NewGroup.Attributes := (NewGroup.Attributes and not AttributesToClear)
-      or AttributesToSet;
+    if not Node.TryGetProvider(IGroup, Provider) then
+      Continue;
+
+    NewGroup := Provider.GetGroup;
+    NewGroup.Attributes := (NewGroup.Attributes and not AttributesToClear) or
+      AttributesToSet;
 
     // Reuse SID lookup
-    Node.SetProvider(TGroupNodeData.Create(NewGroup,
-      IGroup(Node.GetProvider).GetLookup));
+    Node.Provider := TGroupNodeData.Create(NewGroup, Provider.GetLookup);
 
     VST.InvalidateNode(Node);
   end;
@@ -282,22 +289,23 @@ end;
 
 function TFrameGroups.GetAllGroups: TArray<TGroup>;
 begin
-  Result := TArray.Map<PVirtualNode, TGroup>(VST.Nodes.ToArray,
+  Result := TArray.Convert<PVirtualNode, TGroup>(VST.Nodes.ToArray,
     NodeToGroup);
 end;
 
 function TFrameGroups.GetChecked;
 begin
-  Result := TArray.Map<PVirtualNode, TGroup>(VST.CheckedNodes.ToArray,
+  Result := TArray.Convert<PVirtualNode, TGroup>(VST.CheckedNodes.ToArray,
     NodeToGroup);
 end;
 
 function TFrameGroups.GetIsChecked;
 var
   Node: PVirtualNode;
+  Provider: IGroup;
 begin
   for Node in VST.Nodes do
-    if IGroup(Node.GetProvider).Matches(Group.Sid) then
+    if Node.TryGetProvider(IGroup, Provider) and Provider.Matches(Group.Sid) then
       Exit(VST.CheckState[Node] = csCheckedNormal);
 
   Result := False;
@@ -305,7 +313,7 @@ end;
 
 function TFrameGroups.GetSelected;
 begin
-  Result := TArray.Map<PVirtualNode, TGroup>(VST.SelectedNodes.ToArray,
+  Result := TArray.Convert<PVirtualNode, TGroup>(VST.SelectedNodes.ToArray,
     NodeToGroup);
 end;
 
@@ -319,25 +327,39 @@ end;
 
 function TFrameGroups.NodeComparer;
 var
+  Provider: IGroup;
   Sid: ISid;
 begin
-  // We compare nodes via their SIDs
-  Sid := IGroup(Node.GetProvider).GetGroup.Sid;
+  if Node.TryGetProvider(IGroup, Provider) then
+  begin
+    // We compare nodes via their SIDs
+    Sid := Provider.GetGroup.Sid;
 
-  Result := function (const Node: PVirtualNode): Boolean
+    Result := function (const Node: PVirtualNode): Boolean
+    var
+      Provider: IGroup;
     begin
-      Result := IGroup(Node.GetProvider).Matches(Sid);
+      Result := Node.TryGetProvider(IGroup, Provider) and Provider.Matches(Sid);
     end;
+  end
+  else
+    Result := nil;
 end;
 
 function TFrameGroups.NodeToGroup;
+var
+  Provider: IGroup;
 begin
-  Result := IGroup(Node.GetProvider).GetGroup;
+  Result := Node.TryGetProvider(IGroup, Provider);
+
+  if Result then
+    Group := Provider.GetGroup;
 end;
 
 procedure TFrameGroups.SetChecked;
 var
   Node: PVirtualNode;
+  Provider: IGroup;
   NeedToCheck: Boolean;
   i: Integer;
 begin
@@ -346,7 +368,8 @@ begin
     NeedToCheck := False;
 
     for i := 0 to High(Value) do
-      if IGroup(Node.GetProvider).Matches(Value[i].Sid) then
+      if Node.TryGetProvider(IGroup, Provider) and
+        Provider.Matches(Value[i].Sid) then
       begin
         NeedToCheck := True;
         Break;
@@ -362,9 +385,11 @@ end;
 procedure TFrameGroups.SetIsChecked;
 var
   Node: PVirtualNode;
+  Provider: IGroup;
 begin
   for Node in VST.Nodes do
-    if IGroup(Node.GetProvider).Matches(Group.Sid) then
+    if Node.TryGetProvider(IGroup, Provider) and
+      Provider.Matches(Group.Sid) then
     begin
       if Value then
         VST.CheckState[Node] := csCheckedNormal

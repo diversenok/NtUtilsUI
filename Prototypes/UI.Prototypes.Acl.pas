@@ -120,7 +120,7 @@ begin
     Aces := nil;
 
   for Ace in TAceNodeData.CreateMany(Aces, MaskType) do
-    VST.AddChild(VST.RootNode).SetProvider(Ace);
+    VST.AddChild(VST.RootNode).Provider := Ace;
 end;
 
 end.
