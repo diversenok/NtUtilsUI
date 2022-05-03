@@ -24,9 +24,12 @@ type
     FDefaultMenus: TDefaultTreeMenu;
     FPopupMenuEx: TPopupMenu;
     FPopupMode: TPopupMode;
+    FNoItemsText: String;
+    FNoItemsTextLines: TArray<String>;
     procedure SetPopupMenuEx(const Value: TPopupMenu);
     function GetOnInspectNode: TNodeEvent;
     procedure SetOnInspectNode(const Value: TNodeEvent);
+    procedure SetNoItemsText(const Value: String);
   protected
     function DoCompare(Node1, Node2: PVirtualNode; Column: TColumnIndex): Integer; override;
     function DoGetPopupMenu(Node: PVirtualNode; Column: TColumnIndex; Position: TPoint): TPopupMenu; override;
@@ -34,6 +37,7 @@ type
     procedure DoRemoveFromSelection(Node: PVirtualNode); override;
     procedure DblClick; override;
     procedure KeyDown(var Key: Word; Shift: TShiftState); override;
+    procedure DoAfterPaint(Canvas: TCanvas); override;
   public
     function OverrideInspectMenuEnabled(Node: PVirtualNode): Boolean; virtual;
     constructor Create(AOwner: TComponent); override;
@@ -46,6 +50,7 @@ type
     property OnInspectNode: TNodeEvent read GetOnInspectNode write SetOnInspectNode;
     property PopupMenuEx: TPopupMenu read FPopupMenuEx write SetPopupMenuEx;
     property PopupMode: TPopupMode read FPopupMode write FPopupMode default pmOnItemsOnly;
+    property NoItemsText: String read FNoItemsText write SetNoItemsText;
   end;
 
 procedure Register;
@@ -129,6 +134,42 @@ begin
   inherited;
 end;
 
+procedure TVirtualStringTreeEx.DoAfterPaint;
+var
+  Sizes: TArray<TSize>;
+  TotalHeight, Offset: Integer;
+  i: Integer;
+begin
+  if (RootNodeCount = 0) and (Length(FNoItemsTextLines) > 0) then
+  begin
+    Canvas.Font.Color := clGrayText;
+
+    // Compute the sizes of each line
+    SetLength(Sizes, Length(FNoItemsTextLines));
+    TotalHeight := 0;
+
+    for i := 0 to High(FNoItemsTextLines) do
+    begin
+      Sizes[i] := Canvas.TextExtent(FNoItemsTextLines[i]);
+      Inc(TotalHeight, Sizes[i].Height);
+    end;
+
+    Offset := 0;
+
+    // Draw the static text in the middle of an empty tree
+    for i := 0 to High(FNoItemsTextLines) do
+    begin
+      Canvas.TextOut(
+        (ClientWidth - Sizes[i].Width) div 2,
+        (ClientHeight - Sizes[i].Height - TotalHeight) div 2 + Offset,
+        FNoItemsTextLines[i]);
+      Inc(Offset, Sizes[i].Height);
+    end;
+  end;
+
+  inherited DoAfterPaint(Canvas);
+end;
+
 function TVirtualStringTreeEx.DoCompare;
 begin
   Result := inherited;
@@ -192,6 +233,13 @@ end;
 function TVirtualStringTreeEx.OverrideInspectMenuEnabled;
 begin
   Result := True;
+end;
+
+procedure TVirtualStringTreeEx.SetNoItemsText;
+begin
+  FNoItemsText := Value;
+  FNoItemsTextLines := FNoItemsText.Split([#$D#$A]);
+  Invalidate;
 end;
 
 procedure TVirtualStringTreeEx.SetOnInspectNode;
