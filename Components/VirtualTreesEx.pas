@@ -140,7 +140,7 @@ var
   TotalHeight, Offset: Integer;
   i: Integer;
 begin
-  if (RootNodeCount = 0) and (Length(FNoItemsTextLines) > 0) then
+  if (VisibleCount = 0) and (Length(FNoItemsTextLines) > 0) then
   begin
     Canvas.Font.Color := clGrayText;
 

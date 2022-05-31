@@ -25,7 +25,7 @@ implementation
 
 uses
   Vcl.ImgList, Vcl.Graphics, Ntapi.WinUser, Ntapi.ShellApi, Ntapi.WinNt,
-  NtUtils, NtUtils.Files, NtUtils.Processes.Info;
+  Ntapi.ntpebteb, NtUtils, NtUtils.Files, NtUtils.Processes.Info;
 
 { TProcessIcons }
 
