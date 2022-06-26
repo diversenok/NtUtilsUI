@@ -41,6 +41,8 @@ type
   public
     function OverrideInspectMenuEnabled(Node: PVirtualNode): Boolean; virtual;
     constructor Create(AOwner: TComponent); override;
+    procedure DeleteSelectedNodesEx(SelectSomethingAfter: Boolean = True);
+    procedure SelectSometing;
     destructor Destroy; override;
   published
     property DrawSelectionMode default smBlendedRectangle;
@@ -126,6 +128,54 @@ begin
 
   // Enter, Double Click, and Inspect should yield the same result
   FDefaultMenus.InvokeInspect;
+end;
+
+procedure TVirtualStringTreeEx.DeleteSelectedNodesEx;
+var
+  SelectionLookupStart: PVirtualNode;
+  SelectionCandidate: PVirtualNode;
+begin
+  if SelectedCount <= 0 then
+    Exit;
+
+  try
+    BeginUpdate;
+    SelectionCandidate := nil;
+
+    if SelectSomethingAfter then
+    begin
+      // We want the future selection to be in the same area of the tree
+      if Assigned(FocusedNode) then
+        SelectionLookupStart := FocusedNode
+      else
+        SelectionLookupStart := GetFirstSelected(True);
+
+      // Choose an item below for future selection
+      SelectionCandidate := SelectionLookupStart;
+      while Assigned(SelectionCandidate) and Selected[SelectionCandidate] do
+        SelectionCandidate := GetNextVisible(SelectionCandidate, True);
+
+      // No items below are suitable; try items above
+      if not Assigned(SelectionCandidate) then
+      begin
+        SelectionCandidate := SelectionLookupStart;
+        while Assigned(SelectionCandidate) and Selected[SelectionCandidate] do
+           SelectionCandidate := GetPreviousVisible(SelectionCandidate, True);
+      end;
+    end;
+
+    // Perform deletion
+    DeleteSelectedNodes;
+
+    // Select and focus the candidate
+    if Assigned(SelectionCandidate) then
+    begin
+      FocusedNode := SelectionCandidate;
+      Selected[SelectionCandidate] := True;
+    end;
+  finally
+    EndUpdate;
+  end;
 end;
 
 destructor TVirtualStringTreeEx.Destroy;
@@ -233,6 +283,22 @@ end;
 function TVirtualStringTreeEx.OverrideInspectMenuEnabled;
 begin
   Result := True;
+end;
+
+procedure TVirtualStringTreeEx.SelectSometing;
+var
+  Node: PVirtualNode;
+begin
+  if SelectedCount > 0 then
+    Exit;
+
+  Node := GetFirstVisible;
+
+  if Assigned(Node) then
+  begin
+    FocusedNode := Node;
+    Selected[Node] := True;
+  end;
 end;
 
 procedure TVirtualStringTreeEx.SetNoItemsText;
