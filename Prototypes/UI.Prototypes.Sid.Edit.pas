@@ -95,11 +95,11 @@ begin
   btnCheatsheet.Images := FImages;
 
   try
-    Icon := Auto.From(TIcon.Create).Data;
+    Icon := Auto.From(TIcon.Create).Self;
     Icon.LoadFromResourceName(HInstance, 'SidEditor.DsObjectPicker');
     btnDsPicker.ImageIndex := FImages.AddIcon(Icon);
 
-    Icon := Auto.From(TIcon.Create).Data;
+    Icon := Auto.From(TIcon.Create).Self;
     Icon.LoadFromResourceName(HInstance, 'SidEditor.Cheatsheet');
     btnCheatsheet.ImageIndex := FImages.AddIcon(Icon);
   except

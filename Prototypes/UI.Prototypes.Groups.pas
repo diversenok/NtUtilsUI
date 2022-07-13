@@ -118,7 +118,7 @@ begin
     Cells[colFriendly] := Cells[colSid];
 
   Cells[colFlags] := TNumeric.Represent<TGroupAttributes>(Group.Attributes and
-    not SE_GROUP_STATE_MASK, [Auto.From(IgnoreSubEnumsAttribute.Create).Data]
+    not SE_GROUP_STATE_MASK, [Auto.From(IgnoreSubEnumsAttribute.Create).Self]
   ).Text;
 
   Cells[colState] := TNumeric.Represent<TGroupAttributes>(Group.Attributes and

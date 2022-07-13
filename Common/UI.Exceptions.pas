@@ -63,7 +63,7 @@ begin
   if not Assigned(TUIExceptionHandler.Instance) then
     TUIExceptionHandler.Instance := Auto.From(TUIExceptionHandler.Create);
 
-  Application.OnException := TUIExceptionHandler.Instance.Data.Display;
+  Application.OnException := TUIExceptionHandler.Instance.Self.Display;
 end;
 
 procedure TUIExceptionHandler.Display;
