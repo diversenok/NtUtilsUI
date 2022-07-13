@@ -19,7 +19,7 @@ type
     procedure SetValue(const NewValue: Cardinal);
     procedure UpdateHighlighting;
   public
-    procedure Initialize(Flags: TArray<TFlagName>; Groups: TArray<TFlagName> = nil);
+    procedure Initialize(const Flags: TArray<TFlagName>; const Groups: TArray<TFlagName> = nil);
     property Value: Cardinal read FValue write SetValue;
     property OnValueChange: TNotifyEvent read FOnValueChange write FOnValueChange;
     property ReadOnly: Boolean read FReadOnly write FReadOnly;
@@ -34,8 +34,7 @@ uses
 
 { TFlagsFrame }
 
-procedure TBitMaskFrame.Initialize(Flags: TArray<TFlagName>;
-  Groups: TArray<TFlagName>);
+procedure TBitMaskFrame.Initialize;
 var
   i, j: Integer;
 begin
@@ -89,7 +88,7 @@ begin
   ListViewEx.OnItemChecked := ListViewExItemChecked;
 end;
 
-procedure TBitMaskFrame.ListViewExItemChecked(Sender: TObject; Item: TListItem);
+procedure TBitMaskFrame.ListViewExItemChecked;
 begin
   // Prevent checking items in a read-only mode
   if FReadOnly then
@@ -111,7 +110,7 @@ begin
     OnValueChange(Self);
 end;
 
-procedure TBitMaskFrame.SetValue(const NewValue: Cardinal);
+procedure TBitMaskFrame.SetValue;
 var
   i: Integer;
 begin

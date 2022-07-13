@@ -47,7 +47,7 @@ begin
   Mapping.Free;
 end;
 
-class function TProcessIcons.GetIcon(FileName: string): Integer;
+class function TProcessIcons.GetIcon;
 var
   ObjIcon: TIcon;
   SmallHIcon: THIcon;
@@ -82,7 +82,7 @@ begin
   Mapping.Add(FileName, Result);
 end;
 
-class function TProcessIcons.GetIconByPid(PID: NativeUInt): Integer;
+class function TProcessIcons.GetIconByPid;
 var
   NtImageName: String;
 begin

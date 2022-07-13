@@ -37,7 +37,7 @@ type
     Group: TGroup;
     Lookup: TTranslatedName;
     constructor Create(const Src: TGroup; const LookupSrc: TTranslatedName);
-    class function CreateMany(Src: TArray<TGroup>): TArray<INodeProvider>; static;
+    class function CreateMany(const Src: TArray<TGroup>): TArray<INodeProvider>; static;
     function GetGroup: TGroup;
     function GetLookup: TTranslatedName;
     function Matches(const Sid: ISid): Boolean;
@@ -287,7 +287,7 @@ begin
   end;
 end;
 
-function TFrameGroups.GetAllGroups: TArray<TGroup>;
+function TFrameGroups.GetAllGroups;
 begin
   Result := TArray.Convert<PVirtualNode, TGroup>(VST.Nodes.ToArray,
     NodeToGroup);

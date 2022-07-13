@@ -22,8 +22,7 @@ type
     FAccessMask, FFullAccess: TAccessMask;
     GenericMapping: TGenericMapping;
     FReadOnly: Boolean;
-    procedure AddItem(const Flag: TFlagName; Group: Integer;
-      ItemData: IInterface);
+    procedure AddItem(const Flag: TFlagName; Group: Integer; const ItemData: IInterface);
     procedure PopulateItems(Attributes: TArray<TCustomAttribute>);
     procedure UpdateEdit;
     procedure UpdateCheckboxes;
@@ -68,20 +67,22 @@ type
 
 { TAccessBit }
 
-constructor TAccessBit.Create(Value: TAccessMask);
+constructor TAccessBit.Create;
 begin
   FValue := Value;
 end;
 
-function TAccessBit.Value: TAccessMask;
+function TAccessBit.Value;
 begin
   Result := FValue;
 end;
 
 { Custom attribute filters }
 
-function FilterFlags(const Attribute: TCustomAttribute; out FlagName: TFlagName)
-  : Boolean;
+function FilterFlags(
+  const Attribute: TCustomAttribute;
+  out FlagName: TFlagName
+): Boolean;
 begin
   Result := Attribute is FlagNameAttribute;
 
@@ -100,8 +101,7 @@ end;
 
 { TAccessMaskFrame }
 
-procedure TAccessMaskFrame.AddItem(const Flag: TFlagName; Group: Integer;
-  ItemData: IInterface);
+procedure TAccessMaskFrame.AddItem;
 begin
   with ListViewEx.Items.Add do
   begin
@@ -112,8 +112,7 @@ begin
   end;
 end;
 
-procedure TAccessMaskFrame.LoadType(AType: Pointer;
-  const Mapping: TGenericMapping);
+procedure TAccessMaskFrame.LoadType;
 var
   RttiContext: TRttiContext;
   CheckedEvent: TLVCheckedItemEvent;
@@ -153,24 +152,23 @@ begin
   end;
 end;
 
-procedure TAccessMaskFrame.ButtonClearClick(Sender: TObject);
+procedure TAccessMaskFrame.ButtonClearClick;
 begin
   AccessMask := 0;
 end;
 
-procedure TAccessMaskFrame.ButtonFullClick(Sender: TObject);
+procedure TAccessMaskFrame.ButtonFullClick;
 begin
   AccessMask := FFullAccess;
 end;
 
-procedure TAccessMaskFrame.EditMaskChange(Sender: TObject);
+procedure TAccessMaskFrame.EditMaskChange;
 begin
   if TryStrToUIntEx(EditMask.Text, Cardinal(FAccessMask)) then
     UpdateCheckboxes;
 end;
 
-procedure TAccessMaskFrame.ListViewExItemChecked(Sender: TObject;
-  Item: TListItem);
+procedure TAccessMaskFrame.ListViewExItemChecked;
 var
   ItemEx: TListItemEx absolute Item;
   CheckEvent: TLVCheckedItemEvent;
@@ -203,7 +201,7 @@ begin
   UpdateEdit;
 end;
 
-procedure TAccessMaskFrame.PopulateItems(Attributes: TArray<TCustomAttribute>);
+procedure TAccessMaskFrame.PopulateItems;
 var
   Flag: TFlagName;
   ItemData: IAccessBit;
@@ -257,14 +255,14 @@ begin
   end;
 end;
 
-procedure TAccessMaskFrame.SetAccessMask(const Value: TAccessMask);
+procedure TAccessMaskFrame.SetAccessMask;
 begin
   FAccessMask := Value;
   UpdateEdit;
   UpdateCheckboxes;
 end;
 
-procedure TAccessMaskFrame.SetReadOnly(const Value: Boolean);
+procedure TAccessMaskFrame.SetReadOnly;
 begin
   FReadOnly := Value;
   ButtonClear.Visible := not FReadOnly;
