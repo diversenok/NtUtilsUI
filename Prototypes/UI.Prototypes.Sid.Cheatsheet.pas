@@ -68,7 +68,7 @@ begin
 
   // Lookup friendly names
   if not LsaxLookupSids(Sids, Lookup).IsSuccess then
-    SetLength(Lookup, Length(Names));
+    Lookup := nil;
 end;
 
 procedure TSidCheatsheet.FormCreate;
@@ -88,10 +88,10 @@ begin
 
   Result.Column[colSddl] := Names[Index];
   Result.Column[colSid] := RtlxSidToString(Sids[Index]);
-  Result.Column[colSidType] := TNumeric.Represent(Lookup[Index].SidType).Text;
 
-  if Lookup[Index].IsValid then
+  if Assigned(Lookup) and Lookup[Index].IsValid then
   begin
+    Result.Column[colSidType] := TNumeric.Represent(Lookup[Index].SidType).Text;
     Result.Column[colFullName] := Lookup[Index].FullName;
 
     Result.Hint := BuildHint([
