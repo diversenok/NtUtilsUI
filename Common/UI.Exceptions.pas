@@ -17,7 +17,9 @@ procedure ReportException(E: Exception);
 procedure EnableNtUiLibExceptionHandling;
 
 // Add stack trace support to exception handling
-procedure EnableStackTracingExceptions;
+procedure EnableStackTracingExceptions(
+  OnlyWhenSymbolsAvailable: Boolean
+);
 
 type
   // Custom exception-safe invokers for automatic events
@@ -41,7 +43,8 @@ type
 implementation
 
 uses
-  NtUtils, NtUtils.Ldr, NtUtils.DbgHelp, DelphiUtils.AutoObjects,
+  Ntapi.ntioapi, NtUtils, NtUtils.Ldr, NtUtils.DbgHelp, NtUtils.Files,
+  NtUtils.Files.Open, NtUtils.SysUtils, DelphiUtils.AutoObjects,
   NtUiLib.Exceptions.Dialog, Vcl.Forms;
 
 { NtUiLib Exception Hanlder }
@@ -128,10 +131,17 @@ begin
 end;
 
 procedure EnableStackTracingExceptions;
+var
+  hxSymbols: IHandle;
 begin
-  Exception.GetExceptionStackInfoProc := GetExceptionStackInfoProc;
-  Exception.GetStackInfoStringProc := GetStackInfoStringProc;
-  Exception.CleanUpStackInfoProc := CleanUpStackInfoProc;
+  if not OnlyWhenSymbolsAvailable or NtxOpenFile(hxSymbols, FileOpenParameters
+    .UseFileName(RtlxReplaceExtensionPath(ParamStr(0), 'dbg'), fnWin32)
+    .UseOpenOptions(FILE_NON_DIRECTORY_FILE)).IsSuccess then
+  begin
+    Exception.GetExceptionStackInfoProc := GetExceptionStackInfoProc;
+    Exception.GetStackInfoStringProc := GetStackInfoStringProc;
+    Exception.CleanUpStackInfoProc := CleanUpStackInfoProc;
+  end;
 end;
 
 { Safe Event Invoker }
