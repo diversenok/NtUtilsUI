@@ -72,8 +72,9 @@ begin
     var
       SelectionCondition: TCondition<PVirtualNode>;
       Node: PVirtualNode;
+      UpdateReleaser: IAutoReleasable;
     begin
-      BeginUpdateAuto;
+      UpdateReleaser := BeginUpdateAuto;
 
       // Check if each new node matches any conditions for selection
       for Node in Nodes do
