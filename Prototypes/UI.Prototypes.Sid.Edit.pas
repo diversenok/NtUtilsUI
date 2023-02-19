@@ -36,7 +36,7 @@ type
 implementation
 
 uses
-  DelphiUtils.AutoObjects, NtUtils.Lsa.Sid, NtUiLib.Errors,
+  Ntapi.ntstatus, DelphiUtils.AutoObjects, NtUtils.Lsa.Sid, NtUiLib.Errors,
   NtUiLib.AutoCompletion.Sid, UI.Builtin.DsObjectPicker,
   UI.Prototypes.Sid.Cheatsheet, UI.Prototypes.Forms;
 
@@ -135,20 +135,27 @@ end;
 
 function TSidEditor.TryGetSid;
 begin
+  // Use cache when available
   if Assigned(SidCache) then
   begin
-    // Use cached version
     Sid := SidCache;
     Result := Default(TNtxStatus);
-  end
-  else
-  begin
-    Result := LsaxLookupNameOrSddl(tbxSid.Text, Sid);
-
-    // Cache successful lookups
-    if Result.IsSuccess then
-      SidCache := Sid;
+    Exit;
   end;
+
+  // Workaround empty lookups that give confusing results
+  if (tbxSid.Text = '') or (tbxSid.Text = '\') then
+  begin
+    Result.Location := 'TSidEditor.TryGetSid';
+    Result.Status := STATUS_NONE_MAPPED;
+    Exit;
+  end;
+
+  Result := LsaxLookupNameOrSddl(tbxSid.Text, Sid);
+
+  // Cache successful lookups
+  if Result.IsSuccess then
+    SidCache := Sid;
 end;
 
 end.
