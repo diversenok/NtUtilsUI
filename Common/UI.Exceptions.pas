@@ -134,9 +134,9 @@ procedure EnableStackTracingExceptions;
 var
   hxSymbols: IHandle;
 begin
-  if not OnlyWhenSymbolsAvailable or NtxOpenFile(hxSymbols, FileOpenParameters
+  if not OnlyWhenSymbolsAvailable or NtxOpenFile(hxSymbols, FileParameters
     .UseFileName(RtlxReplaceExtensionPath(ParamStr(0), 'dbg'), fnWin32)
-    .UseOpenOptions(FILE_NON_DIRECTORY_FILE)).IsSuccess then
+    .UseOptions(FILE_NON_DIRECTORY_FILE)).IsSuccess then
   begin
     Exception.GetExceptionStackInfoProc := GetExceptionStackInfoProc;
     Exception.GetStackInfoStringProc := GetStackInfoStringProc;
