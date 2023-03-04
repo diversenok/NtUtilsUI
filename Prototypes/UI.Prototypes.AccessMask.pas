@@ -93,10 +93,10 @@ end;
 function FilterFullAccess(const Attribute: TCustomAttribute; out Mask:
   TAccessMask): Boolean;
 begin
-  Result := Attribute is ValidMaskAttribute;
+  Result := Attribute is ValidBitsAttribute;
 
   if Result then
-    Mask := TAccessMask(ValidMaskAttribute(Attribute).ValidMask);
+    Mask := TAccessMask(ValidBitsAttribute(Attribute).ValidMask);
 end;
 
 { TAccessMaskFrame }
