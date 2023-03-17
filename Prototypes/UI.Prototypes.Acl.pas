@@ -43,7 +43,7 @@ type
   TFrameAcl = class(TFrame)
     VST: TDevirtualizedTree;
   public
-    procedure Load(Acl: PAcl; MaskType: Pointer);
+    procedure Load(const Acl: IAcl; MaskType: Pointer);
   end;
 
 implementation
