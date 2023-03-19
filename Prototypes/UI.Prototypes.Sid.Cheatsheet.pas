@@ -26,7 +26,7 @@ type
     Sids: TArray<ISid>;
     Lookup: TArray<TTranslatedName>;
     procedure FindAbbreviations;
-    function MakeProvider(Index: Integer): INodeProvider;
+    function MakeProvider(Index: Integer): IEditableNodeProvider;
   end;
 
 implementation
@@ -84,30 +84,30 @@ end;
 
 function TSidCheatsheet.MakeProvider;
 begin
-  Result := TCustomNodeProvider.Create(colCount);
+  Result := TEditableNodeProvider.Create(colCount);
 
-  Result.Column[colSddl] := Names[Index];
-  Result.Column[colSid] := RtlxSidToString(Sids[Index]);
+  Result.ColumnText[colSddl] := Names[Index];
+  Result.ColumnText[colSid] := RtlxSidToString(Sids[Index]);
 
   if Assigned(Lookup) and Lookup[Index].IsValid then
   begin
-    Result.Column[colSidType] := TNumeric.Represent(Lookup[Index].SidType).Text;
-    Result.Column[colFullName] := Lookup[Index].FullName;
+    Result.ColumnText[colSidType] := TNumeric.Represent(Lookup[Index].SidType).Text;
+    Result.ColumnText[colFullName] := Lookup[Index].FullName;
 
     Result.Hint := BuildHint([
-      THintSection.New('Short Name', Result.Column[colSddl]),
-      THintSection.New('Full Name', Result.Column[colFullName]),
-      THintSection.New('SID', Result.Column[colSid]),
-      THintSection.New('SID Type', Result.Column[colSidType])
+      THintSection.New('Short Name', Result.ColumnText[colSddl]),
+      THintSection.New('Full Name', Result.ColumnText[colFullName]),
+      THintSection.New('SID', Result.ColumnText[colSid]),
+      THintSection.New('SID Type', Result.ColumnText[colSidType])
     ]);
   end
   else
   begin
-    Result.Column[colFullName] := Result.Column[colSid];
+    Result.ColumnText[colFullName] := Result.ColumnText[colSid];
 
     Result.Hint := BuildHint([
-      THintSection.New('Short Name', Result.Column[colSddl]),
-      THintSection.New('SID', Result.Column[colSid])
+      THintSection.New('Short Name', Result.ColumnText[colSddl]),
+      THintSection.New('SID', Result.ColumnText[colSid])
     ]);
   end;
 end;

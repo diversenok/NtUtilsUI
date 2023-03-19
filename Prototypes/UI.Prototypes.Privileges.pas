@@ -21,22 +21,11 @@ type
   TPrivilegeColoring = (pcStateBased, pcRemoved, pcNone);
 
   IPrivilege = interface (INodeProvider)
-    ['{DC6BDFAD-2601-4402-933F-093C87406ED1}']
+    ['{660DF981-AC29-46FA-8E32-E88A60622CC6}']
     function GetPrivilege: TPrivilege;
     procedure SetColoringMode(Mode: TPrivilegeColoring);
     property Privilege: TPrivilege read GetPrivilege;
     procedure Adjust(NewAttributes: TPrivilegeAttributes);
-  end;
-
-  TPrivilegeNodeData = class (TCustomNodeProvider, IPrivilege, INodeProvider)
-    Privilege: TPrivilege;
-    ColoringMode: TPrivilegeColoring;
-    function GetPrivilege: TPrivilege;
-    procedure SetColoringMode(Mode: TPrivilegeColoring);
-    procedure Adjust(NewAttributes: TPrivilegeAttributes);
-  public
-    constructor Create(Privilege: TPrivilege; const hxPolicy: ILsaHandle = nil);
-    class function CreateMany(const Privileges: TArray<TPrivilege>): TArray<IPrivilege>;
   end;
 
   TFramePrivileges = class(TFrame)
@@ -121,10 +110,22 @@ end;
 
 { TPrivilegeNodeData }
 
+type
+  TPrivilegeNodeData = class (TNodeProvider, IPrivilege, INodeProvider)
+    Privilege: TPrivilege;
+    ColoringMode: TPrivilegeColoring;
+    function GetPrivilege: TPrivilege;
+    procedure SetColoringMode(Mode: TPrivilegeColoring);
+    procedure Adjust(NewAttributes: TPrivilegeAttributes);
+  public
+    constructor Create(Privilege: TPrivilege; const hxPolicy: ILsaHandle = nil);
+    class function CreateMany(const Privileges: TArray<TPrivilege>): TArray<IPrivilege>;
+  end;
+
 procedure TPrivilegeNodeData.Adjust;
 begin
   Privilege.Attributes := NewAttributes;
-  Cells[colState] := TNumeric.Represent(Privilege.Attributes).Text;
+  FColumnText[colState] := TNumeric.Represent(Privilege.Attributes).Text;
 
   SetColoringMode(ColoringMode);
   Invalidate;
@@ -135,28 +136,28 @@ begin
   inherited Create(colMax);
 
   Self.Privilege := Privilege;
-  Cells[colValue] := IntToStr(Privilege.Luid);
-  Cells[colState] := TNumeric.Represent(Privilege.Attributes).Text;
-  Cells[colIntegrity] := TNumeric.Represent(
+  FColumnText[colValue] := IntToStr(Privilege.Luid);
+  FColumnText[colState] := TNumeric.Represent(Privilege.Attributes).Text;
+  FColumnText[colIntegrity] := TNumeric.Represent(
     LsaxQueryIntegrityPrivilege(Privilege.Luid)).Text;
 
   // Try to query the name and the description from the system
-  if LsaxQueryPrivilege(Privilege.Luid, Cells[colName], Cells[colDescription],
-    hxPolicy).IsSuccess then
+  if LsaxQueryPrivilege(Privilege.Luid, FColumnText[colName],
+    FColumnText[colDescription], hxPolicy).IsSuccess then
   begin
-    Cells[colFriendly] := PrettifyCamelCase(Cells[colName], 'Se');
+    FColumnText[colFriendly] := PrettifyCamelCase(FColumnText[colName], 'Se');
 
-    Hint := BuildHint([
-      THintSection.New('Friendly Name', Cells[colFriendly]),
-      THintSection.New('Description', Cells[colDescription]),
-      THintSection.New('Required Integrity', Cells[colIntegrity]),
-      THintSection.New('Value', Cells[colValue])
+    FHint := BuildHint([
+      THintSection.New('Friendly Name', FColumnText[colFriendly]),
+      THintSection.New('Description', FColumnText[colDescription]),
+      THintSection.New('Required Integrity', FColumnText[colIntegrity]),
+      THintSection.New('Value', FColumnText[colValue])
     ]);
   end
   else
   begin
     // Otherwise, prepare names based on well-known privileges
-    Cells[colFriendly] := TNumeric.Represent(TSeWellKnownPrivilege(
+    FColumnText[colFriendly] := TNumeric.Represent(TSeWellKnownPrivilege(
       Privilege.Luid)).Text;
   end;
 
@@ -183,21 +184,21 @@ end;
 procedure TPrivilegeNodeData.SetColoringMode;
 begin
   ColoringMode := Mode;
-  HasColor := Mode <> pcNone;
+  FHasColor := Mode <> pcNone;
 
   case Mode of
-    pcRemoved: Color := ColorSettings.clRemoved;
+    pcRemoved: FColor := ColorSettings.clRemoved;
     pcStateBased:
       if BitTest(Privilege.Attributes and SE_PRIVILEGE_ENABLED) then
         if BitTest(Privilege.Attributes and SE_PRIVILEGE_ENABLED_BY_DEFAULT) then
-          Color := ColorSettings.clEnabled
+          FColor := ColorSettings.clEnabled
         else
-          Color := ColorSettings.clEnabledModified
+          FColor := ColorSettings.clEnabledModified
       else
         if BitTest(Privilege.Attributes and SE_PRIVILEGE_ENABLED_BY_DEFAULT) then
-          Color := ColorSettings.clDisabledModified
+          FColor := ColorSettings.clDisabledModified
         else
-          Color := ColorSettings.clDisabled;
+          FColor := ColorSettings.clDisabled;
   end;
 
   Invalidate;

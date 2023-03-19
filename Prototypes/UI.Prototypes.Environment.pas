@@ -99,8 +99,6 @@ end;
 
 procedure TEnvironmentFrame.SetHighlighting(const Value:
   TArray<TEnvironmentHightligter>);
-var
-  i: Integer;
 begin
   FHighlight := Value;
   SetEnvironment(FEnvirinment);
