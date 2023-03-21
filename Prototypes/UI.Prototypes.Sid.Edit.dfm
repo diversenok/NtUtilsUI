@@ -17,6 +17,7 @@ object SidEditor: TSidEditor
     TabOrder = 0
     TextHint = 'Start typing or press DOWN to show suggestions'
     OnChange = tbxSidChange
+    OnEnter = tbxSidEnter
   end
   object btnDsPicker: TButton
     Left = 575
