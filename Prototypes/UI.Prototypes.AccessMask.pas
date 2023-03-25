@@ -23,7 +23,7 @@ type
     GenericMapping: TGenericMapping;
     FReadOnly: Boolean;
     procedure AddItem(const Flag: TFlagName; Group: Integer; const ItemData: IInterface);
-    procedure PopulateItems(Attributes: TArray<TCustomAttribute>);
+    procedure PopulateItems(Attributes: TArray<TCustomAttribute>; SpecificOnly: Boolean);
     procedure UpdateEdit;
     procedure UpdateCheckboxes;
     procedure SetAccessMask(const Value: TAccessMask);
@@ -31,7 +31,8 @@ type
   public
     property AccessMask: TAccessMask read FAccessMask write SetAccessMask;
     property IsReadOnly: Boolean read FReadOnly write SetReadOnly;
-    procedure LoadType(AType: Pointer; const Mapping: TGenericMapping);
+    procedure LoadType(AType: Pointer; const Mapping: TGenericMapping;
+      SpecificOnly: Boolean = False);
   end;
 
 implementation
@@ -134,7 +135,7 @@ begin
     if Assigned(AType) and (AType <> TypeInfo(TAccessMask)) then
     begin
       Attributes := RttiContext.GetType(AType).GetAttributes;
-      PopulateItems(Attributes);
+      PopulateItems(Attributes, SpecificOnly);
     end
     else
       Attributes := nil;
@@ -144,7 +145,7 @@ begin
       Attributes, FilterFullAccess, GENERIC_RIGHTS_ALL);
 
     // Add standard, generic, and other access rights
-    PopulateItems(RttiContext.GetType(TypeInfo(TAccessMask)).GetAttributes);
+    PopulateItems(RttiContext.GetType(TypeInfo(TAccessMask)).GetAttributes, SpecificOnly);
 
     // Enable event and redraw back
     EndUpdate;
@@ -217,7 +218,7 @@ begin
       AddItem(Flag, GROUP_STANDARD, ItemData)
 
     // Generic bits do that as well
-    else if Flag.Value and GENERIC_RIGHTS_ALL <> 0 then
+    else if not SpecificOnly and (Flag.Value and GENERIC_RIGHTS_ALL <> 0) then
       AddItem(Flag, GROUP_GENERIC, ItemData)
 
     // Specific rights have more options
@@ -250,7 +251,7 @@ begin
     end
 
     // The rets goes to misc.
-    else
+    else if not SpecificOnly then
       AddItem(Flag, GROUP_MISC, ItemData);
   end;
 end;
