@@ -28,6 +28,7 @@ type
     FPreviouslySelected, FPreviouslySelectedValid: Boolean;
     FOnSelected: TVTChangeEvent;
 
+    function Attached: Boolean; virtual;
     procedure Attach(Value: PVirtualNode); virtual;
     procedure NotifyChecked; virtual;
     procedure NotifySelected; virtual;
@@ -111,6 +112,11 @@ begin
     FTree := nil;
 end;
 
+function TNodeProvider.Attached;
+begin
+  Result := Assigned(FTree) and Assigned(FNode);
+end;
+
 constructor TNodeProvider.Create;
 begin
   inherited Create;
@@ -188,18 +194,21 @@ end;
 
 procedure TNodeProvider.Invalidate;
 begin
-  if Assigned(FTree) then
+  if Attached then
     FTree.InvalidateNode(FNode);
 end;
 
 procedure TNodeProvider.NotifyChecked;
 begin
-  if Assigned(FOnChecked) then
+  if Assigned(FOnChecked) and Attached then
     FOnChecked(FTree, FNode);
 end;
 
 procedure TNodeProvider.NotifySelected;
 begin
+  if not Attached then
+    Exit;
+
   // Check if selection actually changed
   if FPreviouslySelectedValid and
     not (FPreviouslySelected xor (vsSelected in FNode.States)) then
