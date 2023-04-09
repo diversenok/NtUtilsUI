@@ -16,11 +16,6 @@ procedure ReportException(E: Exception);
 // Set NtUiLib exception dialog as the hander for Application.OnException
 procedure EnableNtUiLibExceptionHandling;
 
-// Add stack trace support to exception handling
-procedure EnableStackTracingExceptions(
-  OnlyWhenSymbolsAvailable: Boolean
-);
-
 type
   // Custom exception-safe invokers for automatic events
   TExceptionSafeInvoker = record
@@ -43,9 +38,7 @@ type
 implementation
 
 uses
-  Ntapi.ntioapi, NtUtils, NtUtils.Ldr, NtUtils.DbgHelp, NtUtils.Files,
-  NtUtils.Files.Open, NtUtils.SysUtils, DelphiUtils.AutoObjects,
-  NtUiLib.Exceptions.Dialog, Vcl.Forms;
+  DelphiUtils.AutoObjects, NtUiLib.Exceptions.Dialog, Vcl.Forms;
 
 { NtUiLib Exception Hanlder }
 
@@ -72,76 +65,6 @@ end;
 procedure TUIExceptionHandler.Display;
 begin
   ReportException(E);
-end;
-
-{ Stack Trace Support }
-
-// A callback for capturing the stack trace when an exception occurs
-function GetExceptionStackInfoProc(P: PExceptionRecord): Pointer;
-var
-  Trace: TArray<Pointer> absolute Result;
-  i: Integer;
-begin
-  // Clean-up before assigning
-  Result := nil;
-
-  // Capture the backtrace
-  Trace := RtlxCaptureStackTrace;
-
-  // Trim it by removing exception-handling frames
-  for i := 0 to High(Trace) do
-    if Trace[i] = P.ExceptionAddress then
-    begin
-      Delete(Trace, 0, i);
-      Break;
-    end;
-end;
-
-{$IFDEF Win64}
-// A callback for representing the stack trace
-function GetStackInfoStringProc(Info: Pointer): string;
-var
-  Trace: TArray<Pointer> absolute Info;
-  Modules: TArray<TModuleEntry>;
-  Frames: TArray<String>;
-  i: Integer;
-begin
-  Modules := LdrxEnumerateModules;
-  SetLength(Frames, Length(Trace));
-
-  for i := 0 to High(Trace) do
-    Frames[i] := SymxFindBestMatch(Modules, Trace[i]).ToString;
-
-  Result := String.Join(#$D#$A, Frames);
-end;
-{$ELSE}
-function GetStackInfoStringProc(Info: Pointer): string;
-begin
-  // TODO: fix NtUtils's DbgHelp support on WoW64
-  // TODO: fallback to export-based symbol enumeration
-  Result := '(not supported under WoW64)';
-end;
-{$ENDIF}
-
-procedure CleanUpStackInfoProc(Info: Pointer);
-var
-  Trace: TArray<Pointer> absolute Info;
-begin
-  Finalize(Trace);
-end;
-
-procedure EnableStackTracingExceptions;
-var
-  hxSymbols: IHandle;
-begin
-  if not OnlyWhenSymbolsAvailable or NtxOpenFile(hxSymbols, FileParameters
-    .UseFileName(RtlxReplaceExtensionPath(ParamStr(0), 'dbg'), fnWin32)
-    .UseOptions(FILE_NON_DIRECTORY_FILE)).IsSuccess then
-  begin
-    Exception.GetExceptionStackInfoProc := GetExceptionStackInfoProc;
-    Exception.GetStackInfoStringProc := GetStackInfoStringProc;
-    Exception.CleanUpStackInfoProc := CleanUpStackInfoProc;
-  end;
 end;
 
 { Safe Event Invoker }
