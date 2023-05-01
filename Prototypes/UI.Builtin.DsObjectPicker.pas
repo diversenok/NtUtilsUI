@@ -10,9 +10,10 @@ interface
 {$MINENUMSIZE 4}
 
 uses
-  Ntapi.WinUser, DelphiApi.Reflection, NtUtils;
+  Ntapi.WinUser, Ntapi.ObjBase, DelphiApi.Reflection, NtUtils;
 
 // Show the dialog and retieve the selected account name
+[RequiresCOM]
 function ComxCallDsObjectPicker(
   ParentWindow: THwnd;
   out AccountName: String
@@ -21,7 +22,7 @@ function ComxCallDsObjectPicker(
 implementation
 
 uses
-  Ntapi.WinNt, Ntapi.ntstatus, Ntapi.ObjBase, NtUtils.Com.Dispatch,
+  Ntapi.WinNt, Ntapi.ntstatus, NtUtils.Com,
   DelphiUtils.AutoObjects;
 
 const
@@ -123,7 +124,6 @@ const
 
   // SDK::ObjSel.h
   CLSID_DsObjectPicker: TGuid = '{17D6CCD8-3B7B-11D2-B9E0-00C04FD8DBF7}';
-  IID_IDsObjectPicker: TGuid = '{0C87E64E-3B7A-11D2-B9E0-00C04FD8DBF7}';
 
   // SDK::ObjSel.h
   CFSTR_DSOP_DS_SELECTION_LIST = 'CFSTR_DSOP_DS_SELECTION_LIST';
@@ -320,7 +320,6 @@ end;
 
 function ComxCallDsObjectPicker;
 var
-  ComInit: IAutoReleasable;
   Picker: IDsObjectPicker;
   InitInfo: TDsOpInitInfo;
   ScopeInfo: TDsOpScopeInitInfo;
@@ -330,13 +329,8 @@ var
   SelList: PDSSelectionList;
   Lock: IAutoReleasable;
 begin
-  Result := ComxInitialize(ComInit, COINIT_APARTMENTTHREADED);
-
-  if not Result.IsSuccess then
-    Exit;
-
-  Result := ComxCreateInstance(CLSID_DsObjectPicker, IID_IDsObjectPicker,
-    Picker, CLSCTX_INPROC_SERVER);
+  Result := ComxCreateInstanceWithFallback('objsel.dll', CLSID_DsObjectPicker,
+    IDsObjectPicker, Picker, 'CLSID_DsObjectPicker');
 
   if not Result.IsSuccess then
     Exit;
