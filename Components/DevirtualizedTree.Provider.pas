@@ -13,7 +13,7 @@ uses
 type
   TNodeProvider = class (TInterfacedObject, INodeProvider)
   protected
-    FTree: TBaseVirtualTree;
+    FTree: TDevirtualizedTree;
     FNode: PVirtualNode;
     FColumnText: TArray<String>;
     FHint: String;
@@ -24,14 +24,18 @@ type
     FHasFontStyle: Boolean;
     FFontStyle: TFontStyles;
     FEnabledInspectMenu: Boolean;
+    FOnAttach: TVTChangeEvent;
     FOnChecked: TVTChangeEvent;
     FPreviouslySelected, FPreviouslySelectedValid: Boolean;
     FOnSelected: TVTChangeEvent;
+    FOnExpanding, FOnCollapsing: TVTChangeEvent;
 
     function Attached: Boolean; virtual;
     procedure Attach(Value: PVirtualNode); virtual;
     procedure NotifyChecked; virtual;
     procedure NotifySelected; virtual;
+    procedure NotifyExpanding(var HasChildren: Boolean); virtual;
+    procedure NotifyCollapsing(var HasChildren: Boolean); virtual;
 
     function GetTree: TBaseVirtualTree; virtual;
     function GetNode: PVirtualNode; virtual;
@@ -44,15 +48,18 @@ type
     function GetFontStyle: TFontStyles; virtual;
     function GetHasFontStyle: Boolean; virtual;
     function GetEnabledInspectMenu: Boolean; virtual;
+    function GetOnAttach: TVTChangeEvent; virtual;
     function GetOnChecked: TVTChangeEvent; virtual;
     function GetOnSelected: TVTChangeEvent; virtual;
+    function GetOnExpanding: TVTChangeEvent; virtual;
+    function GetOnCollapsing: TVTChangeEvent; virtual;
   public
     constructor Create(InitialColumnCount: Integer = 1);
     procedure Invalidate; virtual;
   end;
 
   IEditableNodeProvider = interface (INodeProvider)
-    ['{C4211977-15A3-46FC-8935-30004824258F}']
+    ['{5E05DBBA-5A5C-44A8-A531-B55DB58362A5}']
     procedure Invalidate;
 
     procedure SetColumnText(Index: Integer; const Value: String);
@@ -61,8 +68,11 @@ type
     procedure SetFontColor(Value: TColor);
     procedure SetFontStyle(Value: TFontStyles);
     procedure SetEnabledInspectMenu(Value: Boolean);
+    procedure SetOnAttach(Value: TVTChangeEvent);
     procedure SetOnChecked(Value: TVTChangeEvent);
     procedure SetOnSelected(Value: TVTChangeEvent);
+    procedure SetOnExpanding(Value: TVTChangeEvent);
+    procedure SetOnCollapsing(Value: TVTChangeEvent);
 
     procedure ResetColor;
     procedure ResetFontColor;
@@ -79,8 +89,11 @@ type
     property FontStyle: TFontStyles read GetFontStyle write SetFontStyle;
     property HasFontStyle: Boolean read GetHasFontStyle;
     property EnabledInspectMenu: Boolean read GetEnabledInspectMenu write SetEnabledInspectMenu;
+    property OnAttach: TVTChangeEvent read GetOnAttach write SetOnAttach;
     property OnChecked: TVTChangeEvent read GetOnChecked write SetOnChecked;
     property OnSelected: TVTChangeEvent read GetOnSelected write SetOnSelected;
+    property OnExpanding: TVTChangeEvent read GetOnExpanding write SetOnExpanding;
+    property OnCollapsing: TVTChangeEvent read GetOnCollapsing write SetOnCollapsing;
   end;
 
   TEditableNodeProvider = class (TNodeProvider, IEditableNodeProvider)
@@ -91,8 +104,11 @@ type
     procedure SetFontColor(Value: TColor); virtual;
     procedure SetFontStyle(Value: TFontStyles); virtual;
     procedure SetEnabledInspectMenu(Value: Boolean); virtual;
+    procedure SetOnAttach(Value: TVTChangeEvent); virtual;
     procedure SetOnChecked(Value: TVTChangeEvent); virtual;
     procedure SetOnSelected(Value: TVTChangeEvent); virtual;
+    procedure SetOnExpanding(Value: TVTChangeEvent); virtual;
+    procedure SetOnCollapsing(Value: TVTChangeEvent); virtual;
     procedure ResetColor; virtual;
     procedure ResetFontColor; virtual;
     procedure ResetFontStyle; virtual;
@@ -103,13 +119,19 @@ implementation
 { TNodeProvider }
 
 procedure TNodeProvider.Attach;
+var
+  FBaseTree: TBaseVirtualTree;
 begin
   FNode := Value;
+  FBaseTree := TreeFromNode(Value);
 
-  if Assigned(Value) then
-    FTree := TreeFromNode(Value)
+  if Assigned(Value) and (FBaseTree is TDevirtualizedTree) then
+    FTree :=  TDevirtualizedTree(FBaseTree)
   else
     FTree := nil;
+
+  if Attached and Assigned(FOnAttach) then
+    FOnAttach(FTree, FNode);
 end;
 
 function TNodeProvider.Attached;
@@ -177,9 +199,24 @@ begin
   Result := FNode;
 end;
 
+function TNodeProvider.GetOnAttach;
+begin
+  Result := FOnAttach;
+end;
+
 function TNodeProvider.GetOnChecked;
 begin
   Result := FOnChecked;
+end;
+
+function TNodeProvider.GetOnCollapsing;
+begin
+  Result := FOnCollapsing;
+end;
+
+function TNodeProvider.GetOnExpanding;
+begin
+  Result := FOnExpanding;
 end;
 
 function TNodeProvider.GetOnSelected;
@@ -202,6 +239,18 @@ procedure TNodeProvider.NotifyChecked;
 begin
   if Assigned(FOnChecked) and Attached then
     FOnChecked(FTree, FNode);
+end;
+
+procedure TNodeProvider.NotifyCollapsing;
+begin
+  if Assigned(FOnCollapsing) and Attached then
+    FOnCollapsing(FTree, FNode);
+end;
+
+procedure TNodeProvider.NotifyExpanding;
+begin
+  if Assigned(FOnExpanding) and Attached then
+    FOnExpanding(FTree, FNode);
 end;
 
 procedure TNodeProvider.NotifySelected;
@@ -306,9 +355,24 @@ begin
   Invalidate;
 end;
 
+procedure TEditableNodeProvider.SetOnAttach;
+begin
+  FOnAttach := Value;
+end;
+
 procedure TEditableNodeProvider.SetOnChecked;
 begin
   FOnChecked := Value;
+end;
+
+procedure TEditableNodeProvider.SetOnCollapsing;
+begin
+  FOnCollapsing := Value;
+end;
+
+procedure TEditableNodeProvider.SetOnExpanding;
+begin
+  FOnExpanding := Value;
 end;
 
 procedure TEditableNodeProvider.SetOnSelected;

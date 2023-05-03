@@ -11,11 +11,15 @@ uses
   VirtualTrees, VirtualTreesEx, Vcl.Graphics, System.Classes, System.Types;
 
 type
+  PVirtualNode = VirtualTrees.PVirtualNode;
+
   INodeProvider = interface
-    ['{F0967DC6-80D6-4910-BDB8-41F979410E7A}']
+    ['{24F61FDB-F8D3-4EA1-999F-31984177F6F0}']
     procedure Attach(Node: PVirtualNode);
     procedure NotifyChecked;
     procedure NotifySelected;
+    procedure NotifyExpanding(var HasChildren: Boolean);
+    procedure NotifyCollapsing(var HasChildren: Boolean);
 
     function GetTree: TBaseVirtualTree;
     function GetNode: PVirtualNode;
@@ -28,8 +32,11 @@ type
     function GetFontStyle: TFontStyles;
     function GetHasFontStyle: Boolean;
     function GetEnabledInspectMenu: Boolean;
+    function GetOnAttach: TVTChangeEvent;
     function GetOnChecked: TVTChangeEvent;
     function GetOnSelected: TVTChangeEvent;
+    function GetOnExpanding: TVTChangeEvent;
+    function GetOnCollapsing: TVTChangeEvent;
 
     property Tree: TBaseVirtualTree read GetTree;
     property Node: PVirtualNode read GetNode;
@@ -42,8 +49,11 @@ type
     property FontStyle: TFontStyles read GetFontStyle;
     property HasFontStyle: Boolean read GetHasFontStyle;
     property EnabledInspectMenu: Boolean read GetEnabledInspectMenu;
+    property OnAttach: TVTChangeEvent read GetOnAttach;
     property OnChecked: TVTChangeEvent read GetOnChecked;
     property OnSelected: TVTChangeEvent read GetOnSelected;
+    property OnExpanding: TVTChangeEvent read GetOnExpanding;
+    property OnCollapsing: TVTChangeEvent read GetOnCollapsing;
   end;
 
   TVirtualNodeHelper = record helper for TVirtualNode
@@ -68,10 +78,12 @@ type
     procedure DoChange(Node: PVirtualNode); override;
     procedure DoRemoveFromSelection(Node: PVirtualNode); override;
     procedure ValidateNodeDataSize(var Size: Integer); override;
+    function DoExpanding(Node: PVirtualNode): Boolean; override;
+    function DoCollapsing(Node: PVirtualNode): Boolean; override;
   public
     function OverrideInspectMenuEnabled(Node: PVirtualNode): Boolean; override;
-    function AddChild(Parent: PVirtualNode; const Provider: INodeProvider): PVirtualNode; overload;
-    function InsertNode(Node: PVirtualNode; Mode: TVTNodeAttachMode; const Provider: INodeProvider): PVirtualNode; overload;
+    function AddChildEx(Parent: PVirtualNode; const Provider: INodeProvider): PVirtualNode; overload;
+    function InsertNodeEx(Node: PVirtualNode; Mode: TVTNodeAttachMode; const Provider: INodeProvider): PVirtualNode; overload;
   end;
 
 procedure Register;
@@ -138,7 +150,7 @@ end;
 
 { TDevirtualizedTree }
 
-function TDevirtualizedTree.AddChild(
+function TDevirtualizedTree.AddChildEx(
   Parent: PVirtualNode;
   const Provider: INodeProvider
 ): PVirtualNode;
@@ -184,6 +196,22 @@ begin
 
   if Node.HasProvider then
     Node.Provider.NotifyChecked;
+end;
+
+function TDevirtualizedTree.DoCollapsing;
+begin
+  Result := inherited;
+
+  if Node.HasProvider then
+    Node.Provider.NotifyCollapsing(Result);
+end;
+
+function TDevirtualizedTree.DoExpanding;
+begin
+  Result := inherited;
+
+  if Node.HasProvider then
+    Node.Provider.NotifyExpanding(Result);
 end;
 
 function TDevirtualizedTree.DoGetNodeHint;
@@ -233,7 +261,7 @@ begin
     Node.Provider.NotifySelected;
 end;
 
-function TDevirtualizedTree.InsertNode(
+function TDevirtualizedTree.InsertNodeEx(
   Node: PVirtualNode;
   Mode: TVTNodeAttachMode;
   const Provider: INodeProvider
