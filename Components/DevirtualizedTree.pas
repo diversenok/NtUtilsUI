@@ -14,8 +14,10 @@ type
   PVirtualNode = VirtualTrees.PVirtualNode;
 
   INodeProvider = interface
-    ['{24F61FDB-F8D3-4EA1-999F-31984177F6F0}']
+    ['{29A66452-4879-4ABB-8CE1-DC84F83D21E5}']
     procedure Attach(Node: PVirtualNode);
+    procedure Detach;
+    procedure Invalidate;
     procedure NotifyChecked;
     procedure NotifySelected;
     procedure NotifyExpanding(var HasChildren: Boolean);
@@ -32,11 +34,6 @@ type
     function GetFontStyle: TFontStyles;
     function GetHasFontStyle: Boolean;
     function GetEnabledInspectMenu: Boolean;
-    function GetOnAttach: TVTChangeEvent;
-    function GetOnChecked: TVTChangeEvent;
-    function GetOnSelected: TVTChangeEvent;
-    function GetOnExpanding: TVTChangeEvent;
-    function GetOnCollapsing: TVTChangeEvent;
 
     property Tree: TBaseVirtualTree read GetTree;
     property Node: PVirtualNode read GetNode;
@@ -49,11 +46,6 @@ type
     property FontStyle: TFontStyles read GetFontStyle;
     property HasFontStyle: Boolean read GetHasFontStyle;
     property EnabledInspectMenu: Boolean read GetEnabledInspectMenu;
-    property OnAttach: TVTChangeEvent read GetOnAttach;
-    property OnChecked: TVTChangeEvent read GetOnChecked;
-    property OnSelected: TVTChangeEvent read GetOnSelected;
-    property OnExpanding: TVTChangeEvent read GetOnExpanding;
-    property OnCollapsing: TVTChangeEvent read GetOnCollapsing;
   end;
 
   TVirtualNodeHelper = record helper for TVirtualNode
@@ -80,6 +72,7 @@ type
     procedure ValidateNodeDataSize(var Size: Integer); override;
     function DoExpanding(Node: PVirtualNode): Boolean; override;
     function DoCollapsing(Node: PVirtualNode): Boolean; override;
+    procedure DoFreeNode(Node: PVirtualNode); override;
   public
     function OverrideInspectMenuEnabled(Node: PVirtualNode): Boolean; override;
     function AddChildEx(Parent: PVirtualNode; const Provider: INodeProvider): PVirtualNode; overload;
@@ -212,6 +205,14 @@ begin
 
   if Node.HasProvider then
     Node.Provider.NotifyExpanding(Result);
+end;
+
+procedure TDevirtualizedTree.DoFreeNode(Node: PVirtualNode);
+begin
+  if Node.HasProvider then
+    Node.Provider.Detach;
+
+  inherited;
 end;
 
 function TDevirtualizedTree.DoGetNodeHint;
