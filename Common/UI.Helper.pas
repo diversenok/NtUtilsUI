@@ -6,7 +6,6 @@ uses
   VirtualTrees, VirtualTreesEx, Vcl.StdCtrls, Vcl.Menus, System.Classes,
   NtUtils, DelphiUtils.Arrays;
 
-
 type
   TCollectionHelper = class helper for TCollection
     function BeginUpdateAuto: IAutoReleasable;
@@ -16,6 +15,11 @@ type
   TVirtualTreeAutoHelper = class helper for TBaseVirtualTree
     function BeginUpdateAuto: IAutoReleasable;
     function BackupSelectionAuto(Comparer: TMapRoutine<PVirtualNode, TCondition<PVirtualNode>>): IAutoReleasable;
+  end;
+
+  TComboBoxHelper = class helper for TComboBox
+    // Update the list of items preserving selection
+    procedure UpdateItems(const NewItems: TArray<String>; FallbackIndex: Integer = -1);
   end;
 
   // Change of checkbox state that does not issue OnClick event
@@ -107,6 +111,54 @@ begin
       EndUpdate;
     end
   );
+end;
+
+{ TComboBoxHelper }
+
+procedure TComboBoxHelper.UpdateItems;
+var
+  PreviousEvent: TNotifyEvent;
+  PreviousItem: String;
+  PreviousItemFound: Boolean;
+  i: Integer;
+begin
+  // Save the current state
+  PreviousItem := Self.Text;
+  PreviousEvent := Self.OnChange;
+
+  // Remove all items
+  Self.OnChange := nil;
+  Self.Items.BeginUpdate;
+  Auto.Delay(
+    procedure
+    begin
+      Self.Items.EndUpdate;
+      Self.OnChange := PreviousEvent;
+    end
+  );
+  Self.Clear;
+
+  // Add new items
+  for i := 0 to High(NewItems) do
+    Self.Items.Add(NewItems[i]);
+
+  // Restore selection
+  PreviousItemFound := False;
+  for i := 0 to Pred(Self.Items.Count) do
+    if Self.Items[i] = PreviousItem then
+    begin
+      Self.Text := PreviousItem;
+      Self.ItemIndex := i;
+      PreviousItemFound := True;
+      Break;
+    end;
+
+  // Reset selection if necessary
+  if not PreviousItemFound then
+  begin
+    Self.Text := PreviousItem;
+    Self.ItemIndex := FallbackIndex;
+  end;
 end;
 
 { TCheckBoxHack }

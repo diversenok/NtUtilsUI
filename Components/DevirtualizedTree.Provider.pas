@@ -38,6 +38,7 @@ type
     procedure NotifySelected; virtual;
     procedure NotifyExpanding(var HasChildren: Boolean); virtual;
     procedure NotifyCollapsing(var HasChildren: Boolean); virtual;
+    function MatchesSearch(const Query: String; Column: TColumnIndex): Boolean; virtual;
 
     function GetTree: TBaseVirtualTree; virtual;
     function GetNode: PVirtualNode; virtual;
@@ -55,7 +56,7 @@ type
   end;
 
   IEditableNodeProvider = interface (INodeProvider)
-    ['{BE0A44E1-3786-4C08-AF1F-4CCFC87A8A75}']
+    ['{19DB09B5-24A3-420E-9603-0901E8E540B7}']
 
     procedure SetColumnText(Index: Integer; const Value: String);
     procedure SetHint(const Value: String);
@@ -142,6 +143,9 @@ type
   end;
 
 implementation
+
+uses
+  System.SysUtils;
 
 { TNodeProvider }
 
@@ -242,6 +246,26 @@ procedure TNodeProvider.Invalidate;
 begin
   if Attached then
     FTree.InvalidateNode(FNode);
+end;
+
+function TNodeProvider.MatchesSearch;
+var
+  QueryLowercase: string;
+  i: TVirtualTreeColumn;
+begin
+  QueryLowercase := Query.ToLower;
+
+  // Single-column queries
+  if Column >= 0 then
+    Exit(GetColumnText(Column).ToLower.Contains(QueryLowercase));
+
+  // Multi-column queries require at least one visible column to match
+  if Attached then
+    for i in FTree.Header.Columns.GetVisibleColumns do
+      if GetColumnText(i.Index).ToLower.Contains(QueryLowercase) then
+        Exit(True);
+
+  Result := False;
 end;
 
 procedure TNodeProvider.NotifyChecked;
