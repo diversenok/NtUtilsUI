@@ -24,6 +24,7 @@ type
     FLoaded: Boolean;
     FImages: TImageList;
     FTree: TDevirtualizedTree;
+    FColumnIndexes: TArray<TColumnIndex>;
     FOnQueryChange: TNotifyEvent;
     procedure LoadIcons;
     procedure UpdateColumns;
@@ -111,8 +112,12 @@ end;
 
 function TSearchFrame.GetQueryColumn;
 begin
-  // Shit indexes by one because the first item indicates 'All columns'
-  Result := cbxColumn.ItemIndex - 1;
+  Result := cbxColumn.ItemIndex;
+
+  if (Result > 0) and (Result <= High(FColumnIndexes)) then
+    Result := FColumnIndexes[Result]
+  else
+    Result := -1;
 end;
 
 function TSearchFrame.GetQueryText;
@@ -192,12 +197,18 @@ begin
   if not Assigned(FTree) then
     Exit;
 
+  // Collect all visible columns + one for searching all at once
   NewColumns := FTree.Header.Columns.GetVisibleColumns;
   SetLength(NewItems, Length(NewColumns) + 1);
+  SetLength(FColumnIndexes, Length(NewColumns) + 1);
   NewItems[0] := 'All visible columns';
+  FColumnIndexes[0] := -1;
 
   for i := 0 to High(NewColumns) do
+  begin
     NewItems[i + 1] := NewColumns[i].Text;
+    FColumnIndexes[i + 1] := NewColumns[i].Index;
+  end;
 
   cbxColumn.UpdateItems(NewItems, 0);
   ApplySearch;
