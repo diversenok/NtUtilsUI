@@ -32,8 +32,12 @@ type
   TAppContainersFrame = class(TFrame)
     SearchBox: TSearchFrame;
     Tree: TDevirtualizedTree;
+    procedure TreeAddToSelection(Sender: TBaseVirtualTree; Node: PVirtualNode);
+    procedure TreeRemoveFromSelection(Sender: TBaseVirtualTree;
+      Node: PVirtualNode);
   private
     FOnInspect: TInspectAppContainer;
+    FOnSelectionChanged: TNotifyEvent;
     procedure InspectNode(Node: PVirtualNode);
     procedure SetOnInspect(const Value: TInspectAppContainer);
     function GetSelectedCount: Integer;
@@ -46,6 +50,7 @@ type
     function BeginUpdateAuto: IAutoReleasable;
     function AddItem(const Info: TAppContainerInfo; const Parent: IAppContainerNode = nil): IAppContainerNode;
     property OnInspect: TInspectAppContainer read FOnInspect write SetOnInspect;
+    property OnSelectionChanged: TNotifyEvent read FOnSelectionChanged write FOnSelectionChanged;
     property Selected: TArray<IAppContainerNode> read GetSelected;
     property SelectedCount: Integer read GetSelectedCount;
     property FocusedItem: IAppContainerNode read GetFocusedItem;
@@ -218,6 +223,18 @@ begin
     Tree.OnInspectNode := InspectNode
   else
     Tree.OnInspectNode := nil;
+end;
+
+procedure TAppContainersFrame.TreeAddToSelection;
+begin
+  if Assigned(FOnSelectionChanged) then
+    FOnSelectionChanged(Self);
+end;
+
+procedure TAppContainersFrame.TreeRemoveFromSelection;
+begin
+  if Assigned(FOnSelectionChanged) then
+    FOnSelectionChanged(Self);
 end;
 
 end.
