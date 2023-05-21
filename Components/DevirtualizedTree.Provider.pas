@@ -20,6 +20,7 @@ type
   protected
     FTree: TDevirtualizedTree;
     FNode: PVirtualNode;
+    FInitialized: Boolean;
     FColumnText: TArray<String>;
     FHint: String;
     FHasColor: Boolean;
@@ -33,6 +34,7 @@ type
     function Attached: Boolean; virtual;
     procedure Attach(Value: PVirtualNode); virtual;
     procedure Detach; virtual;
+    procedure Initialize; virtual;
     procedure Invalidate; virtual;
     procedure NotifyChecked; virtual;
     procedure NotifySelected; virtual;
@@ -56,7 +58,7 @@ type
   end;
 
   IEditableNodeProvider = interface (INodeProvider)
-    ['{19DB09B5-24A3-420E-9603-0901E8E540B7}']
+    ['{A0F36B1F-7838-41C2-B1EE-700BC7FFDE9D}']
 
     procedure SetColumnText(Index: Integer; const Value: String);
     procedure SetHint(const Value: String);
@@ -240,6 +242,11 @@ end;
 function TNodeProvider.GetTree;
 begin
   Result := FTree;
+end;
+
+procedure TNodeProvider.Initialize;
+begin
+  FInitialized := True;
 end;
 
 procedure TNodeProvider.Invalidate;

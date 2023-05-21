@@ -14,9 +14,10 @@ type
   PVirtualNode = VirtualTrees.PVirtualNode;
 
   INodeProvider = interface
-    ['{50A7C025-E565-48B4-829F-EE4E2E68FBBE}']
+    ['{73CD9263-15D9-470E-937A-1EFDBBF60AF4}']
     procedure Attach(Node: PVirtualNode);
     procedure Detach;
+    procedure Initialize;
     procedure Invalidate;
     procedure NotifyChecked;
     procedure NotifySelected;
@@ -74,10 +75,11 @@ type
     function DoExpanding(Node: PVirtualNode): Boolean; override;
     function DoCollapsing(Node: PVirtualNode): Boolean; override;
     procedure DoFreeNode(Node: PVirtualNode); override;
+    procedure DoInitNode(Parent, Node: PVirtualNode; var InitStates: TVirtualNodeInitStates); override;
   public
     function OverrideInspectMenuEnabled(Node: PVirtualNode): Boolean; override;
-    function AddChildEx(Parent: PVirtualNode; const Provider: INodeProvider): PVirtualNode; overload;
-    function InsertNodeEx(Node: PVirtualNode; Mode: TVTNodeAttachMode; const Provider: INodeProvider): PVirtualNode; overload;
+    function AddChildEx(Parent: PVirtualNode; const Provider: INodeProvider): PVirtualNode;
+    function InsertNodeEx(Node: PVirtualNode; Mode: TVTNodeAttachMode; const Provider: INodeProvider): PVirtualNode;
   end;
 
 procedure Register;
@@ -144,10 +146,7 @@ end;
 
 { TDevirtualizedTree }
 
-function TDevirtualizedTree.AddChildEx(
-  Parent: PVirtualNode;
-  const Provider: INodeProvider
-): PVirtualNode;
+function TDevirtualizedTree.AddChildEx;
 begin
   Assert(Assigned(Provider), 'Provider must not be null');
   Result := inherited AddChild(Parent, IInterface(Provider));
@@ -208,7 +207,7 @@ begin
     Node.Provider.NotifyExpanding(Result);
 end;
 
-procedure TDevirtualizedTree.DoFreeNode(Node: PVirtualNode);
+procedure TDevirtualizedTree.DoFreeNode;
 begin
   if Node.HasProvider then
     Node.Provider.Detach;
@@ -239,6 +238,14 @@ begin
   inherited;
 end;
 
+procedure TDevirtualizedTree.DoInitNode;
+begin
+  inherited;
+
+  if Node.HasProvider then
+    Node.Provider.Initialize;
+end;
+
 procedure TDevirtualizedTree.DoPaintText;
 begin
   // Pre-load font styles
@@ -263,11 +270,7 @@ begin
     Node.Provider.NotifySelected;
 end;
 
-function TDevirtualizedTree.InsertNodeEx(
-  Node: PVirtualNode;
-  Mode: TVTNodeAttachMode;
-  const Provider: INodeProvider
-): PVirtualNode;
+function TDevirtualizedTree.InsertNodeEx;
 begin
   Assert(Assigned(Provider), 'Provider must not be null');
   Result := inherited InsertNode(Node, Mode, Pointer(IInterface(Provider)));
