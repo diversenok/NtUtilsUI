@@ -22,7 +22,7 @@ const
 
 type
   IAppContainerNode = interface (INodeProvider)
-    ['{660DF981-AC29-46FA-8E32-E88A60622CC6}']
+    ['{AF1E4CBD-1752-4655-8C13-D6B0D18AFE3D}']
     function GetInfo: TAppContainerInfo;
     property Info: TAppContainerInfo read GetInfo;
   end;
@@ -67,6 +67,8 @@ type
   TAppContainerNode = class (TNodeProvider, IAppContainerNode)
   private
     FInfo: TAppContainerInfo;
+  protected
+    procedure Initialize; override;
   public
     function GetInfo: TAppContainerInfo;
     constructor Create(
@@ -75,23 +77,33 @@ type
   end;
 
 constructor TAppContainerNode.Create;
-var
-  IsPackage: Boolean;
 begin
   inherited Create(colMax);
   FInfo := Info;
+end;
 
-  FColumnText[colSID] := RtlxSidToString(Info.Sid);
-  FColumnText[colMoniker] := RtlxStringOrDefault(Info.Moniker, 'Unknown');
+function TAppContainerNode.GetInfo;
+begin
+  Result := FInfo;
+end;
 
-  if Info.Moniker <> '' then
+procedure TAppContainerNode.Initialize;
+var
+  IsPackage: Boolean;
+begin
+  inherited;
+
+  FColumnText[colSID] := RtlxSidToString(FInfo.Sid);
+  FColumnText[colMoniker] := RtlxStringOrDefault(FInfo.Moniker, 'Unknown');
+
+  if FInfo.Moniker <> '' then
   begin
-    IsPackage := PkgxIsValidFamilyName(Info.Moniker);
+    IsPackage := PkgxIsValidFamilyName(FInfo.Moniker);
     FColumnText[colIsPackage] := YesNoToString(IsPackage);
-    FColumnText[colDisplayName] := RtlxStringOrDefault(Info.DisplayName, '(None)');
-    FColumnText[colFriendlyName] := Info.DisplayName;
+    FColumnText[colDisplayName] := RtlxStringOrDefault(FInfo.DisplayName, '(None)');
+    FColumnText[colFriendlyName] := FInfo.DisplayName;
 
-    if RtlxPrefixString('@{', Info.DisplayName, True) then
+    if RtlxPrefixString('@{', FInfo.DisplayName, True) then
       PkgxExpandResourceStringVar(FColumnText[colFriendlyName]);
 
     FColumnText[colFriendlyName] := RtlxStringOrDefault(
@@ -116,11 +128,6 @@ begin
     FColumnText[colDisplayName] := 'Unknown';
     FColumnText[colIsPackage] := 'Unknown';
   end;
-end;
-
-function TAppContainerNode.GetInfo;
-begin
-  Result := FInfo;
 end;
 
 { TAppContainersFrame }
