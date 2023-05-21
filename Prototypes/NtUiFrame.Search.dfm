@@ -4,6 +4,7 @@ object SearchFrame: TSearchFrame
   Width = 436
   Height = 21
   Anchors = [akLeft, akTop, akRight]
+  Constraints.MinHeight = 21
   Constraints.MinWidth = 240
   TabOrder = 0
   object Splitter: TSplitter
@@ -25,6 +26,7 @@ object SearchFrame: TSearchFrame
     TabOrder = 0
     TextHint = 'Search'
     OnChange = tbxSearchBoxChange
+    OnKeyDown = tbxSearchBoxKeyDown
     OnKeyPress = tbxSearchBoxKeyPress
     OnRightButtonClick = tbxSearchBoxRightButtonClick
   end

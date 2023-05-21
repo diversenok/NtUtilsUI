@@ -20,6 +20,8 @@ type
     procedure tbxSearchBoxRightButtonClick(Sender: TObject);
     procedure tbxSearchBoxKeyPress(Sender: TObject; var Key: Char);
     procedure cbxColumnChange(Sender: TObject);
+    procedure tbxSearchBoxKeyDown(Sender: TObject; var Key: Word;
+      Shift: TShiftState);
   private
     FLoaded: Boolean;
     FImages: TImageList;
@@ -32,6 +34,7 @@ type
     function GetHasQueryText: Boolean;
     function GetQueryColumn: Integer;
     procedure ColumnVisibilityChanged(const Sender: TBaseVirtualTree; const Column: TColumnIndex; Visible: Boolean);
+    function GetShouldIgnoreEscape: Boolean;
   protected
     procedure Loaded; override;
     procedure ChangeScale(M, D: Integer; isDpiChange: Boolean); override;
@@ -41,8 +44,10 @@ type
     property QueryText: String read GetQueryText;
     property QueryColumn: Integer read GetQueryColumn;
     property OnQueryChange: TNotifyEvent read FOnQueryChange write FOnQueryChange;
+    property ShouldIgnoreEscape: Boolean read GetShouldIgnoreEscape;
     procedure AttachToTree(Tree: TDevirtualizedTree);
     procedure ApplySearch;
+    procedure SetSeacrchFocus;
   end;
 
 implementation
@@ -125,6 +130,12 @@ begin
   Result := tbxSearchBox.Text;
 end;
 
+function TSearchFrame.GetShouldIgnoreEscape;
+begin
+  Result := (tbxSearchBox.Focused and HasQueryText) or
+    (cbxColumn.Focused and cbxColumn.DroppedDown);
+end;
+
 procedure TSearchFrame.Loaded;
 begin
   inherited;
@@ -164,6 +175,11 @@ begin
   end;
 end;
 
+procedure TSearchFrame.SetSeacrchFocus;
+begin
+  tbxSearchBox.SetFocus;
+end;
+
 procedure TSearchFrame.tbxSearchBoxChange;
 begin
   tbxSearchBox.RightButton.Visible := HasQueryText;
@@ -172,6 +188,12 @@ begin
   // Notify subscribers
   if Assigned(FOnQueryChange) then
     FOnQueryChange(Self);
+end;
+
+procedure TSearchFrame.tbxSearchBoxKeyDown;
+begin
+  if Assigned(FTree) and ((Key = VK_UP) or (Key = VK_DOWN)) then
+    FTree.SetFocus;
 end;
 
 procedure TSearchFrame.tbxSearchBoxKeyPress;
