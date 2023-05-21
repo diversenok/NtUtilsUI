@@ -3,6 +3,10 @@ object AppContainersFrame: TAppContainersFrame
   Top = 0
   Width = 600
   Height = 407
+  Constraints.MinHeight = 120
+  Constraints.MinWidth = 280
+  ParentShowHint = False
+  ShowHint = True
   TabOrder = 0
   inline SearchBox: TSearchFrame
     Left = 0
@@ -10,6 +14,7 @@ object AppContainersFrame: TAppContainersFrame
     Width = 600
     Height = 21
     Align = alTop
+    Constraints.MinHeight = 21
     Constraints.MinWidth = 240
     TabOrder = 1
     inherited Splitter: TSplitter
@@ -45,7 +50,7 @@ object AppContainersFrame: TAppContainersFrame
     TreeOptions.AutoOptions = [toAutoDropExpand, toAutoScrollOnExpand, toAutoTristateTracking, toAutoDeleteMovedNodes, toAutoChangeScale]
     TreeOptions.ExportMode = emSelected
     TreeOptions.MiscOptions = [toAcceptOLEDrop, toFullRepaintOnResize, toInitOnSave, toToggleOnDblClick, toWheelPanning]
-    TreeOptions.PaintOptions = [toHideFocusRect, toHotTrack, toShowButtons, toShowDropmark, toThemeAware, toUseBlendedImages, toUseExplorerTheme]
+    TreeOptions.PaintOptions = [toHideFocusRect, toHotTrack, toShowButtons, toShowDropmark, toShowTreeLines, toThemeAware, toUseBlendedImages, toUseExplorerTheme]
     TreeOptions.SelectionOptions = [toFullRowSelect, toMultiSelect, toRightClickSelect]
     Touch.InteractiveGestures = [igPan, igPressAndTap]
     Touch.InteractiveGestureOptions = [igoPanSingleFingerHorizontal, igoPanSingleFingerVertical, igoPanInertia, igoPanGutter, igoParentPassthrough]
@@ -54,13 +59,13 @@ object AppContainersFrame: TAppContainersFrame
       item
         Options = [coAllowClick, coDraggable, coEnabled, coParentBidiMode, coParentColor, coResizable, coVisible, coAutoSpring, coSmartResize, coAllowFocus, coDisableAnimatedResize, coEditable, coStyleColor]
         Position = 0
-        Text = 'Display Name'
+        Text = 'Friendly Name'
         Width = 260
       end
       item
         Options = [coAllowClick, coDraggable, coEnabled, coParentBidiMode, coParentColor, coResizable, coAutoSpring, coSmartResize, coAllowFocus, coDisableAnimatedResize, coEditable, coStyleColor]
         Position = 1
-        Text = 'Display Name (Raw)'
+        Text = 'Display Name'
         Width = 340
       end
       item
@@ -70,12 +75,13 @@ object AppContainersFrame: TAppContainersFrame
         Width = 220
       end
       item
+        Options = [coAllowClick, coDraggable, coEnabled, coParentBidiMode, coParentColor, coResizable, coShowDropMark, coAllowFocus, coEditable, coStyleColor]
         Position = 3
         Text = 'Package'
         Width = 80
       end
       item
-        Options = [coAllowClick, coDraggable, coEnabled, coParentBidiMode, coParentColor, coResizable, coAutoSpring, coSmartResize, coAllowFocus, coDisableAnimatedResize, coEditable, coStyleColor]
+        Options = [coAllowClick, coDraggable, coEnabled, coParentBidiMode, coParentColor, coResizable, coVisible, coAutoSpring, coSmartResize, coAllowFocus, coDisableAnimatedResize, coEditable, coStyleColor]
         Position = 4
         Text = 'SID'
         Width = 400

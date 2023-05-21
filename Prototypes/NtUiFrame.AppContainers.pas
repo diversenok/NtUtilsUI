@@ -43,18 +43,21 @@ type
     procedure Loaded; override;
   public
     procedure ClearItems;
+    function BeginUpdateAuto: IAutoReleasable;
     function AddItem(const Info: TAppContainerInfo; const Parent: IAppContainerNode = nil): IAppContainerNode;
     property OnInspect: TInspectAppContainer read FOnInspect write SetOnInspect;
     property Selected: TArray<IAppContainerNode> read GetSelected;
     property SelectedCount: Integer read GetSelectedCount;
     property FocusedItem: IAppContainerNode read GetFocusedItem;
+    procedure SetNoItemsStatus(const Status: TNtxStatus);
   end;
 
 implementation
 
 uses
   NtUtils.Security.Sid, NtUtils.SysUtils, NtUtils.Packages, DelphiUtils.Arrays,
-  DelphiUiLib.Reflection.Strings;
+  NtUiLib.Errors, DelphiUiLib.Reflection.Strings, UI.Helper, VirtualTrees.Types,
+  UI.Colors;
 
 {$R *.dfm}
 
@@ -72,18 +75,47 @@ type
   end;
 
 constructor TAppContainerNode.Create;
+var
+  IsPackage: Boolean;
 begin
   inherited Create(colMax);
   FInfo := Info;
 
   FColumnText[colSID] := RtlxSidToString(Info.Sid);
-  FColumnText[colMoniker] := Info.Moniker;
-  FColumnText[colDisplayName] := Info.DisplayName;
-  FColumnText[colFriendlyName] := Info.DisplayName;
-  FColumnText[colIsPackage] := YesNoToString(PkgxIsValidFamilyName(Info.Moniker));
+  FColumnText[colMoniker] := RtlxStringOrDefault(Info.Moniker, 'Unknown');
 
-  if RtlxPrefixString('@{', Info.DisplayName, True) then
-    PkgxExpandResourceStringVar(FColumnText[colFriendlyName]);
+  if Info.Moniker <> '' then
+  begin
+    IsPackage := PkgxIsValidFamilyName(Info.Moniker);
+    FColumnText[colIsPackage] := YesNoToString(IsPackage);
+    FColumnText[colDisplayName] := RtlxStringOrDefault(Info.DisplayName, '(None)');
+    FColumnText[colFriendlyName] := Info.DisplayName;
+
+    if RtlxPrefixString('@{', Info.DisplayName, True) then
+      PkgxExpandResourceStringVar(FColumnText[colFriendlyName]);
+
+    FColumnText[colFriendlyName] := RtlxStringOrDefault(
+      FColumnText[colFriendlyName], '(None)');
+
+     FHasColor := True;
+
+    if IsPackage then
+      FColor := ColorSettings.clSystem
+    else
+      FColor := ColorSettings.clUser;
+
+    FHint := BuildHint([
+      THintSection.New('Friendly Name', FColumnText[colFriendlyName]),
+      THintSection.New('Monker', FColumnText[colMoniker]),
+      THintSection.New('SID', FColumnText[colSID])
+    ]);
+  end
+  else
+  begin
+    FColumnText[colFriendlyName] := 'Unknown';
+    FColumnText[colDisplayName] := 'Unknown';
+    FColumnText[colIsPackage] := 'Unknown';
+  end;
 end;
 
 function TAppContainerNode.GetInfo;
@@ -94,14 +126,34 @@ end;
 { TAppContainersFrame }
 
 function TAppContainersFrame.AddItem;
+var
+  ParentNode: PVirtualNode;
 begin
   Result := TAppContainerNode.Create(Info);
-  Tree.AddChildEx(Parent.Node, Result);
+
+  if Assigned(Parent) then
+  begin
+    ParentNode := Parent.Node;
+    Tree.TreeOptions.PaintOptions := Tree.TreeOptions.PaintOptions + [toShowRoot];
+  end
+  else
+    ParentNode := Tree.RootNode;
+
+  Tree.AddChildEx(ParentNode, Result);
+
+  if Assigned(Parent) then
+    Tree.Expanded[Parent.Node] := True;
+end;
+
+function TAppContainersFrame.BeginUpdateAuto;
+begin
+  Result := Tree.BeginUpdateAuto;
 end;
 
 procedure TAppContainersFrame.ClearItems;
 begin
   Tree.Clear;
+  Tree.TreeOptions.PaintOptions := Tree.TreeOptions.PaintOptions - [toShowRoot];
 end;
 
 function TAppContainersFrame.GetFocusedItem;
@@ -141,6 +193,14 @@ procedure TAppContainersFrame.Loaded;
 begin
   inherited;
   SearchBox.AttachToTree(Tree);
+end;
+
+procedure TAppContainersFrame.SetNoItemsStatus;
+begin
+  if Status.IsSuccess then
+    Tree.NoItemsText := 'No items to display'
+  else
+    Tree.NoItemsText := 'Unable to query:'#$D#$A + Status.ToString;
 end;
 
 procedure TAppContainersFrame.SetOnInspect;
