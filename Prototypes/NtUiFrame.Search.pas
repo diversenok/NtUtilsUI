@@ -9,10 +9,10 @@ interface
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes,
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls,
-  Vcl.ExtCtrls, VirtualTrees, DevirtualizedTree;
+  Vcl.ExtCtrls, VirtualTrees, DevirtualizedTree, NtUiCommon.Interfaces;
 
 type
-  TSearchFrame = class(TFrame)
+  TSearchFrame = class(TFrame, IHasSearch, ICanConsumeEscape)
     tbxSearchBox: TButtonedEdit;
     cbxColumn: TComboBox;
     Splitter: TSplitter;
@@ -34,7 +34,6 @@ type
     function GetHasQueryText: Boolean;
     function GetQueryColumn: Integer;
     procedure ColumnVisibilityChanged(const Sender: TBaseVirtualTree; const Column: TColumnIndex; Visible: Boolean);
-    function GetShouldIgnoreEscape: Boolean;
   protected
     procedure Loaded; override;
     procedure ChangeScale(M, D: Integer; isDpiChange: Boolean); override;
@@ -44,10 +43,10 @@ type
     property QueryText: String read GetQueryText;
     property QueryColumn: Integer read GetQueryColumn;
     property OnQueryChange: TNotifyEvent read FOnQueryChange write FOnQueryChange;
-    property ShouldIgnoreEscape: Boolean read GetShouldIgnoreEscape;
     procedure AttachToTree(Tree: TDevirtualizedTree);
     procedure ApplySearch;
-    procedure SetSeacrchFocus;
+    procedure SetSearchFocus;
+    function ConsumesEscape: Boolean;
   end;
 
 implementation
@@ -110,6 +109,12 @@ begin
   UpdateColumns;
 end;
 
+function TSearchFrame.ConsumesEscape;
+begin
+  Result := (tbxSearchBox.Focused and HasQueryText) or
+    (cbxColumn.Focused and cbxColumn.DroppedDown);
+end;
+
 function TSearchFrame.GetHasQueryText;
 begin
   Result := tbxSearchBox.Text <> '';
@@ -128,12 +133,6 @@ end;
 function TSearchFrame.GetQueryText;
 begin
   Result := tbxSearchBox.Text;
-end;
-
-function TSearchFrame.GetShouldIgnoreEscape;
-begin
-  Result := (tbxSearchBox.Focused and HasQueryText) or
-    (cbxColumn.Focused and cbxColumn.DroppedDown);
 end;
 
 procedure TSearchFrame.Loaded;
@@ -175,7 +174,7 @@ begin
   end;
 end;
 
-procedure TSearchFrame.SetSeacrchFocus;
+procedure TSearchFrame.SetSearchFocus;
 begin
   tbxSearchBox.SetFocus;
 end;

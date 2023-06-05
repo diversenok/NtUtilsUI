@@ -32,11 +32,11 @@ type
 implementation
 
 uses
-  NtUtils.Lsa.Sid, UI.Helper, DelphiUiLib.Reflection;
+  DelphiUiLib.Reflection, NtUiCommon.Interfaces, NtUiBackend.AppContainers;
 
 {$R *.dfm}
 
-{ TForm2 }
+{ TAppContainersForm }
 
 procedure TAppContainersForm.btnCloseClick;
 begin
@@ -51,10 +51,10 @@ end;
 procedure TAppContainersForm.FormKeyDown;
 begin
   if (Shift = [ssCtrl]) and (Key = Ord('F')) then
-    AppContainersFrame.SearchBox.SetSeacrchFocus
+    IHasSearch(AppContainersFrame).SetSearchFocus
 
   else if (Key = VK_ESCAPE) and
-    not AppContainersFrame.SearchBox.ShouldIgnoreEscape then
+    not ICanConsumeEscape(AppContainersFrame).ConsumesEscape then
   begin
     btnClose.Click;
     Key := 0;
@@ -71,10 +71,8 @@ procedure TAppContainersForm.LoadForUser;
 var
   UserRepresentation: TRepresentation;
   Status: TNtxStatus;
-  Info: TAppContainerInfo;
-  ParentSids, ChildSids: TArray<ISid>;
-  ParentSid, ChildSid: ISid;
-  ParentNode: IAppContainerNode;
+  Parents, Children: TArray<IAppContainerNode>;
+  Parent, Child: IAppContainerNode;
 begin
   FUser := User;
   UserRepresentation := TType.Represent(User);
@@ -85,38 +83,20 @@ begin
   AppContainersFrame.ClearItems;
 
   // Enumerate parent AppContainers
-  Status := RtlxEnumerateAppContainerSIDs(ParentSids, nil, User);
+  Status := UiLibEnumerateAppContainers(Parents, User);
   AppContainersFrame.SetNoItemsStatus(Status);
 
   if not Status.IsSuccess then
     Exit;
 
-  for ParentSid in ParentSids do
+  for Parent in Parents do
   begin
-    // Query parent AppContainer
-    if not RtlxQueryAppContainer(Info, ParentSid, User).IsSuccess then
-    begin
-      Info := Default(TAppContainerInfo);
-      Info.Sid := ParentSid;
-    end;
+    AppContainersFrame.AddItem(Parent);
 
-    // Add parent
-    ParentNode := AppContainersFrame.AddItem(Info);
-
-    // Enumerate children
-    if RtlxEnumerateAppContainerSIDs(ChildSids, ParentSid, User).IsSuccess then
-      for ChildSid in ChildSids do
-      begin
-        // Query child AppContainer
-        if not RtlxQueryAppContainer(Info, ChildSid, User).IsSuccess then
-        begin
-          Info := Default(TAppContainerInfo);
-          Info.Sid := ChildSid;
-        end;
-
-        // Add child
-        AppContainersFrame.AddItem(Info, ParentNode);
-      end;
+    // Enumerate child AppContainers
+    if UiLibEnumerateAppContainers(Children, User, Parent.Info.Sid).IsSuccess then
+      for Child in Children do
+        AppContainersFrame.AddItem(Child, Parent);
   end;
 end;
 

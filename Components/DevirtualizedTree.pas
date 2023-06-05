@@ -78,8 +78,8 @@ type
     procedure DoInitNode(Parent, Node: PVirtualNode; var InitStates: TVirtualNodeInitStates); override;
   public
     function OverrideInspectMenuEnabled(Node: PVirtualNode): Boolean; override;
-    function AddChildEx(Parent: PVirtualNode; const Provider: INodeProvider): PVirtualNode;
-    function InsertNodeEx(Node: PVirtualNode; Mode: TVTNodeAttachMode; const Provider: INodeProvider): PVirtualNode;
+    function AddChildEx(Parent: PVirtualNode; const Provider: INodeProvider): INodeProvider;
+    function InsertNodeEx(Node: PVirtualNode; Mode: TVTNodeAttachMode; const Provider: INodeProvider): INodeProvider;
   end;
 
 procedure Register;
@@ -149,8 +149,8 @@ end;
 function TDevirtualizedTree.AddChildEx;
 begin
   Assert(Assigned(Provider), 'Provider must not be null');
-  Result := inherited AddChild(Parent, IInterface(Provider));
-  Provider.Attach(Result);
+  Provider.Attach(inherited AddChild(Parent, IInterface(Provider)));
+  Result := Provider;
 end;
 
 procedure TDevirtualizedTree.DoBeforeItemErase;
@@ -273,8 +273,8 @@ end;
 function TDevirtualizedTree.InsertNodeEx;
 begin
   Assert(Assigned(Provider), 'Provider must not be null');
-  Result := inherited InsertNode(Node, Mode, Pointer(IInterface(Provider)));
-  Provider.Attach(Result);
+  Provider.Attach(inherited InsertNode(Node, Mode, Pointer(IInterface(Provider))));
+  Result := Provider;
 end;
 
 function TDevirtualizedTree.OverrideInspectMenuEnabled;
