@@ -7,7 +7,8 @@ unit NtUiCommon.Interfaces;
 interface
 
 uses
-  DevirtualizedTree, VirtualTrees, System.Classes;
+  DevirtualizedTree, VirtualTrees, System.Classes, DelphiUtils.AutoObjects,
+  NtUtils;
 
 type
   // Indicates a component with a search bar that should obtain focus on Ctrl+F
@@ -20,6 +21,12 @@ type
   ICanConsumeEscape = interface
     ['{4280FDBC-97C0-41DC-9C96-98142BCABADF}']
     function ConsumesEscape: Boolean;
+  end;
+
+  // Indicates a component that can show a status of an operation
+  ICanShowStatus = interface
+    ['{C16901FB-80A0-4430-96AB-CD823BC370CB}']
+    procedure SetStatus(const Status: TNtxStatus);
   end;
 
   // Indicates a component that has a collection of devirtualized nodes
@@ -55,6 +62,15 @@ type
   end;
   INodeCollection = INodeCollection<INodeProvider>;
 
+  // Indicates a component that allows modifying devirtualized nodes
+  IEditableNodeCollection<I: INodeProvider> = interface
+    ['{05DA3293-63D8-42CB-B26A-AFA502C56A42}']
+    function BeginUpdateAuto: IAutoReleasable;
+    procedure ClearItems;
+    procedure AddItem(const Item: I; const Parent: INodeProvider = nil);
+  end;
+  IEditableNodeCollection = IEditableNodeCollection<INodeProvider>;
+
   // A base interaface for a components that allows observing events
   ICallback = interface
     procedure SetCallback(const Callback: TNotifyEvent);
@@ -63,7 +79,7 @@ type
   end;
 
   // Indicates a component that allows observing node selection changes
-  INodeSelectionCallback = interface (ICallback)
+  IOnNodeSelection = interface (ICallback)
     ['{CE3DD21D-BD55-44E8-B923-12DF4F62233D}']
   end;
 
@@ -73,15 +89,26 @@ function NtUiLibDelegateINodeCollection(
   const ProviderID: TGuid
 ): INodeCollection;
 
+// Delegate the implementation of IEditableNodeCollection on a devirtualized tree
+function NtUiLibDelegateIEditableNodeCollection(
+  Tree: TDevirtualizedTree;
+  const ProviderID: TGuid
+): IEditableNodeCollection;
+
 // Delegate the implementation of INodeSelectionCallback on a devirtualized tree
 function NtUiLibDelegateINodeSelectionCallback(
   Tree: TDevirtualizedTree
-): INodeSelectionCallback;
+): IOnNodeSelection;
+
+// Delegate the implementation of ICanShowStatus on a devirtualized tree
+function NtUiLibDelegateNoItemsStatus(
+  Tree: TDevirtualizedTree
+): ICanShowStatus;
 
 implementation
 
 uses
-  DelphiUtils.AutoObjects;
+  VirtualTrees.Types, NtUiLib.Errors;
 
 {$BOOLEVAL OFF}
 {$IFOPT R+}{$DEFINE R+}{$ENDIF}
@@ -117,6 +144,24 @@ begin
   // correctly track object lifetime
   FTree := Tree;
   FTreeWeakRef := Tree;
+end;
+
+type
+  TNoItemsStatusProvider = class (TBaseTreeExtension, ICanShowStatus)
+    procedure SetStatus(const Status: TNtxStatus);
+  end;
+
+{ TNoItemsStatusProvider }
+
+procedure TNoItemsStatusProvider.SetStatus;
+begin
+  if not Attached then
+    Exit;
+
+  if Status.IsSuccess then
+    Tree.NoItemsText := 'No items to display'
+  else
+    Tree.NoItemsText := 'Unable to query:'#$D#$A + Status.ToString;
 end;
 
 type
@@ -274,6 +319,75 @@ begin
 end;
 
 type
+  TEditableNodeCollectionProvider = class (TBaseTreeExtension, IEditableNodeCollection)
+  private
+    FIId: TGuid;
+  public
+    function BeginUpdateAuto: IAutoReleasable;
+    procedure ClearItems;
+    procedure AddItem(const Item: INodeProvider; const Parent: INodeProvider);
+    constructor Create(Tree: TDevirtualizedTree; const ProviderID: TGuid);
+  end;
+
+{ TEditableNodeCollectionProvider }
+
+procedure TEditableNodeCollectionProvider.AddItem;
+var
+  ParentNode: PVirtualNode;
+begin
+  if not Attached then
+    Exit;
+
+  if Assigned(Parent) then
+    ParentNode := Parent.Node
+  else
+    ParentNode := Tree.RootNode;
+
+  Tree.AddChildEx(ParentNode, Item);
+
+  if Assigned(Parent) then
+  begin
+    Tree.Expanded[Parent.Node] := True;
+    Tree.TreeOptions.PaintOptions := Tree.TreeOptions.PaintOptions
+      + [toShowRoot];
+  end;
+end;
+
+function TEditableNodeCollectionProvider.BeginUpdateAuto;
+begin
+  if Attached then
+  begin
+    Tree.BeginUpdate;
+
+    Result := Auto.Delay(
+      procedure
+      begin
+        if Attached then
+          Tree.EndUpdate;
+      end
+    );
+  end
+  else
+    Result := nil;
+end;
+
+procedure TEditableNodeCollectionProvider.ClearItems;
+begin
+  if Attached then
+  begin
+    Tree.Clear;
+    Tree.TreeOptions.PaintOptions := Tree.TreeOptions.PaintOptions
+      - [toShowRoot];
+  end;
+end;
+
+constructor TEditableNodeCollectionProvider.Create;
+begin
+  inherited Create(Tree);
+  FIId := ProviderID;
+end;
+
+type
   TBaseTreeEventsProvider = class (TBaseTreeExtension, ICallback)
   private
     FCallback: TNotifyEvent;
@@ -303,7 +417,7 @@ begin
 end;
 
 type
-  TNodeSelectionCallbackProvider = class (TBaseTreeEventsProvider, INodeSelectionCallback)
+  TNodeSelectionCallbackProvider = class (TBaseTreeEventsProvider, IOnNodeSelection)
   private
     procedure TreeCallback(Sender: TBaseVirtualTree; Node: PVirtualNode);
   public
@@ -335,9 +449,19 @@ begin
   Result := TNodeCollectionProvider.Create(Tree, ProviderID);
 end;
 
+function NtUiLibDelegateIEditableNodeCollection;
+begin
+  Result := TEditableNodeCollectionProvider.Create(Tree, ProviderID);
+end;
+
 function NtUiLibDelegateINodeSelectionCallback;
 begin
   Result := TNodeSelectionCallbackProvider.Create(Tree);
+end;
+
+function NtUiLibDelegateNoItemsStatus;
+begin
+  Result := TNoItemsStatusProvider.Create(Tree);
 end;
 
 end.
