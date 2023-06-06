@@ -7,36 +7,30 @@ unit NtUiFrame.AppContainers;
 interface
 
 uses
-  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes,
-  Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, VirtualTrees,
-  VirtualTreesEx, DevirtualizedTree, DevirtualizedTree.Provider,
-  NtUiFrame.Search, NtUtils, NtUiCommon.Interfaces, NtUiBackend.AppContainers;
+  Vcl.Controls, System.Classes, Vcl.Forms, VirtualTrees, VirtualTreesEx,
+  DevirtualizedTree, NtUiFrame.Search, NtUtils, NtUiCommon.Interfaces;
 
 type
-  IAppContainerCollection = INodeCollection<IAppContainerNode>;
-  IEditableAppContainerCollection = IEditableNodeCollection<IAppContainerNode>;
-
-  TAppContainersFrame = class(TFrame, IHasSearch, ICanConsumeEscape,
-    ICanShowStatus, IAppContainerCollection, IEditableAppContainerCollection,
-    IOnNodeSelection)
+  TAppContainersFrame = class (TFrame, IHasSearch, ICanConsumeEscape,
+    IGetFocusedNode, IOnNodeSelection)
   published
     SearchBox: TSearchFrame;
     Tree: TDevirtualizedTree;
   private
-    FNoItemsTextImpl: ICanShowStatus;
-    FSelectionImpl: IOnNodeSelection;
-    FCollectionImpl: IAppContainerCollection;
-    FEditableCollectionImpl: IEditableAppContainerCollection;
+    Backend: TTreeNodeInterfaceProvider;
+    BackendRef: IUnknown;
+    property BackendImpl: TTreeNodeInterfaceProvider read Backend implements IGetFocusedNode, IOnNodeSelection;
     property SearchImpl: TSearchFrame read SearchBox implements IHasSearch, ICanConsumeEscape;
-    property SelectionImpl: IOnNodeSelection read FSelectionImpl implements IOnNodeSelection;
-    property NoItemsTextImpl: ICanShowStatus read FNoItemsTextImpl implements ICanShowStatus;
-    property CollectionImpl: IAppContainerCollection read FCollectionImpl implements IAppContainerCollection;
-    property EditableCollectionImpl: IEditableAppContainerCollection read FEditableCollectionImpl implements IEditableAppContainerCollection;
   protected
     procedure Loaded; override;
+  public
+    procedure LoadForUser(const User: ISid);
   end;
 
 implementation
+
+uses
+  NtUiBackend.AppContainers;
 
 {$R *.dfm}
 
@@ -46,16 +40,35 @@ procedure TAppContainersFrame.Loaded;
 begin
   inherited;
   SearchBox.AttachToTree(Tree);
-
-  FSelectionImpl := NtUiLibDelegateINodeSelectionCallback(Tree);
-  FNoItemsTextImpl := NtUiLibDelegateNoItemsStatus(Tree);
-
-  INodeCollection(FCollectionImpl) :=
-    NtUiLibDelegateINodeCollection(Tree, IAppContainerNode);
-
-  IEditableNodeCollection(FEditableCollectionImpl) :=
-    NtUiLibDelegateIEditableNodeCollection(Tree, IAppContainerNode);
+  Backend := TTreeNodeInterfaceProvider.Create(Tree, [teSelectionChange]);
+  BackendRef := Backend; // Make an owning reference
 end;
 
+procedure TAppContainersFrame.LoadForUser;
+var
+  Parents, Children: TArray<IAppContainerNode>;
+  Parent, Child: IAppContainerNode;
+  Status: TNtxStatus;
+begin
+  // Enumerate parent AppContainers
+  Status := UiLibEnumerateAppContainers(Parents, User);
+  Backend.SetStatus(Status);
+
+  if not Status.IsSuccess then
+    Exit;
+
+  Backend.BeginUpdateAuto;
+  Backend.ClearItems;
+
+  for Parent in Parents do
+  begin
+    Backend.AddItem(Parent);
+
+    // Enumerate child AppContainers
+    if UiLibEnumerateAppContainers(Children, User, Parent.Info.Sid).IsSuccess then
+      for Child in Children do
+        Backend.AddItem(Child, Parent);
+  end;
+end;
 
 end.

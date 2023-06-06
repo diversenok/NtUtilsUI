@@ -11,6 +11,8 @@ uses
   NtUtils;
 
 type
+  { Common interfaces }
+
   // Indicates a component with a search bar that should obtain focus on Ctrl+F
   IHasSearch = interface
     ['{987D54D2-1AEA-4FCA-B9B5-890A94B961BD}']
@@ -29,81 +31,90 @@ type
     procedure SetStatus(const Status: TNtxStatus);
   end;
 
-  // Indicates a component that has a collection of devirtualized nodes
-  INodeCollection<I: INodeProvider> = interface
-    ['{09956A79-29F9-48F6-BB40-033C27F70358}']
-    // Non-type-specific information
-    function GetTotalNodes: Cardinal;
-    function GetTotalSelectedNodes: Cardinal;
-    function GetTotalCheckedNodes: Cardinal;
+  { Tree interfaces }
 
-    // Type-specific information
-    function GetAllNodesCount: Cardinal;
-    function GetAllNodes: TArray<I>;
-    function GetSelectedNodesCount: Cardinal;
-    function GetSelectedNodes: TArray<I>;
-    function GetCheckedNodesCount: Cardinal;
-    function GetCheckedNodes: TArray<I>;
-    function GetFocusedNode: I;
-
-    // Non-type-specific information
-    property TotalNodes: Cardinal read GetTotalNodes;
-    property TotalSelectedNodes: Cardinal read GetTotalSelectedNodes;
-    property TotalCheckedNodes: Cardinal read GetTotalCheckedNodes;
-
-    // Type-specific information
-    property AllNodesCount: Cardinal read GetAllNodesCount;
-    property AllNodes: TArray<I> read GetAllNodes;
-    property SelectedNodesCount: Cardinal read GetSelectedNodesCount;
-    property SelectedNodes: TArray<I> read GetSelectedNodes;
-    property CheckedNodesCount: Cardinal read GetCheckedNodesCount;
-    property CheckedNodes: TArray<I> read GetCheckedNodes;
-    property FocusedNode: I read GetFocusedNode;
+  // Indicates a component that allows enumerating all devirtualized nodes
+  IGetNodes = interface
+    ['{4B2C5DD6-52AF-4C3B-A831-B985DFA0B10E}']
+    function NodeCount(const ProviderId: TGuid): Cardinal;
+    function Nodes(const ProviderId: TGuid): TArray<INodeProvider>;
   end;
-  INodeCollection = INodeCollection<INodeProvider>;
+
+  // Indicates a component that allows enumerating selected devirtualized nodes
+  IGetSelectedNodes = interface
+    ['{E7D0A799-5719-4CA0-A76C-819C1AEF45EB}']
+    function SelectedNodeCount(const ProviderId: TGuid): Cardinal;
+    function SelectedNodes(const ProviderId: TGuid): TArray<INodeProvider>;
+  end;
+
+  // Indicates a component that allows enumerating checked devirtualized nodes
+  IGetCheckedNodes = interface
+    ['{7E5EF7D7-2A31-4DD2-A643-6DAE99F4F032}']
+    function CheckedNodeCount(const ProviderId: TGuid): Cardinal;
+    function CheckedNodes(const ProviderId: TGuid): TArray<INodeProvider>;
+  end;
+
+  // Indicates a component allowing to retrieve the focused devirtualized node
+  IGetFocusedNode = interface
+    ['{3B4E5A9A-C832-429B-9440-F2FC2399214E}']
+    function FocusedNode: INodeProvider;
+  end;
 
   // Indicates a component that allows modifying devirtualized nodes
-  IEditableNodeCollection<I: INodeProvider> = interface
+  ISetNodes = interface
     ['{05DA3293-63D8-42CB-B26A-AFA502C56A42}']
     function BeginUpdateAuto: IAutoReleasable;
     procedure ClearItems;
-    procedure AddItem(const Item: I; const Parent: INodeProvider = nil);
-  end;
-  IEditableNodeCollection = IEditableNodeCollection<INodeProvider>;
-
-  // A base interaface for a components that allows observing events
-  ICallback = interface
-    procedure SetCallback(const Callback: TNotifyEvent);
-    function GetCallback: TNotifyEvent;
-    property Callback: TNotifyEvent read GetCallback write SetCallback;
+    procedure AddItem(const Item: INodeProvider; const Parent: INodeProvider = nil);
   end;
 
   // Indicates a component that allows observing node selection changes
-  IOnNodeSelection = interface (ICallback)
+  IOnNodeSelection = interface
     ['{CE3DD21D-BD55-44E8-B923-12DF4F62233D}']
+    function GetOnSelection: TNotifyEvent;
+    procedure SetOnSelection(const Callback: TNotifyEvent);
+    property OnSelection: TNotifyEvent read GetOnSelection write SetOnSelection;
   end;
 
-// Delegate the implementation of INodeCollection on a devirtualized tree
-function NtUiLibDelegateINodeCollection(
-  Tree: TDevirtualizedTree;
-  const ProviderID: TGuid
-): INodeCollection;
+{ Delegatable implementation }
 
-// Delegate the implementation of IEditableNodeCollection on a devirtualized tree
-function NtUiLibDelegateIEditableNodeCollection(
-  Tree: TDevirtualizedTree;
-  const ProviderID: TGuid
-): IEditableNodeCollection;
+type
+  TTreeEventSubscription = set of (
+    teSelectionChange
+  );
 
-// Delegate the implementation of INodeSelectionCallback on a devirtualized tree
-function NtUiLibDelegateINodeSelectionCallback(
-  Tree: TDevirtualizedTree
-): IOnNodeSelection;
+  TBaseTreeExtension = class abstract (TInterfacedObject)
+  private
+    FTree: TDevirtualizedTree;
+    FTreeWeakRef: Weak<IUnknown>;
+  protected
+    function Attached: Boolean;
+    property Tree: TDevirtualizedTree read FTree;
+    constructor Create(Tree: TDevirtualizedTree);
+  end;
 
-// Delegate the implementation of ICanShowStatus on a devirtualized tree
-function NtUiLibDelegateNoItemsStatus(
-  Tree: TDevirtualizedTree
-): ICanShowStatus;
+  TTreeNodeInterfaceProvider = class (TBaseTreeExtension, ICanShowStatus,
+    IGetNodes, IGetSelectedNodes, IGetCheckedNodes, IGetFocusedNode, ISetNodes,
+    IOnNodeSelection)
+  private
+    FOnNodeSelection: TNotifyEvent;
+    procedure TreeSelectionChanged(Sender: TBaseVirtualTree; Node: PVirtualNode);
+  public
+    procedure SetStatus(const Status: TNtxStatus);
+    function NodeCount(const ProviderId: TGuid): Cardinal;
+    function Nodes(const ProviderId: TGuid): TArray<INodeProvider>;
+    function SelectedNodeCount(const ProviderId: TGuid): Cardinal;
+    function SelectedNodes(const ProviderId: TGuid): TArray<INodeProvider>;
+    function CheckedNodeCount(const ProviderId: TGuid): Cardinal;
+    function CheckedNodes(const ProviderId: TGuid): TArray<INodeProvider>;
+    function FocusedNode: INodeProvider;
+    function BeginUpdateAuto: IAutoReleasable;
+    procedure ClearItems;
+    procedure AddItem(const Item: INodeProvider; const Parent: INodeProvider = nil);
+    function GetOnSelection: TNotifyEvent;
+    procedure SetOnSelection(const Callback: TNotifyEvent);
+    constructor Create(Tree: TDevirtualizedTree; SubscribeTo: TTreeEventSubscription = []);
+  end;
 
 implementation
 
@@ -113,17 +124,6 @@ uses
 {$BOOLEVAL OFF}
 {$IFOPT R+}{$DEFINE R+}{$ENDIF}
 {$IFOPT Q+}{$DEFINE Q+}{$ENDIF}
-
-type
-  TBaseTreeExtension = class (TInterfacedObject)
-  private
-    FTree: TDevirtualizedTree;
-    FTreeWeakRef: Weak<IUnknown>;
-  public
-    function Attached: Boolean;
-    property Tree: TDevirtualizedTree read FTree;
-    constructor Create(Tree: TDevirtualizedTree);
-  end;
 
 { TBaseTreeExtension }
 
@@ -146,192 +146,9 @@ begin
   FTreeWeakRef := Tree;
 end;
 
-type
-  TNoItemsStatusProvider = class (TBaseTreeExtension, ICanShowStatus)
-    procedure SetStatus(const Status: TNtxStatus);
-  end;
+{ TTreeNodeInterfaceProvider }
 
-{ TNoItemsStatusProvider }
-
-procedure TNoItemsStatusProvider.SetStatus;
-begin
-  if not Attached then
-    Exit;
-
-  if Status.IsSuccess then
-    Tree.NoItemsText := 'No items to display'
-  else
-    Tree.NoItemsText := 'Unable to query:'#$D#$A + Status.ToString;
-end;
-
-type
-  TNodeCollectionProvider = class (TBaseTreeExtension, INodeCollection)
-  private
-    FIId: TGuid;
-  public
-    function GetTotalNodes: Cardinal;
-    function GetTotalSelectedNodes: Cardinal;
-    function GetTotalCheckedNodes: Cardinal;
-
-    function GetAllNodesCount: Cardinal;
-    function GetAllNodes: TArray<INodeProvider>;
-    function GetSelectedNodesCount: Cardinal;
-    function GetSelectedNodes: TArray<INodeProvider>;
-    function GetCheckedNodesCount: Cardinal;
-    function GetCheckedNodes: TArray<INodeProvider>;
-    function GetFocusedNode: INodeProvider;
-
-    constructor Create(Tree: TDevirtualizedTree; const ProviderID: TGuid);
-  end;
-
-{ TNodeCollectionProvider }
-
-constructor TNodeCollectionProvider.Create;
-begin
-  inherited Create(Tree);
-  FIId := ProviderID;
-end;
-
-function TNodeCollectionProvider.GetAllNodes;
-var
-  Node: PVirtualNode;
-  Provider: INodeProvider;
-  Count: Cardinal;
-begin
-  if not Attached then
-    Exit(nil);
-
-  Count := 0;
-  SetLength(Result, GetAllNodesCount);
-
-  for Node in FTree.Nodes do
-    if Node.TryGetProvider(FIId, Provider) then
-    begin
-      Result[Count] := Provider;
-      Inc(Count);
-    end;
-end;
-
-function TNodeCollectionProvider.GetAllNodesCount;
-var
-  Node: PVirtualNode;
-begin
-  Result := 0;
-
-  if Attached then
-    for Node in FTree.Nodes do
-      if Node.HasProvider(FIId) then
-        Inc(Result);
-end;
-
-function TNodeCollectionProvider.GetCheckedNodes;
-var
-  Node: PVirtualNode;
-  Provider: INodeProvider;
-  Count: Cardinal;
-begin
-  if not Attached then
-    Exit(nil);
-
-  Count := 0;
-  SetLength(Result, GetCheckedNodesCount);
-
-  for Node in FTree.CheckedNodes do
-    if Node.TryGetProvider(FIId, Provider) then
-    begin
-      Result[Count] := Provider;
-      Inc(Count);
-    end;
-end;
-
-function TNodeCollectionProvider.GetCheckedNodesCount;
-var
-  Node: PVirtualNode;
-begin
-  Result := 0;
-
-  if Attached then
-    for Node in FTree.CheckedNodes do
-      if Node.HasProvider(FIId) then
-        Inc(Result);
-end;
-
-function TNodeCollectionProvider.GetFocusedNode;
-begin
-  if not Attached or not FTree.FocusedNode.TryGetProvider(FIId, Result) then
-    Result := nil;
-end;
-
-function TNodeCollectionProvider.GetSelectedNodes;
-var
-  Node: PVirtualNode;
-  Provider: INodeProvider;
-  Count: Cardinal;
-begin
-  if not Attached then
-    Exit(nil);
-
-  Count := 0;
-  SetLength(Result, GetSelectedNodesCount);
-
-  for Node in FTree.SelectedNodes do
-    if Node.TryGetProvider(FIId, Provider) then
-    begin
-      Result[Count] := Provider;
-      Inc(Count);
-    end;
-end;
-
-function TNodeCollectionProvider.GetSelectedNodesCount;
-var
-  Node: PVirtualNode;
-begin
-  Result := 0;
-
-  if Attached then
-    for Node in FTree.SelectedNodes do
-      if Node.HasProvider(FIId) then
-        Inc(Result);
-end;
-
-function TNodeCollectionProvider.GetTotalCheckedNodes;
-begin
-  if not Attached then
-    Exit(0);
-
-  Result := FTree.CheckedCount;
-end;
-
-function TNodeCollectionProvider.GetTotalNodes;
-begin
-  if not Attached then
-    Exit(0);
-
-  Result := FTree.TotalCount;
-end;
-
-function TNodeCollectionProvider.GetTotalSelectedNodes;
-begin
-  if not Attached then
-    Exit(0);
-
-  Result := FTree.SelectedCount;
-end;
-
-type
-  TEditableNodeCollectionProvider = class (TBaseTreeExtension, IEditableNodeCollection)
-  private
-    FIId: TGuid;
-  public
-    function BeginUpdateAuto: IAutoReleasable;
-    procedure ClearItems;
-    procedure AddItem(const Item: INodeProvider; const Parent: INodeProvider);
-    constructor Create(Tree: TDevirtualizedTree; const ProviderID: TGuid);
-  end;
-
-{ TEditableNodeCollectionProvider }
-
-procedure TEditableNodeCollectionProvider.AddItem;
+procedure TTreeNodeInterfaceProvider.AddItem;
 var
   ParentNode: PVirtualNode;
 begin
@@ -353,25 +170,56 @@ begin
   end;
 end;
 
-function TEditableNodeCollectionProvider.BeginUpdateAuto;
+function TTreeNodeInterfaceProvider.BeginUpdateAuto;
 begin
-  if Attached then
-  begin
-    Tree.BeginUpdate;
+  if not Attached then
+    Exit(nil);
 
-    Result := Auto.Delay(
-      procedure
-      begin
-        if Attached then
-          Tree.EndUpdate;
-      end
-    );
-  end
-  else
-    Result := nil;
+  Tree.BeginUpdate;
+
+  Result := Auto.Delay(
+    procedure
+    begin
+      // This will capture the entire object with its weak tree reference
+      if Attached then
+        Tree.EndUpdate;
+    end
+  );
 end;
 
-procedure TEditableNodeCollectionProvider.ClearItems;
+function TTreeNodeInterfaceProvider.CheckedNodeCount;
+var
+  Node: PVirtualNode;
+begin
+  Result := 0;
+
+  if Attached then
+    for Node in FTree.CheckedNodes do
+      if Node.HasProvider(ProviderId) then
+        Inc(Result);
+end;
+
+function TTreeNodeInterfaceProvider.CheckedNodes;
+var
+  Node: PVirtualNode;
+  Provider: INodeProvider;
+  Count: Cardinal;
+begin
+  if not Attached then
+    Exit(nil);
+
+  Count := 0;
+  SetLength(Result, CheckedNodeCount(ProviderId));
+
+  for Node in FTree.CheckedNodes do
+    if Node.TryGetProvider(ProviderId, Provider) then
+    begin
+      Result[Count] := Provider;
+      Inc(Count);
+    end;
+end;
+
+procedure TTreeNodeInterfaceProvider.ClearItems;
 begin
   if Attached then
   begin
@@ -381,87 +229,114 @@ begin
   end;
 end;
 
-constructor TEditableNodeCollectionProvider.Create;
-begin
-  inherited Create(Tree);
-  FIId := ProviderID;
-end;
-
-type
-  TBaseTreeEventsProvider = class (TBaseTreeExtension, ICallback)
-  private
-    FCallback: TNotifyEvent;
-  protected
-    procedure InvokeCallback(Sender: TObject);
-  public
-    procedure SetCallback(const Callback: TNotifyEvent);
-    function GetCallback: TNotifyEvent;
-  end;
-
-{ TBaseTreeEventsProvider }
-
-function TBaseTreeEventsProvider.GetCallback;
-begin
-  Result := FCallback;
-end;
-
-procedure TBaseTreeEventsProvider.InvokeCallback;
-begin
-  if Assigned(FCallback) then
-    FCallback(Sender);
-end;
-
-procedure TBaseTreeEventsProvider.SetCallback;
-begin
-  FCallback := Callback;
-end;
-
-type
-  TNodeSelectionCallbackProvider = class (TBaseTreeEventsProvider, IOnNodeSelection)
-  private
-    procedure TreeCallback(Sender: TBaseVirtualTree; Node: PVirtualNode);
-  public
-    constructor Create(Tree: TDevirtualizedTree);
-  end;
-
-{ TNodeSelectionCallbackProvider }
-
-constructor TNodeSelectionCallbackProvider.Create;
+constructor TTreeNodeInterfaceProvider.Create;
 begin
   inherited Create(Tree);
 
-  if Assigned(Tree) then
+  if Assigned(Tree) and (teSelectionChange in SubscribeTo) then
   begin
-    Tree.OnAddToSelection := TreeCallback;
-    Tree.OnRemoveFromSelection := TreeCallback;
+    Tree.OnAddToSelection := TreeSelectionChanged;
+    Tree.OnRemoveFromSelection := TreeSelectionChanged;
   end;
 end;
 
-procedure TNodeSelectionCallbackProvider.TreeCallback;
+function TTreeNodeInterfaceProvider.FocusedNode;
 begin
-  InvokeCallback(Sender);
+  if Attached and (FTree.SelectedCount = 1) then
+    Result := FTree.FocusedNode.Provider
+  else
+    Result := nil;
 end;
 
-{ Functions }
-
-function NtUiLibDelegateINodeCollection;
+function TTreeNodeInterfaceProvider.GetOnSelection;
 begin
-  Result := TNodeCollectionProvider.Create(Tree, ProviderID);
+  Result := FOnNodeSelection;
 end;
 
-function NtUiLibDelegateIEditableNodeCollection;
+function TTreeNodeInterfaceProvider.NodeCount;
+var
+  Node: PVirtualNode;
 begin
-  Result := TEditableNodeCollectionProvider.Create(Tree, ProviderID);
+  Result := 0;
+
+  if Attached then
+    for Node in FTree.Nodes do
+      if Node.HasProvider(ProviderId) then
+        Inc(Result);
 end;
 
-function NtUiLibDelegateINodeSelectionCallback;
+function TTreeNodeInterfaceProvider.Nodes;
+var
+  Node: PVirtualNode;
+  Provider: INodeProvider;
+  Count: Cardinal;
 begin
-  Result := TNodeSelectionCallbackProvider.Create(Tree);
+  if not Attached then
+    Exit(nil);
+
+  Count := 0;
+  SetLength(Result, NodeCount(ProviderId));
+
+  for Node in FTree.Nodes do
+    if Node.TryGetProvider(ProviderId, Provider) then
+    begin
+      Result[Count] := Provider;
+      Inc(Count);
+    end;
 end;
 
-function NtUiLibDelegateNoItemsStatus;
+function TTreeNodeInterfaceProvider.SelectedNodeCount;
+var
+  Node: PVirtualNode;
 begin
-  Result := TNoItemsStatusProvider.Create(Tree);
+  Result := 0;
+
+  if Attached then
+    for Node in FTree.SelectedNodes do
+      if Node.HasProvider(ProviderId) then
+        Inc(Result);
+end;
+
+function TTreeNodeInterfaceProvider.SelectedNodes;
+var
+  Node: PVirtualNode;
+  Provider: INodeProvider;
+  Count: Cardinal;
+begin
+  if not Attached then
+    Exit(nil);
+
+  Count := 0;
+  SetLength(Result, SelectedNodeCount(ProviderId));
+
+  for Node in FTree.SelectedNodes do
+    if Node.TryGetProvider(ProviderId, Provider) then
+    begin
+      Result[Count] := Provider;
+      Inc(Count);
+    end;
+end;
+
+procedure TTreeNodeInterfaceProvider.SetOnSelection;
+begin
+  FOnNodeSelection := Callback;
+end;
+
+procedure TTreeNodeInterfaceProvider.SetStatus;
+begin
+  if not Attached then
+    Exit;
+
+  if Status.IsSuccess then
+    Tree.NoItemsText := 'No items to display'
+  else
+    Tree.NoItemsText := 'Unable to query:'#$D#$A + Status.ToString;
+end;
+
+procedure TTreeNodeInterfaceProvider.TreeSelectionChanged;
+begin
+  if Assigned(FOnNodeSelection) then
+    FOnNodeSelection(Sender);
 end;
 
 end.

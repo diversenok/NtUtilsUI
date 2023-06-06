@@ -45,7 +45,7 @@ end;
 
 procedure TAppContainersForm.FormCreate;
 begin
-  IOnNodeSelection(AppContainersFrame).Callback := FrameSelectionChanged;
+  IOnNodeSelection(AppContainersFrame).OnSelection := FrameSelectionChanged;
 end;
 
 procedure TAppContainersForm.FormKeyDown;
@@ -62,48 +62,19 @@ begin
 end;
 
 procedure TAppContainersForm.FrameSelectionChanged;
-var
-  NodeCollection: IAppContainerCollection;
 begin
-  NodeCollection := AppContainersFrame;
-
-  btnSelect.Enabled := (NodeCollection.TotalSelectedNodes = 1) and
-    Assigned(NodeCollection.FocusedNode);
+  btnSelect.Enabled := Assigned(IGetFocusedNode(AppContainersFrame).FocusedNode);
 end;
 
 procedure TAppContainersForm.LoadForUser;
 var
-  Collection: IEditableAppContainerCollection;
   UserRepresentation: TRepresentation;
-  Status: TNtxStatus;
-  Parents, Children: TArray<IAppContainerNode>;
-  Parent, Child: IAppContainerNode;
 begin
   FUser := User;
   UserRepresentation := TType.Represent(User);
   tbxUser.Text := UserRepresentation.Text;
   tbxUser.Hint := UserRepresentation.Hint;
-
-  Collection := AppContainersFrame;
-  Collection.BeginUpdateAuto;
-  Collection.ClearItems;
-
-  // Enumerate parent AppContainers
-  Status := UiLibEnumerateAppContainers(Parents, User);
-  ICanShowStatus(AppContainersFrame).SetStatus(Status);
-
-  if not Status.IsSuccess then
-    Exit;
-
-  for Parent in Parents do
-  begin
-    Collection.AddItem(Parent);
-
-    // Enumerate child AppContainers
-    if UiLibEnumerateAppContainers(Children, User, Parent.Info.Sid).IsSuccess then
-      for Child in Children do
-        Collection.AddItem(Child, Parent);
-  end;
+  AppContainersFrame.LoadForUser(User);
 end;
 
 class function TAppContainersForm.Pick;
@@ -115,7 +86,7 @@ begin
     LoadForUser(User);
     ShowModal;
 
-    Node := IAppContainerCollection(AppContainersFrame).FocusedNode;
+    Node := IGetFocusedNode(AppContainersFrame).FocusedNode as IAppContainerNode;
 
     if not Assigned(Node) then
       Abort;
