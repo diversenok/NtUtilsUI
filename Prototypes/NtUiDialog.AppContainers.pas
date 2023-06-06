@@ -62,9 +62,13 @@ begin
 end;
 
 procedure TAppContainersForm.FrameSelectionChanged;
+var
+  NodeCollection: IAppContainerNodeCollection;
 begin
-  btnSelect.Enabled := (AppContainersFrame.SelectedCount = 1) and
-    Assigned(AppContainersFrame.FocusedItem);
+  NodeCollection := AppContainersFrame;
+
+  btnSelect.Enabled := (NodeCollection.TotalSelectedNodes = 1) and
+    Assigned(NodeCollection.FocusedNode);
 end;
 
 procedure TAppContainersForm.LoadForUser;
@@ -109,7 +113,7 @@ begin
     LoadForUser(User);
     ShowModal;
 
-    Node := AppContainersFrame.FocusedItem;
+    Node := IAppContainerNodeCollection(AppContainersFrame).FocusedNode;
 
     if not Assigned(Node) then
       Abort;
