@@ -45,7 +45,7 @@ end;
 
 procedure TAppContainersForm.FormCreate;
 begin
-  AppContainersFrame.OnSelectionChanged := FrameSelectionChanged;
+  INodeSelectionCallback(AppContainersFrame).Callback := FrameSelectionChanged;
 end;
 
 procedure TAppContainersForm.FormKeyDown;

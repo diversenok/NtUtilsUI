@@ -7,7 +7,7 @@ unit NtUiCommon.Interfaces;
 interface
 
 uses
-  DevirtualizedTree, VirtualTrees;
+  DevirtualizedTree, VirtualTrees, System.Classes;
 
 type
   // Indicates a component with a search bar that should obtain focus on Ctrl+F
@@ -55,11 +55,28 @@ type
   end;
   INodeCollection = INodeCollection<INodeProvider>;
 
+  // A base interaface for a components that allows observing events
+  ICallback = interface
+    procedure SetCallback(const Callback: TNotifyEvent);
+    function GetCallback: TNotifyEvent;
+    property Callback: TNotifyEvent read GetCallback write SetCallback;
+  end;
+
+  // Indicates a component that allows observing node selection changes
+  INodeSelectionCallback = interface (ICallback)
+    ['{CE3DD21D-BD55-44E8-B923-12DF4F62233D}']
+  end;
+
 // Delegate the implementation of INodeCollection on a devirtualized tree
 function NtUiLibDelegateINodeCollection(
   Tree: TDevirtualizedTree;
-  const IID: TGuid
+  const ProviderID: TGuid
 ): INodeCollection;
+
+// Delegate the implementation of INodeSelectionCallback on a devirtualized tree
+function NtUiLibDelegateINodeSelectionCallback(
+  Tree: TDevirtualizedTree
+): INodeSelectionCallback;
 
 implementation
 
@@ -71,12 +88,41 @@ uses
 {$IFOPT Q+}{$DEFINE Q+}{$ENDIF}
 
 type
-  TNodeCollectionProvider = class (TInterfacedObject, INodeCollection)
+  TBaseTreeExtension = class (TInterfacedObject)
   private
     FTree: TDevirtualizedTree;
     FTreeWeakRef: Weak<IUnknown>;
-    FIId: TGuid;
+  public
     function Attached: Boolean;
+    property Tree: TDevirtualizedTree read FTree;
+    constructor Create(Tree: TDevirtualizedTree);
+  end;
+
+{ TBaseTreeExtension }
+
+function TBaseTreeExtension.Attached;
+var
+  StrongRef: IUnknown;
+begin
+  // It's safe to use the tree as long as the weak reference is alive
+  Result := FTreeWeakRef.Upgrade(StrongRef);
+
+  if not Result then
+    FTree := nil;
+end;
+
+constructor TBaseTreeExtension.Create;
+begin
+  // We store a non-owning typed refernce and a weak interface reference to
+  // correctly track object lifetime
+  FTree := Tree;
+  FTreeWeakRef := Tree;
+end;
+
+type
+  TNodeCollectionProvider = class (TBaseTreeExtension, INodeCollection)
+  private
+    FIId: TGuid;
   public
     function GetTotalNodes: Cardinal;
     function GetTotalSelectedNodes: Cardinal;
@@ -90,26 +136,15 @@ type
     function GetCheckedNodes: TArray<INodeProvider>;
     function GetFocusedNode: INodeProvider;
 
-    constructor Create(Tree: TDevirtualizedTree; const IID: TGuid);
+    constructor Create(Tree: TDevirtualizedTree; const ProviderID: TGuid);
   end;
 
 { TNodeCollectionProvider }
 
-function TNodeCollectionProvider.Attached;
-var
-  StrongRef: IUnknown;
-begin
-  // It's safe to use the tree as long as the weak reference is alive
-  Result := FTreeWeakRef.Upgrade(StrongRef);
-end;
-
 constructor TNodeCollectionProvider.Create;
 begin
-  // We store a non-owning typed refernce and a weak interface reference to
-  // correctly track object lifetime
-  FTree := Tree;
-  FTreeWeakRef := Tree;
-  FIId := IID;
+  inherited Create(Tree);
+  FIId := ProviderID;
 end;
 
 function TNodeCollectionProvider.GetAllNodes;
@@ -238,11 +273,71 @@ begin
   Result := FTree.SelectedCount;
 end;
 
+type
+  TBaseTreeEventsProvider = class (TBaseTreeExtension, ICallback)
+  private
+    FCallback: TNotifyEvent;
+  protected
+    procedure InvokeCallback(Sender: TObject);
+  public
+    procedure SetCallback(const Callback: TNotifyEvent);
+    function GetCallback: TNotifyEvent;
+  end;
+
+{ TBaseTreeEventsProvider }
+
+function TBaseTreeEventsProvider.GetCallback;
+begin
+  Result := FCallback;
+end;
+
+procedure TBaseTreeEventsProvider.InvokeCallback;
+begin
+  if Assigned(FCallback) then
+    FCallback(Sender);
+end;
+
+procedure TBaseTreeEventsProvider.SetCallback;
+begin
+  FCallback := Callback;
+end;
+
+type
+  TNodeSelectionCallbackProvider = class (TBaseTreeEventsProvider, INodeSelectionCallback)
+  private
+    procedure TreeCallback(Sender: TBaseVirtualTree; Node: PVirtualNode);
+  public
+    constructor Create(Tree: TDevirtualizedTree);
+  end;
+
+{ TNodeSelectionCallbackProvider }
+
+constructor TNodeSelectionCallbackProvider.Create;
+begin
+  inherited Create(Tree);
+
+  if Assigned(Tree) then
+  begin
+    Tree.OnAddToSelection := TreeCallback;
+    Tree.OnRemoveFromSelection := TreeCallback;
+  end;
+end;
+
+procedure TNodeSelectionCallbackProvider.TreeCallback;
+begin
+  InvokeCallback(Sender);
+end;
+
 { Functions }
 
 function NtUiLibDelegateINodeCollection;
 begin
-  Result := TNodeCollectionProvider.Create(Tree, IID);
+  Result := TNodeCollectionProvider.Create(Tree, ProviderID);
+end;
+
+function NtUiLibDelegateINodeSelectionCallback;
+begin
+  Result := TNodeSelectionCallbackProvider.Create(Tree);
 end;
 
 end.

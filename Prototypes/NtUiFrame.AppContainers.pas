@@ -17,16 +17,13 @@ type
 
   TInspectAppContainer = procedure (const Node: IAppContainerNode) of object;
 
-  TAppContainersFrame = class(TFrame, IHasSearch, ICanConsumeEscape, IAppContainerNodeCollection)
+  TAppContainersFrame = class(TFrame, IHasSearch, ICanConsumeEscape, IAppContainerNodeCollection, INodeSelectionCallback)
     SearchBox: TSearchFrame;
     Tree: TDevirtualizedTree;
-    procedure TreeAddToSelection(Sender: TBaseVirtualTree; Node: PVirtualNode);
-    procedure TreeRemoveFromSelection(Sender: TBaseVirtualTree;
-      Node: PVirtualNode);
   private
     FOnInspect: TInspectAppContainer;
-    FOnSelectionChanged: TNotifyEvent;
     FNodeCollectionImpl: IAppContainerNodeCollection;
+    FNodeSelectionImpl: INodeSelectionCallback;
 
     procedure InspectNode(Node: PVirtualNode);
     procedure SetOnInspect(const Value: TInspectAppContainer);
@@ -34,6 +31,7 @@ type
     property HasSearchImpl: TSearchFrame read SearchBox implements IHasSearch;
     property CanConsumeEscapeImpl: TSearchFrame read SearchBox implements ICanConsumeEscape;
     property NodeCollectionImpl: IAppContainerNodeCollection read FNodeCollectionImpl implements IAppContainerNodeCollection;
+    property NodeSelectionImpl: INodeSelectionCallback read FNodeSelectionImpl implements INodeSelectionCallback;
   protected
     procedure Loaded; override;
   public
@@ -44,7 +42,6 @@ type
     procedure SetNoItemsStatus(const Status: TNtxStatus);
 
     property OnInspect: TInspectAppContainer read FOnInspect write SetOnInspect;
-    property OnSelectionChanged: TNotifyEvent read FOnSelectionChanged write FOnSelectionChanged;
   end;
 
 implementation
@@ -100,6 +97,7 @@ begin
   inherited;
   SearchBox.AttachToTree(Tree);
   INodeCollection(FNodeCollectionImpl) := NtUiLibDelegateINodeCollection(Tree, IAppContainerNode);
+  FNodeSelectionImpl := NtUiLibDelegateINodeSelectionCallback(Tree);
 end;
 
 procedure TAppContainersFrame.SetNoItemsStatus;
@@ -118,18 +116,6 @@ begin
     Tree.OnInspectNode := InspectNode
   else
     Tree.OnInspectNode := nil;
-end;
-
-procedure TAppContainersFrame.TreeAddToSelection;
-begin
-  if Assigned(FOnSelectionChanged) then
-    FOnSelectionChanged(Self);
-end;
-
-procedure TAppContainersFrame.TreeRemoveFromSelection;
-begin
-  if Assigned(FOnSelectionChanged) then
-    FOnSelectionChanged(Self);
 end;
 
 end.
