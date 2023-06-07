@@ -12,6 +12,7 @@ type
     clDisabled: TColor;
     clDisabledModified: TColor;
     clRemoved: TColor;
+    clHidden: TColor;
     clStale: TColor;
     clIntegrity: TColor;
     clIntegrityModified: TColor;
@@ -30,6 +31,7 @@ var
     clDisabled: $E0E0F0;
     clDisabledModified: $D0D0F0;
     clRemoved: $E0E0E0;
+    clHidden: $808080;
     clStale: $F5DCC2;
     clIntegrity: $F0E0E0;
     clIntegrityModified: $F0C0C0;
