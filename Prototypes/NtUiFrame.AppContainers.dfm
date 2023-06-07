@@ -3,8 +3,8 @@ object AppContainersFrame: TAppContainersFrame
   Top = 0
   Width = 600
   Height = 407
-  Constraints.MinHeight = 120
-  Constraints.MinWidth = 280
+  Constraints.MinHeight = 150
+  Constraints.MinWidth = 300
   ParentShowHint = False
   ShowHint = True
   TabOrder = 0

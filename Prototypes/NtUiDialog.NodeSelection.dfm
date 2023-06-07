@@ -13,6 +13,7 @@ object NodeSelectionDialog: TNodeSelectionDialog
   Font.Style = []
   KeyPreview = True
   OldCreateOrder = False
+  Position = poOwnerFormCenter
   ShowHint = True
   OnKeyDown = FormKeyDown
   PixelsPerInch = 96

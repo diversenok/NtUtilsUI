@@ -40,6 +40,10 @@ uses
   DevirtualizedTree.Provider, NtUtils.Security.Sid, DelphiUiLib.Reflection,
   DelphiUiLib.Reflection.Strings, UI.Colors;
 
+{$BOOLEVAL OFF}
+{$IFOPT R+}{$DEFINE R+}{$ENDIF}
+{$IFOPT Q+}{$DEFINE Q+}{$ENDIF}
+
 { TProfileNode }
 
 type

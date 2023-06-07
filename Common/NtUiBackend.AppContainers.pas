@@ -42,6 +42,10 @@ uses
   DevirtualizedTree.Provider, NtUtils.SysUtils, NtUtils.Security.Sid,
   NtUtils.Packages, DelphiUiLib.Reflection.Strings, UI.Colors;
 
+{$BOOLEVAL OFF}
+{$IFOPT R+}{$DEFINE R+}{$ENDIF}
+{$IFOPT Q+}{$DEFINE Q+}{$ENDIF}
+
 { TAppContainerNode }
 
 type

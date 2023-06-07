@@ -33,6 +33,10 @@ type
 
 implementation
 
+{$BOOLEVAL OFF}
+{$IFOPT R+}{$DEFINE R+}{$ENDIF}
+{$IFOPT Q+}{$DEFINE Q+}{$ENDIF}
+
 {$R *.dfm}
 
 { TAppContainersFrame }
@@ -56,15 +60,15 @@ var
   Parent, Child: IAppContainerNode;
   Status: TNtxStatus;
 begin
+  Backend.BeginUpdateAuto;
+  Backend.ClearItems;
+
   // Enumerate parent AppContainers
   Status := UiLibEnumerateAppContainers(Parents, User);
   Backend.SetStatus(Status);
 
   if not Status.IsSuccess then
     Exit;
-
-  Backend.BeginUpdateAuto;
-  Backend.ClearItems;
 
   for Parent in Parents do
   begin

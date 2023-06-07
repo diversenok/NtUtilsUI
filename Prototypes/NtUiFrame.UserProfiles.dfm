@@ -3,6 +3,8 @@ object UserProfilesFrame: TUserProfilesFrame
   Top = 0
   Width = 700
   Height = 250
+  Constraints.MinHeight = 180
+  Constraints.MinWidth = 370
   ParentShowHint = False
   ShowHint = True
   TabOrder = 0
