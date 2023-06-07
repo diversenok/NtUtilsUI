@@ -8,11 +8,14 @@ interface
 
 uses
   Vcl.Controls, System.Classes, Vcl.Forms, VirtualTrees, VirtualTreesEx,
-  DevirtualizedTree, NtUiFrame.Search, NtUtils, NtUiCommon.Interfaces;
+  DevirtualizedTree, NtUiFrame.Search, NtUtils, NtUiCommon.Interfaces,
+  NtUiBackend.AppContainers;
 
 type
+  IAppContainerNode = NtUiBackend.AppContainers.IAppContainerNode;
+
   TAppContainersFrame = class (TFrame, IHasSearch, ICanConsumeEscape,
-    IGetFocusedNode, IOnNodeSelection)
+    IGetFocusedNode, IOnNodeSelection, IHasDefaultCaption)
   published
     SearchBox: TSearchFrame;
     Tree: TDevirtualizedTree;
@@ -21,6 +24,7 @@ type
     BackendRef: IUnknown;
     property BackendImpl: TTreeNodeInterfaceProvider read Backend implements IGetFocusedNode, IOnNodeSelection;
     property SearchImpl: TSearchFrame read SearchBox implements IHasSearch, ICanConsumeEscape;
+    function DefaultCaption: String;
   protected
     procedure Loaded; override;
   public
@@ -29,12 +33,14 @@ type
 
 implementation
 
-uses
-  NtUiBackend.AppContainers;
-
 {$R *.dfm}
 
 { TAppContainersFrame }
+
+function TAppContainersFrame.DefaultCaption;
+begin
+  Result := 'Select AppContainer Profile...'
+end;
 
 procedure TAppContainersFrame.Loaded;
 begin

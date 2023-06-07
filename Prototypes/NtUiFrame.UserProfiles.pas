@@ -9,11 +9,13 @@ interface
 uses
   System.SysUtils, System.Classes, Vcl.Graphics, Vcl.Controls, Vcl.Forms,
   Vcl.Dialogs, VirtualTrees, VirtualTreesEx, DevirtualizedTree,
-  NtUiFrame.Search, NtUiCommon.Interfaces;
+  NtUiFrame.Search, NtUiCommon.Interfaces, NtUiBackend.UserProfiles;
 
 type
+  IProfileNode = NtUiBackend.UserProfiles.IProfileNode;
+
   TUserProfilesFrame = class(TFrame, IHasSearch, ICanConsumeEscape,
-    IGetFocusedNode, IOnNodeSelection)
+    IGetFocusedNode, IOnNodeSelection, IHasDefaultCaption)
   published
     Tree: TDevirtualizedTree;
     SearchBox: TSearchFrame;
@@ -22,6 +24,7 @@ type
     BackendRef: IUnknown;
     property BackendImpl: TTreeNodeInterfaceProvider read Backend implements IGetFocusedNode, IOnNodeSelection;
     property SearchImpl: TSearchFrame read SearchBox implements IHasSearch, ICanConsumeEscape;
+    function DefaultCaption: String;
   protected
     procedure Loaded; override;
   public
@@ -31,11 +34,16 @@ type
 implementation
 
 uses
-  NtUtils, NtUiBackend.UserProfiles;
+  NtUtils;
 
 {$R *.dfm}
 
 { TUserProfilesFrame }
+
+function TUserProfilesFrame.DefaultCaption;
+begin
+  Result := 'Select User Profile...';
+end;
 
 procedure TUserProfilesFrame.LoadAllUsers;
 var

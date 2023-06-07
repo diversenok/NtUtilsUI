@@ -31,6 +31,12 @@ type
     procedure SetStatus(const Status: TNtxStatus);
   end;
 
+  // Indicates a component that suggest a modal dialog caption
+  IHasDefaultCaption = interface
+    ['{C6238589-5504-461B-8539-F391A4DCC52B}']
+    function DefaultCaption: String;
+  end;
+
   { Tree interfaces }
 
   // Indicates a component that allows enumerating all devirtualized nodes

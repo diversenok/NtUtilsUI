@@ -2,7 +2,7 @@ object UserProfilesFrame: TUserProfilesFrame
   Left = 0
   Top = 0
   Width = 700
-  Height = 240
+  Height = 250
   ParentShowHint = False
   ShowHint = True
   TabOrder = 0
@@ -10,7 +10,7 @@ object UserProfilesFrame: TUserProfilesFrame
     Left = 0
     Top = 26
     Width = 700
-    Height = 214
+    Height = 224
     Align = alClient
     ClipboardFormats.Strings = (
       'CSV'
