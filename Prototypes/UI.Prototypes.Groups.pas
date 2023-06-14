@@ -74,7 +74,7 @@ implementation
 uses
   Ntapi.WinNt, Ntapi.ntlsa, DelphiApi.Reflection,
   NtUtils.Security.Sid, NtUtils.Lsa, NtUtils.SysUtils,
-  DelphiUiLib.Reflection.Strings, DelphiUiLib.Reflection.Numeric,
+  DelphiUiLib.Reflection.Strings, DelphiUiLib.Reflection,
   NtUiLib.Reflection.Types, UI.Colors;
 
 {$R *.dfm}
@@ -113,19 +113,19 @@ begin
   FColumnText[colSid] := RtlxSidToString(Group.Sid);
 
   if Lookup.SidType <> SidTypeUndefined then
-    FColumnText[colSidType] := TNumeric.Represent(Lookup.SidType).Text;
+    FColumnText[colSidType] := TType.Represent(Lookup.SidType).Text;
 
   if Lookup.IsValid then
     FColumnText[colFriendly] := Lookup.FullName
   else
     FColumnText[colFriendly] := FColumnText[colSid];
 
-  FColumnText[colFlags] := TNumeric.Represent<TGroupAttributes>(
+  FColumnText[colFlags] := TType.Represent<TGroupAttributes>(
     Group.Attributes and not SE_GROUP_STATE_MASK,
     [Auto.From(IgnoreSubEnumsAttribute.Create).Self]
   ).Text;
 
-  FColumnText[colState] := TNumeric.Represent<TGroupAttributes>(
+  FColumnText[colState] := TType.Represent<TGroupAttributes>(
     Group.Attributes and SE_GROUP_STATE_MASK).Text;
 
   // Colors

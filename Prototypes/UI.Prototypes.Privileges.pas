@@ -61,7 +61,7 @@ implementation
 
 uses
   Ntapi.ntlsa, DelphiUiLib.Strings, DelphiUiLib.Reflection.Strings,
-  DelphiUiLib.Reflection.Numeric, UI.Colors, UI.Helper, VirtualTrees.Types;
+  DelphiUiLib.Reflection, UI.Colors, UI.Helper, VirtualTrees.Types;
 
 {$R *.dfm}
 
@@ -125,7 +125,7 @@ type
 procedure TPrivilegeNodeData.Adjust;
 begin
   Privilege.Attributes := NewAttributes;
-  FColumnText[colState] := TNumeric.Represent(Privilege.Attributes).Text;
+  FColumnText[colState] := TType.Represent(Privilege.Attributes).Text;
 
   SetColoringMode(ColoringMode);
   Invalidate;
@@ -137,8 +137,8 @@ begin
 
   Self.Privilege := Privilege;
   FColumnText[colValue] := IntToStr(Privilege.Luid);
-  FColumnText[colState] := TNumeric.Represent(Privilege.Attributes).Text;
-  FColumnText[colIntegrity] := TNumeric.Represent(
+  FColumnText[colState] := TType.Represent(Privilege.Attributes).Text;
+  FColumnText[colIntegrity] := TType.Represent(
     LsaxQueryIntegrityPrivilege(Privilege.Luid)).Text;
 
   // Try to query the name and the description from the system
@@ -157,7 +157,7 @@ begin
   else
   begin
     // Otherwise, prepare names based on well-known privileges
-    FColumnText[colFriendly] := TNumeric.Represent(TSeWellKnownPrivilege(
+    FColumnText[colFriendly] := TType.Represent(TSeWellKnownPrivilege(
       Privilege.Luid)).Text;
   end;
 

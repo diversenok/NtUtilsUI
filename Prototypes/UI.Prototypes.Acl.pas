@@ -27,14 +27,13 @@ type
   TFrameAcl = class(TFrame)
     VST: TDevirtualizedTree;
   public
-    procedure Load(const Acl: IAcl; MaskType: Pointer);
+    procedure Load(const Acl: IAcl; [in, opt] MaskType: Pointer = nil);
   end;
 
 implementation
 
 uses
-  NtUtils.Security.Sid, DelphiUiLib.Reflection.Numeric,
-  NtUiLib.Reflection.AccessMasks, UI.Colors, UI.Helper;
+  NtUtils.Security.Sid, DelphiUiLib.Reflection, UI.Colors, UI.Helper;
 
 {$R *.dfm}
 
@@ -49,12 +48,12 @@ type
     constructor Create(
       const AceSrc: TAceData;
       const LookupSrc: TTranslatedName;
-      MaskType: Pointer
+      [in] MaskType: Pointer
     );
 
     class function CreateMany(
       const Aces: TArray<TAceData>;
-      MaskType: Pointer
+      [in] MaskType: Pointer
     ): TArray<IAceNode>;
   end;
 
@@ -71,9 +70,9 @@ begin
   else
     FColumnText[colPrincipal] := FColumnText[colSid];
 
-  FColumnText[colAccess] := FormatAccess(Ace.Mask, MaskType);
-  FColumnText[colFlags] := TNumeric.Represent(Ace.AceFlags).Text;
-  FColumnText[colAceType] := TNumeric.Represent(Ace.AceType).Text;
+  FColumnText[colAccess] := RepresentType(MaskType, Ace.Mask).Text;
+  FColumnText[colFlags] := TType.Represent(Ace.AceFlags).Text;
+  FColumnText[colAceType] := TType.Represent(Ace.AceType).Text;
 
   FHasColor := True;
 
@@ -116,6 +115,9 @@ var
   Aces: TArray<TAceData>;
   Ace: IAceNode;
 begin
+  if not Assigned(MaskType) then
+    MaskType := TypeInfo(TAccessMask);
+
   VST.BeginUpdateAuto;
 
   if not RtlxDumpAcl(Acl, Aces).IsSuccess then

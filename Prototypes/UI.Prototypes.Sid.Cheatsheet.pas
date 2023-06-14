@@ -32,7 +32,7 @@ type
 implementation
 
 uses
-  NtUtils.SysUtils, UI.Helper, DelphiUiLib.Reflection.Numeric,
+  NtUtils.SysUtils, UI.Helper, DelphiUiLib.Reflection,
   DelphiUiLib.Reflection.Strings;
 
 {$R *.dfm}
@@ -91,7 +91,7 @@ begin
 
   if Assigned(Lookup) and Lookup[Index].IsValid then
   begin
-    Result.ColumnText[colSidType] := TNumeric.Represent(Lookup[Index].SidType).Text;
+    Result.ColumnText[colSidType] := TType.Represent(Lookup[Index].SidType).Text;
     Result.ColumnText[colFullName] := Lookup[Index].FullName;
 
     Result.Hint := BuildHint([
