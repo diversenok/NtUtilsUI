@@ -14,16 +14,11 @@ type
   PVirtualNode = VirtualTrees.PVirtualNode;
 
   INodeProvider = interface
-    ['{73CD9263-15D9-470E-937A-1EFDBBF60AF4}']
+    ['{7C43FFE3-DF9C-4F2C-AB77-6C07D96F9D34}']
     procedure Attach(Node: PVirtualNode);
     procedure Detach;
     procedure Initialize;
     procedure Invalidate;
-    procedure NotifyChecked;
-    procedure NotifySelected;
-    procedure NotifyExpanding(var HasChildren: Boolean);
-    procedure NotifyCollapsing(var HasChildren: Boolean);
-    function MatchesSearch(const Query: String; Column: TColumnIndex): Boolean;
 
     function GetTree: TBaseVirtualTree;
     function GetNode: PVirtualNode;
@@ -48,6 +43,12 @@ type
     property FontStyle: TFontStyles read GetFontStyle;
     property HasFontStyle: Boolean read GetHasFontStyle;
     property EnabledInspectMenu: Boolean read GetEnabledInspectMenu;
+
+    procedure NotifyChecked;
+    procedure NotifySelected;
+    procedure NotifyExpanding(var HasChildren: Boolean);
+    procedure NotifyCollapsing(var HasChildren: Boolean);
+    function MatchesSearch(const Query: String; Column: TColumnIndex): Boolean;
   end;
 
   TVirtualNodeHelper = record helper for TVirtualNode

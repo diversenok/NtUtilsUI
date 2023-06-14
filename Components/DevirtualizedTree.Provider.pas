@@ -58,7 +58,7 @@ type
   end;
 
   IEditableNodeProvider = interface (INodeProvider)
-    ['{A0F36B1F-7838-41C2-B1EE-700BC7FFDE9D}']
+    ['{55E0956B-C51F-49DF-A7A2-EC95BC561CBE}']
 
     procedure SetColumnText(Index: Integer; const Value: String);
     procedure SetHint(const Value: String);
@@ -458,7 +458,7 @@ end;
 
 procedure TEditableNodeProvider.SetHint;
 begin
-  if FHint <> Value then
+  if FHint = Value then
     Exit;
 
   FHint := Value;
