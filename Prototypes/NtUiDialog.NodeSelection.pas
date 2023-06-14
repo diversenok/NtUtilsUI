@@ -43,6 +43,7 @@ procedure TNodeSelectionDialog.AddFrame;
 var
   SelectionObserver: IOnNodeSelection;
   DefaultCaption: IHasDefaultCaption;
+  BottomMargin, OtherMargin: Integer;
 begin
   if not Assigned(Frame) then
     Exit;
@@ -50,11 +51,14 @@ begin
   FFrame := Frame;
   FFrameRef := IUnknown(FFrame);
 
-  ClientWidth := FFrame.Width + 6;
-  ClientHeight := FFrame.Height + 36;
+  BottomMargin := 33 * CurrentPPI div 96;
+  OtherMargin := 3 * CurrentPPI div 96;
+
+  ClientWidth := FFrame.Width + OtherMargin * 2;
+  ClientHeight := FFrame.Height + OtherMargin + BottomMargin;
   FFrame.Parent := Self;
   FFrame.AlignWithMargins := True;
-  FFrame.Margins.SetBounds(3, 3, 3, 33);
+  FFrame.Margins.SetBounds(OtherMargin, OtherMargin, OtherMargin, BottomMargin);
   FFrame.Align := alClient;
 
   if FFrameRef.QueryInterface(IHasDefaultCaption, DefaultCaption).IsSuccess then
