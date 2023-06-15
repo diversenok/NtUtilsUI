@@ -28,23 +28,26 @@ type
   private
     FTree: TCustomVirtualStringTree;
     FFallbackMenu: TPopupMenu;
-    FMenuInspect: TMenuItem;
+    FMenuMainAction: TMenuItem;
     FMenuSeparator: TMenuItem;
     FMenuCopy: TMenuItem;
     FMenuCopyColumn: TMenuItem;
     FShortcuts: TArray<TMenuShortCut>;
     FPopupColumnIndex: Integer;
-    FOnInspectNode: TNodeEvent;
-    procedure MenuInspectClick(Sender: TObject);
+    FOnMainAction: TNodeEvent;
+    procedure MenuMainActionClick(Sender: TObject);
     procedure MenuCopyClick(Sender: TObject);
     procedure MenuCopyColumnClick(Sender: TObject);
+    function GetMainActionText: String;
+    procedure SetMainActionText(const Value: String);
   public
     procedure AttachItemsTo(Menu: TPopupMenu);
     procedure InvokeShortcuts(Key: Word; Shift: TShiftState);
-    procedure InvokeInspect;
+    procedure InvokeMainAction;
     procedure NotifyPopup(Node: PVirtualNode; Menu: TPopupMenu; Column: TColumnIndex);
     property FallbackMenu: TPopupMenu read FFallbackMenu;
-    property OnInspect: TNodeEvent read FOnInspectNode write FOnInspectNode;
+    property OnMainAction: TNodeEvent read FOnMainAction write FOnMainAction;
+    property MainActionText: String read GetMainActionText write SetMainActionText;
     constructor Create(Owner: TCustomVirtualStringTree);
   end;
 
@@ -103,11 +106,11 @@ begin
   if not Assigned(Menu) then
     Menu := FFallbackMenu;
 
-  // Attach the item for inspecting to the top
-  if Assigned(FMenuInspect.Parent) then
-    FMenuInspect.Parent.Remove(FMenuInspect);
+  // Attach the item for the main action to the top
+  if Assigned(FMenuMainAction.Parent) then
+    FMenuMainAction.Parent.Remove(FMenuMainAction);
 
-  Menu.Items.Insert(0, FMenuInspect);
+  Menu.Items.Insert(0, FMenuMainAction);
 
   // Attach items for copying text to the bottom of the popup menu
   FMenuSeparator.SetParentComponent(Menu);
@@ -123,12 +126,12 @@ begin
   FTree := Owner;
   FFallbackMenu := TPopupMenu.Create(FTree);
 
-  FMenuInspect := TMenuItem.Create(FTree);
-  FMenuInspect.Caption := 'Inspect';
-  FMenuInspect.Default := True;
-  FMenuInspect.ShortCut := VK_RETURN;
-  FMenuInspect.Visible := False;
-  FMenuInspect.OnClick := MenuInspectClick;
+  FMenuMainAction := TMenuItem.Create(FTree);
+  FMenuMainAction.Caption := 'Inspect...';
+  FMenuMainAction.Default := True;
+  FMenuMainAction.ShortCut := VK_RETURN;
+  FMenuMainAction.Visible := False;
+  FMenuMainAction.OnClick := MenuMainActionClick;
 
   FMenuSeparator := TMenuItem.Create(FTree);
   FMenuSeparator.Caption := '-';
@@ -146,9 +149,14 @@ begin
   AttachItemsTo(FFallbackMenu);
 end;
 
-procedure TDefaultTreeMenu.InvokeInspect;
+function TDefaultTreeMenu.GetMainActionText;
 begin
-  MenuInspectClick(FTree);
+  Result := FMenuMainAction.Caption;
+end;
+
+procedure TDefaultTreeMenu.InvokeMainAction;
+begin
+  MenuMainActionClick(FTree);
 end;
 
 procedure TDefaultTreeMenu.InvokeShortcuts;
@@ -195,22 +203,22 @@ begin
   Clipboard.SetTextBuf(PWideChar(string.Join(#$D#$A, Texts)));
 end;
 
-procedure TDefaultTreeMenu.MenuInspectClick;
+procedure TDefaultTreeMenu.MenuMainActionClick;
 begin
-  if Assigned(FOnInspectNode) and Assigned(FTree.FocusedNode) and
+  if Assigned(FOnMainAction) and Assigned(FTree.FocusedNode) and
     (FTree.SelectedCount = 1) then
-    FOnInspectNode(FTree.FocusedNode);
+    FOnMainAction(FTree.FocusedNode);
 end;
 
 procedure TDefaultTreeMenu.NotifyPopup;
 begin
-  // Allow inspecting only single node
-  FMenuInspect.Visible := Assigned(FOnInspectNode) and (FTree.SelectedCount = 1);
+  // Allow themainaction only single node
+  FMenuMainAction.Visible := Assigned(FOnMainAction) and (FTree.SelectedCount = 1);
 
-  // Allow the node selected to explicitly disable the inspect menu
+  // Allow the node selected to explicitly disable the default menu
   if Assigned(Node) and (FTree is TVirtualStringTreeEx) and
-    not TVirtualStringTreeEx(FTree).OverrideInspectMenuEnabled(Node) then
-    FMenuInspect.Visible := False;
+    not TVirtualStringTreeEx(FTree).OverrideMainActionMenuEnabled(Node) then
+    FMenuMainAction.Visible := False;
 
   // Enable regular copiying when there are things to copy
   FMenuCopy.Visible := FTree.SelectedCount > 0;
@@ -224,8 +232,13 @@ begin
       [FTree.Header.Columns[Column].CaptionText]);
 
   // Enable the separator if there are items to separate
-  FMenuSeparator.Visible := (Assigned(Menu) or FMenuInspect.Visible) and
+  FMenuSeparator.Visible := (Assigned(Menu) or FMenuMainAction.Visible) and
     FMenuCopy.Visible;
+end;
+
+procedure TDefaultTreeMenu.SetMainActionText;
+begin
+  FMenuMainAction.Caption := Value;
 end;
 
 end.

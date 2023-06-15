@@ -27,9 +27,11 @@ type
     FNoItemsText: String;
     FNoItemsTextLines: TArray<String>;
     procedure SetPopupMenuEx(const Value: TPopupMenu);
-    function GetOnInspectNode: TNodeEvent;
-    procedure SetOnInspectNode(const Value: TNodeEvent);
+    function GetOnMainAction: TNodeEvent;
+    procedure SetOnMainAction(const Value: TNodeEvent);
     procedure SetNoItemsText(const Value: String);
+    function GetMainActionMenuText: String;
+    procedure SetMainActionMenuText(const Value: String);
   protected
     function DoCompare(Node1, Node2: PVirtualNode; Column: TColumnIndex): Integer; override;
     function DoGetPopupMenu(Node: PVirtualNode; Column: TColumnIndex; Position: TPoint): TPopupMenu; override;
@@ -39,17 +41,18 @@ type
     procedure KeyDown(var Key: Word; Shift: TShiftState); override;
     procedure DoAfterPaint(Canvas: TCanvas); override;
   public
-    function OverrideInspectMenuEnabled(Node: PVirtualNode): Boolean; virtual;
+    function OverrideMainActionMenuEnabled(Node: PVirtualNode): Boolean; virtual;
     constructor Create(AOwner: TComponent); override;
     procedure DeleteSelectedNodesEx(SelectSomethingAfter: Boolean = True);
     procedure SelectSometing;
+    property MainActionMenuText: String read GetMainActionMenuText write SetMainActionMenuText;
     destructor Destroy; override;
   published
     property DrawSelectionMode default smBlendedRectangle;
     property HintMode default hmHint;
     property IncrementalSearch default isAll;
     property SelectionBlendFactor default 64;
-    property OnInspectNode: TNodeEvent read GetOnInspectNode write SetOnInspectNode;
+    property OnMainAction: TNodeEvent read GetOnMainAction write SetOnMainAction;
     property PopupMenuEx: TPopupMenu read FPopupMenuEx write SetPopupMenuEx;
     property PopupMode: TPopupMode read FPopupMode write FPopupMode default pmOnItemsOnly;
     property NoItemsText: String read FNoItemsText write SetNoItemsText;
@@ -126,8 +129,8 @@ procedure TVirtualStringTreeEx.DblClick;
 begin
   inherited;
 
-  // Enter, Double Click, and Inspect should yield the same result
-  FDefaultMenus.InvokeInspect;
+  // Enter, Double Click, and Inspect should invoke the main action
+  FDefaultMenus.InvokeMainAction;
 end;
 
 procedure TVirtualStringTreeEx.DeleteSelectedNodesEx;
@@ -267,9 +270,14 @@ begin
     inherited;
 end;
 
-function TVirtualStringTreeEx.GetOnInspectNode;
+function TVirtualStringTreeEx.GetMainActionMenuText;
 begin
-  Result := FDefaultMenus.OnInspect;
+  Result := FDefaultMenus.MainActionText;
+end;
+
+function TVirtualStringTreeEx.GetOnMainAction;
+begin
+  Result := FDefaultMenus.OnMainAction;
 end;
 
 procedure TVirtualStringTreeEx.KeyDown(var Key: Word; Shift: TShiftState);
@@ -280,7 +288,7 @@ begin
   FDefaultMenus.InvokeShortcuts(Key, Shift);
 end;
 
-function TVirtualStringTreeEx.OverrideInspectMenuEnabled;
+function TVirtualStringTreeEx.OverrideMainActionMenuEnabled;
 begin
   Result := True;
 end;
@@ -301,6 +309,11 @@ begin
   end;
 end;
 
+procedure TVirtualStringTreeEx.SetMainActionMenuText;
+begin
+  FDefaultMenus.MainActionText := Value;
+end;
+
 procedure TVirtualStringTreeEx.SetNoItemsText;
 begin
   FNoItemsText := Value;
@@ -308,9 +321,9 @@ begin
   Invalidate;
 end;
 
-procedure TVirtualStringTreeEx.SetOnInspectNode;
+procedure TVirtualStringTreeEx.SetOnMainAction;
 begin
-  FDefaultMenus.OnInspect := Value;
+  FDefaultMenus.OnMainAction := Value;
 end;
 
 procedure TVirtualStringTreeEx.SetPopupMenuEx;

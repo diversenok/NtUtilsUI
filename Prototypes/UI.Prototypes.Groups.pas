@@ -217,7 +217,7 @@ end;
 constructor TFrameGroups.Create;
 begin
   inherited Create(AOwner);
-  VST.OnInspectNode := DoDefaultAction;
+  VST.OnMainAction := DoDefaultAction;
 end;
 
 procedure TFrameGroups.DoDefaultAction;

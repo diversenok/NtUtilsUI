@@ -29,7 +29,7 @@ type
     FFontColor: TColor;
     FHasFontStyle: Boolean;
     FFontStyle: TFontStyles;
-    FEnabledInspectMenu: Boolean;
+    FEnabledMainActionMenu: Boolean;
 
     function Attached: Boolean; virtual;
     procedure Attach(Value: PVirtualNode); virtual;
@@ -52,7 +52,7 @@ type
     function GetHasFontColor: Boolean; virtual;
     function GetFontStyle: TFontStyles; virtual;
     function GetHasFontStyle: Boolean; virtual;
-    function GetEnabledInspectMenu: Boolean; virtual;
+    function GetEnabledMainActionMenu: Boolean; virtual;
   public
     constructor Create(InitialColumnCount: Integer = 1);
   end;
@@ -65,7 +65,7 @@ type
     procedure SetColor(Value: TColor);
     procedure SetFontColor(Value: TColor);
     procedure SetFontStyle(Value: TFontStyles);
-    procedure SetEnabledInspectMenu(Value: Boolean);
+    procedure SetEnabledMainActionMenu(Value: Boolean);
 
     procedure ResetColor;
     procedure ResetFontColor;
@@ -94,7 +94,7 @@ type
     property HasFontColor: Boolean read GetHasFontColor;
     property FontStyle: TFontStyles read GetFontStyle write SetFontStyle;
     property HasFontStyle: Boolean read GetHasFontStyle;
-    property EnabledInspectMenu: Boolean read GetEnabledInspectMenu write SetEnabledInspectMenu;
+    property EnabledMainActionMenu: Boolean read GetEnabledMainActionMenu write SetEnabledMainActionMenu;
     property OnAttach: TDVTChangeEvent read GetOnAttach write SetOnAttach;
     property OnDetach: TDVTChangeEvent read GetOnDetach write SetOnDetach;
     property OnChecked: TDVTChangeEvent read GetOnChecked write SetOnChecked;
@@ -117,7 +117,7 @@ type
     procedure SetColor(Value: TColor); virtual;
     procedure SetFontColor(Value: TColor); virtual;
     procedure SetFontStyle(Value: TFontStyles); virtual;
-    procedure SetEnabledInspectMenu(Value: Boolean); virtual;
+    procedure SetEnabledMainActionMenu(Value: Boolean); virtual;
 
     procedure ResetColor; virtual;
     procedure ResetFontColor; virtual;
@@ -177,7 +177,7 @@ constructor TNodeProvider.Create;
 begin
   inherited Create;
   SetLength(FColumnText, InitialColumnCount);
-  FEnabledInspectMenu := True;
+  FEnabledMainActionMenu := True;
 end;
 
 procedure TNodeProvider.Detach;
@@ -199,9 +199,9 @@ begin
     Result := '';
 end;
 
-function TNodeProvider.GetEnabledInspectMenu;
+function TNodeProvider.GetEnabledMainActionMenu;
 begin
-  Result := FEnabledInspectMenu;
+  Result := FEnabledMainActionMenu;
 end;
 
 function TNodeProvider.GetFontColor;
@@ -431,9 +431,9 @@ begin
   Invalidate;
 end;
 
-procedure TEditableNodeProvider.SetEnabledInspectMenu;
+procedure TEditableNodeProvider.SetEnabledMainActionMenu;
 begin
-  FEnabledInspectMenu := Value;
+  FEnabledMainActionMenu := Value;
 end;
 
 procedure TEditableNodeProvider.SetFontColor;

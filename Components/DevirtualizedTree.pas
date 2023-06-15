@@ -30,7 +30,7 @@ type
     function GetHasFontColor: Boolean;
     function GetFontStyle: TFontStyles;
     function GetHasFontStyle: Boolean;
-    function GetEnabledInspectMenu: Boolean;
+    function GetEnabledMainActionMenu: Boolean;
 
     property Tree: TBaseVirtualTree read GetTree;
     property Node: PVirtualNode read GetNode;
@@ -42,7 +42,7 @@ type
     property HasFontColor: Boolean read GetHasFontColor;
     property FontStyle: TFontStyles read GetFontStyle;
     property HasFontStyle: Boolean read GetHasFontStyle;
-    property EnabledInspectMenu: Boolean read GetEnabledInspectMenu;
+    property EnabledMainActionMenu: Boolean read GetEnabledMainActionMenu;
 
     procedure NotifyChecked;
     procedure NotifySelected;
@@ -78,7 +78,7 @@ type
     procedure DoFreeNode(Node: PVirtualNode); override;
     procedure DoInitNode(Parent, Node: PVirtualNode; var InitStates: TVirtualNodeInitStates); override;
   public
-    function OverrideInspectMenuEnabled(Node: PVirtualNode): Boolean; override;
+    function OverrideMainActionMenuEnabled(Node: PVirtualNode): Boolean; override;
     function AddChildEx(Parent: PVirtualNode; const Provider: INodeProvider): INodeProvider;
     function InsertNodeEx(Node: PVirtualNode; Mode: TVTNodeAttachMode; const Provider: INodeProvider): INodeProvider;
   end;
@@ -278,9 +278,9 @@ begin
   Result := Provider;
 end;
 
-function TDevirtualizedTree.OverrideInspectMenuEnabled;
+function TDevirtualizedTree.OverrideMainActionMenuEnabled;
 begin
-  if Node.HasProvider and not Node.Provider.EnabledInspectMenu then
+  if Node.HasProvider and not Node.Provider.EnabledMainActionMenu then
     Result := False
   else
     Result := inherited;
