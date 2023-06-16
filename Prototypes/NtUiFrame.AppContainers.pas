@@ -15,14 +15,14 @@ type
   IAppContainerNode = NtUiBackend.AppContainers.IAppContainerNode;
 
   TAppContainersFrame = class (TFrame, IHasSearch, ICanConsumeEscape,
-    IGetFocusedNode, IOnNodeSelection, IHasDefaultCaption)
+    IGetFocusedNode, IOnNodeSelection, IHasDefaultCaption, INodeDefaultAction)
   published
     SearchBox: TSearchFrame;
     Tree: TDevirtualizedTree;
   private
     Backend: TTreeNodeInterfaceProvider;
     BackendRef: IUnknown;
-    property BackendImpl: TTreeNodeInterfaceProvider read Backend implements IGetFocusedNode, IOnNodeSelection;
+    property BackendImpl: TTreeNodeInterfaceProvider read Backend implements IGetFocusedNode, IOnNodeSelection, INodeDefaultAction;
     property SearchImpl: TSearchFrame read SearchBox implements IHasSearch, ICanConsumeEscape;
     function DefaultCaption: String;
   protected

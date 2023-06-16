@@ -18,6 +18,7 @@ type
     btnSelect: TButton;
     procedure FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
     procedure btnCloseClick(Sender: TObject);
+    procedure DefaultActionChosen(const Node: INodeProvider);
   private
     FFrame: TFrame;
     FFrameRef: IUnknown;
@@ -43,6 +44,7 @@ procedure TNodeSelectionDialog.AddFrame;
 var
   SelectionObserver: IOnNodeSelection;
   DefaultCaption: IHasDefaultCaption;
+  DefaultAction: INodeDefaultAction;
   BottomMargin, OtherMargin: Integer;
 begin
   if not Assigned(Frame) then
@@ -69,11 +71,22 @@ begin
     SelectionObserver.OnSelection := FrameSelectionChanged;
     FrameSelectionChanged(Self);
   end;
+
+  if FFrameRef.QueryInterface(INodeDefaultAction, DefaultAction).IsSuccess then
+  begin
+    DefaultAction.MainActionCaption := 'Select';
+    DefaultAction.OnMainAction := DefaultActionChosen;
+  end;
 end;
 
 procedure TNodeSelectionDialog.btnCloseClick;
 begin
   Close;
+end;
+
+procedure TNodeSelectionDialog.DefaultActionChosen;
+begin
+  ModalResult := mrOk;
 end;
 
 procedure TNodeSelectionDialog.FormKeyDown;

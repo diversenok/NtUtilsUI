@@ -15,7 +15,7 @@ type
   IAppContainerNode = NtUiFrame.AppContainers.IAppContainerNode;
 
   TAppContainersExFrame = class (TFrame, IHasSearch, ICanConsumeEscape,
-    IGetFocusedNode, IOnNodeSelection, IHasDefaultCaption)
+    IGetFocusedNode, IOnNodeSelection, IHasDefaultCaption, INodeDefaultAction)
   published
     lblUsers: TLabel;
     tbxUser: TEdit;
@@ -28,10 +28,12 @@ type
     function GetCanConsumeEscapeImpl: ICanConsumeEscape;
     function GetFocusedNodeImpl: IGetFocusedNode;
     function GetOnNodeSelectionImpl: IOnNodeSelection;
+    function GetNodeDefaultActionImpl: INodeDefaultAction;
     property HasSearchImpl: IHasSearch read GetHasSearchImpl implements IHasSearch;
     property CanConsumeEscapeImpl: ICanConsumeEscape read GetCanConsumeEscapeImpl implements ICanConsumeEscape;
     property FocusedNodeImpl: IGetFocusedNode read GetFocusedNodeImpl implements IGetFocusedNode;
     property OnNodeSelectionImpl: IOnNodeSelection read GetOnNodeSelectionImpl implements IOnNodeSelection;
+    property NodeDefaultActionImpl: INodeDefaultAction read GetNodeDefaultActionImpl implements INodeDefaultAction;
     property Impl: TAppContainersFrame read AppContainersFrame implements IHasDefaultCaption;
   public
     procedure LoadForUser(const User: ISid);
@@ -77,6 +79,11 @@ begin
 end;
 
 function TAppContainersExFrame.GetHasSearchImpl;
+begin
+  Result := AppContainersFrame;
+end;
+
+function TAppContainersExFrame.GetNodeDefaultActionImpl;
 begin
   Result := AppContainersFrame;
 end;

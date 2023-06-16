@@ -82,6 +82,19 @@ type
     property OnSelection: TNotifyEvent read GetOnSelection write SetOnSelection;
   end;
 
+  TNodeProviderEvent = procedure (const Node: INodeProvider) of object;
+
+  // Indicates a component that allows controlling default tree menu action
+  INodeDefaultAction = interface
+    ['{2B8590CB-A205-4018-9975-97CB0C0F87BD}']
+    function GetOnMainAction: TNodeProviderEvent;
+    procedure SetOnMainAction(const Value: TNodeProviderEvent);
+    function GetMainActionCaption: String;
+    procedure SetMainActionCaption(const Value: String);
+    property OnMainAction: TNodeProviderEvent read GetOnMainAction write SetOnMainAction;
+    property MainActionCaption: String read GetMainActionCaption write SetMainActionCaption;
+  end;
+
 { Delegatable implementation }
 
 type
@@ -101,10 +114,12 @@ type
 
   TTreeNodeInterfaceProvider = class (TBaseTreeExtension, ICanShowStatus,
     IGetNodes, IGetSelectedNodes, IGetCheckedNodes, IGetFocusedNode, ISetNodes,
-    IOnNodeSelection)
+    IOnNodeSelection, INodeDefaultAction)
   private
     FOnNodeSelection: TNotifyEvent;
+    FOnMainAction: TNodeProviderEvent;
     procedure TreeSelectionChanged(Sender: TBaseVirtualTree; Node: PVirtualNode);
+    procedure TreeMainAction(Node: PVirtualNode);
   public
     procedure SetStatus(const Status: TNtxStatus);
     function NodeCount(const ProviderId: TGuid): Cardinal;
@@ -119,6 +134,10 @@ type
     procedure AddItem(const Item: INodeProvider; const Parent: INodeProvider = nil);
     function GetOnSelection: TNotifyEvent;
     procedure SetOnSelection(const Callback: TNotifyEvent);
+    function GetOnMainAction: TNodeProviderEvent;
+    procedure SetOnMainAction(const Value: TNodeProviderEvent);
+    function GetMainActionCaption: String;
+    procedure SetMainActionCaption(const Value: String);
     constructor Create(Tree: TDevirtualizedTree; SubscribeTo: TTreeEventSubscription = []);
   end;
 
@@ -137,7 +156,8 @@ function TBaseTreeExtension.Attached;
 var
   StrongRef: IUnknown;
 begin
-  // It's safe to use the tree as long as the weak reference is alive
+  // It's safe to use the tree on the UI thread as long as the weak reference
+  // is alive
   Result := FTreeWeakRef.Upgrade(StrongRef);
 
   if not Result then
@@ -254,6 +274,19 @@ begin
     Result := nil;
 end;
 
+function TTreeNodeInterfaceProvider.GetMainActionCaption;
+begin
+  if Attached then
+    Result := FTree.MainActionMenuText
+  else
+    Result := '';
+end;
+
+function TTreeNodeInterfaceProvider.GetOnMainAction;
+begin
+  Result := FOnMainAction;
+end;
+
 function TTreeNodeInterfaceProvider.GetOnSelection;
 begin
   Result := FOnNodeSelection;
@@ -323,6 +356,25 @@ begin
     end;
 end;
 
+procedure TTreeNodeInterfaceProvider.SetMainActionCaption;
+begin
+  if Attached then
+    FTree.MainActionMenuText := Value;
+end;
+
+procedure TTreeNodeInterfaceProvider.SetOnMainAction;
+begin
+  FOnMainAction := Value;
+
+  if Attached then
+  begin
+    if Assigned(FOnMainAction) then
+      FTree.OnMainAction := TreeMainAction
+    else
+      FTree.OnMainAction := nil;
+  end;
+end;
+
 procedure TTreeNodeInterfaceProvider.SetOnSelection;
 begin
   FOnNodeSelection := Callback;
@@ -337,6 +389,14 @@ begin
     Tree.NoItemsText := 'No items to display'
   else
     Tree.NoItemsText := 'Unable to query:'#$D#$A + Status.ToString;
+end;
+
+procedure TTreeNodeInterfaceProvider.TreeMainAction;
+var
+  Provider: INodeProvider;
+begin
+  if Assigned(FOnMainAction) and Node.TryGetProvider(Provider) then
+    FOnMainAction(Provider);
 end;
 
 procedure TTreeNodeInterfaceProvider.TreeSelectionChanged;
