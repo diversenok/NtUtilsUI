@@ -18,6 +18,10 @@ const
   colMax = 5;
 
 type
+  TAppContainerInfoHelper = record helper for TAppContainerInfo
+    function Hint: String;
+  end;
+
   IAppContainerNode = interface (INodeProvider)
     ['{AF1E4CBD-1752-4655-8C13-D6B0D18AFE3D}']
     function GetInfo: TAppContainerInfo;
@@ -45,6 +49,17 @@ uses
 {$BOOLEVAL OFF}
 {$IFOPT R+}{$DEFINE R+}{$ENDIF}
 {$IFOPT Q+}{$DEFINE Q+}{$ENDIF}
+
+{ TAppContainerInfoHelper }
+
+function TAppContainerInfoHelper.Hint;
+begin
+  Result := BuildHint([
+    THintSection.New('Friendly Name', RtlxStringOrDefault(FriendlyName, '(Unknown)')),
+    THintSection.New('Full Monker', RtlxStringOrDefault(FullMoniker, '(Unknown)')),
+    THintSection.New('SID', RtlxSidToString(Sid))
+  ]);
+end;
 
 { TAppContainerNode }
 
@@ -79,39 +94,28 @@ begin
   inherited;
 
   FColumnText[colSID] := RtlxSidToString(FInfo.Sid);
-  FColumnText[colMoniker] := RtlxStringOrDefault(FInfo.Moniker, 'Unknown');
+  FColumnText[colMoniker] := RtlxStringOrDefault(FInfo.Moniker, '(Unknown)');
 
   if FInfo.Moniker <> '' then
   begin
     IsPackage := PkgxIsValidFamilyName(FInfo.Moniker);
     FColumnText[colIsPackage] := YesNoToString(IsPackage);
     FColumnText[colDisplayName] := RtlxStringOrDefault(FInfo.DisplayName, '(None)');
-    FColumnText[colFriendlyName] := FInfo.DisplayName;
-
-    if RtlxPrefixString('@{', FInfo.DisplayName, True) then
-      PkgxExpandResourceStringVar(FColumnText[colFriendlyName]);
-
-    FColumnText[colFriendlyName] := RtlxStringOrDefault(
-      FColumnText[colFriendlyName], '(None)');
-
-     FHasColor := True;
+    FColumnText[colFriendlyName] := RtlxStringOrDefault(FInfo.FriendlyName, '(None)');
+    FColumnText[colFriendlyName] := RtlxStringOrDefault(FColumnText[colFriendlyName], '(None)');
+    FHint := FInfo.Hint;
+    FHasColor := True;
 
     if IsPackage then
       FColor := ColorSettings.clSystem
     else
       FColor := ColorSettings.clUser;
-
-    FHint := BuildHint([
-      THintSection.New('Friendly Name', FColumnText[colFriendlyName]),
-      THintSection.New('Monker', FColumnText[colMoniker]),
-      THintSection.New('SID', FColumnText[colSID])
-    ]);
   end
   else
   begin
-    FColumnText[colFriendlyName] := 'Unknown';
-    FColumnText[colDisplayName] := 'Unknown';
-    FColumnText[colIsPackage] := 'Unknown';
+    FColumnText[colFriendlyName] := '(Unknown)';
+    FColumnText[colDisplayName] := '(Unknown)';
+    FColumnText[colIsPackage] := '(Unknown)';
   end;
 end;
 
