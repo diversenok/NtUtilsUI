@@ -1,4 +1,4 @@
-unit NtUiFrame.AppContainersEx;
+unit NtUiFrame.AppContainer.ListAllUsers;
 
 {
   This module provides a frame for showing AppContainer profiles for all users.
@@ -8,19 +8,19 @@ interface
 
 uses
   System.SysUtils, System.Classes, Vcl.Graphics, Vcl.Controls, Vcl.Forms,
-  Vcl.Dialogs, Vcl.StdCtrls, NtUtils, NtUiFrame.AppContainers,
+  Vcl.Dialogs, Vcl.StdCtrls, NtUtils, NtUiFrame.AppContainer.List,
   NtUiCommon.Interfaces;
 
 type
-  IAppContainerNode = NtUiFrame.AppContainers.IAppContainerNode;
+  IAppContainerNode = NtUiFrame.AppContainer.List.IAppContainerNode;
 
-  TAppContainersExFrame = class (TFrame, IHasSearch, ICanConsumeEscape,
+  TAppContainerListAllUsersFrame = class (TFrame, IHasSearch, ICanConsumeEscape,
     IGetFocusedNode, IOnNodeSelection, IHasDefaultCaption, INodeDefaultAction)
   published
     lblUsers: TLabel;
     tbxUser: TEdit;
     btnSelectUser: TButton;
-    AppContainersFrame: TAppContainersFrame;
+    AppContainersFrame: TAppContainerListFrame;
     procedure btnSelectUserClick(Sender: TObject);
   private
     FUser: ISid;
@@ -34,7 +34,7 @@ type
     property FocusedNodeImpl: IGetFocusedNode read GetFocusedNodeImpl implements IGetFocusedNode;
     property OnNodeSelectionImpl: IOnNodeSelection read GetOnNodeSelectionImpl implements IOnNodeSelection;
     property NodeDefaultActionImpl: INodeDefaultAction read GetNodeDefaultActionImpl implements INodeDefaultAction;
-    property Impl: TAppContainersFrame read AppContainersFrame implements IHasDefaultCaption;
+    property Impl: TAppContainerListFrame read AppContainersFrame implements IHasDefaultCaption;
   public
     procedure LoadForUser(const User: ISid);
   end;
@@ -51,7 +51,7 @@ uses
 
 {$R *.dfm}
 
-procedure TAppContainersExFrame.btnSelectUserClick;
+procedure TAppContainerListAllUsersFrame.btnSelectUserClick;
 var
   Profile: IProfileNode;
 begin
@@ -68,32 +68,32 @@ begin
   LoadForUser(Profile.Info.User);
 end;
 
-function TAppContainersExFrame.GetCanConsumeEscapeImpl;
+function TAppContainerListAllUsersFrame.GetCanConsumeEscapeImpl;
 begin
   Result := AppContainersFrame;
 end;
 
-function TAppContainersExFrame.GetFocusedNodeImpl;
+function TAppContainerListAllUsersFrame.GetFocusedNodeImpl;
 begin
   Result := AppContainersFrame;
 end;
 
-function TAppContainersExFrame.GetHasSearchImpl;
+function TAppContainerListAllUsersFrame.GetHasSearchImpl;
 begin
   Result := AppContainersFrame;
 end;
 
-function TAppContainersExFrame.GetNodeDefaultActionImpl;
+function TAppContainerListAllUsersFrame.GetNodeDefaultActionImpl;
 begin
   Result := AppContainersFrame;
 end;
 
-function TAppContainersExFrame.GetOnNodeSelectionImpl;
+function TAppContainerListAllUsersFrame.GetOnNodeSelectionImpl;
 begin
   Result := AppContainersFrame;
 end;
 
-procedure TAppContainersExFrame.LoadForUser;
+procedure TAppContainerListAllUsersFrame.LoadForUser;
 var
   Representation: TRepresentation;
 begin

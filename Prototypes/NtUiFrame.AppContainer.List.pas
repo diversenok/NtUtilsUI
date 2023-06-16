@@ -1,4 +1,4 @@
-unit NtUiFrame.AppContainers;
+unit NtUiFrame.AppContainer.List;
 
 {
   This module provides a frame for showing a list of AppContainer profiles.
@@ -14,7 +14,7 @@ uses
 type
   IAppContainerNode = NtUiBackend.AppContainers.IAppContainerNode;
 
-  TAppContainersFrame = class (TFrame, IHasSearch, ICanConsumeEscape,
+  TAppContainerListFrame = class (TFrame, IHasSearch, ICanConsumeEscape,
     IGetFocusedNode, IOnNodeSelection, IHasDefaultCaption, INodeDefaultAction)
   published
     SearchBox: TSearchFrame;
@@ -41,12 +41,12 @@ implementation
 
 { TAppContainersFrame }
 
-function TAppContainersFrame.DefaultCaption;
+function TAppContainerListFrame.DefaultCaption;
 begin
   Result := 'Select AppContainer Profile...'
 end;
 
-procedure TAppContainersFrame.Loaded;
+procedure TAppContainerListFrame.Loaded;
 begin
   inherited;
   SearchBox.AttachToTree(Tree);
@@ -54,7 +54,7 @@ begin
   BackendRef := Backend; // Make an owning reference
 end;
 
-procedure TAppContainersFrame.LoadForUser;
+procedure TAppContainerListFrame.LoadForUser;
 var
   Parents, Children: TArray<IAppContainerNode>;
   Parent, Child: IAppContainerNode;

@@ -1,4 +1,4 @@
-object AppContainersFrame: TAppContainersFrame
+object AppContainerListFrame: TAppContainerListFrame
   Left = 0
   Top = 0
   Width = 600

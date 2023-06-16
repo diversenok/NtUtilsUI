@@ -35,7 +35,7 @@ implementation
 
 uses
   Ntapi.ntseapi, NtUtils.Tokens, NtUtils.Tokens.Info, NtUtils.Security.Sid,
-  NtUtils.SysUtils, NtUiLib.Errors, NtUiFrame.AppContainersEx,
+  NtUtils.SysUtils, NtUiLib.Errors, NtUiFrame.AppContainer.ListAllUsers,
   NtUiDialog.NodeSelection, Vcl.ComCtrls;
 
 {$R *.dfm}
@@ -54,9 +54,9 @@ begin
   NodeProvider := TNodeSelectionDialog.Pick(Self,
     function (AOwner: TForm): TFrame
     var
-      AppContainerFrame: TAppContainersExFrame absolute Result;
+      AppContainerFrame: TAppContainerListAllUsersFrame absolute Result;
     begin
-      AppContainerFrame := TAppContainersExFrame.Create(AOwner);
+      AppContainerFrame := TAppContainerListAllUsersFrame.Create(AOwner);
       AppContainerFrame.LoadForUser(FUser);
     end
   ) as IAppContainerNode;

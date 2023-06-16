@@ -1,4 +1,4 @@
-object AppContainersExFrame: TAppContainersExFrame
+object AppContainerListAllUsersFrame: TAppContainerListAllUsersFrame
   Left = 0
   Top = 0
   Width = 600
@@ -35,7 +35,7 @@ object AppContainersExFrame: TAppContainersExFrame
     TabOrder = 1
     OnClick = btnSelectUserClick
   end
-  inline AppContainersFrame: TAppContainersFrame
+  inline AppContainersFrame: TAppContainerListFrame
     AlignWithMargins = True
     Left = 0
     Top = 32
