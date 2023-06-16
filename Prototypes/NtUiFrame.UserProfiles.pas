@@ -15,14 +15,14 @@ type
   IProfileNode = NtUiBackend.UserProfiles.IProfileNode;
 
   TUserProfilesFrame = class(TFrame, IHasSearch, ICanConsumeEscape,
-    IGetFocusedNode, IOnNodeSelection, IHasDefaultCaption)
+    IGetFocusedNode, IOnNodeSelection, IHasDefaultCaption, INodeDefaultAction)
   published
     Tree: TDevirtualizedTree;
     SearchBox: TSearchFrame;
   private
     Backend: TTreeNodeInterfaceProvider;
     BackendRef: IUnknown;
-    property BackendImpl: TTreeNodeInterfaceProvider read Backend implements IGetFocusedNode, IOnNodeSelection;
+    property BackendImpl: TTreeNodeInterfaceProvider read Backend implements IGetFocusedNode, IOnNodeSelection, INodeDefaultAction;
     property SearchImpl: TSearchFrame read SearchBox implements IHasSearch, ICanConsumeEscape;
     function DefaultCaption: String;
   protected
