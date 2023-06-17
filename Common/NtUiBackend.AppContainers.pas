@@ -18,6 +18,8 @@ const
   colMax = 5;
 
 type
+  TAppContainerInfo = NtUtils.Security.AppContainer.TAppContainerInfo;
+
   TAppContainerInfoHelper = record helper for TAppContainerInfo
     function Hint: String;
   end;
@@ -27,6 +29,15 @@ type
     function GetInfo: TAppContainerInfo;
     property Info: TAppContainerInfo read GetInfo;
   end;
+
+// Derive AppContainer SID from name or SID
+[MayReturnNil]
+function UiLibDeriveAppContainer(
+  const FullMonikerOrSid: String
+): ISid;
+
+// Get the current effective user to use as a default
+function UiLibGetDefaultUser: ISid;
 
 // Populate an AppContainer node from its information
 function UiLibMakeAppContainerNode(
@@ -43,8 +54,9 @@ function UiLibEnumerateAppContainers(
 implementation
 
 uses
-  DevirtualizedTree.Provider, NtUtils.SysUtils, NtUtils.Security.Sid,
-  NtUtils.Packages, DelphiUiLib.Reflection.Strings, UI.Colors;
+  Ntapi.ntseapi, NtUtils.SysUtils, NtUtils.Security.Sid, NtUtils.Tokens,
+  NtUtils.Tokens.Info, NtUtils.Packages, DevirtualizedTree.Provider,
+  NtUiLib.Errors, DelphiUiLib.Reflection.Strings, UI.Colors;
 
 {$BOOLEVAL OFF}
 {$IFOPT R+}{$DEFINE R+}{$ENDIF}
@@ -119,7 +131,24 @@ begin
   end;
 end;
 
-{ Function }
+{ Functions }
+
+function UiLibDeriveAppContainer;
+begin
+  if FullMonikerOrSid = '' then
+    Exit(nil);
+
+  // Derive/convert the SID from text
+  if RtlxPrefixString('S-1-', FullMonikerOrSid) then
+    RtlxStringToSid(FullMonikerOrSid, Result).RaiseOnError
+  else
+    RtlxDeriveFullAppContainerSid(FullMonikerOrSid, Result).RaiseOnError;
+end;
+
+function UiLibGetDefaultUser;
+begin
+  NtxQuerySidToken(NtxCurrentEffectiveToken, TokenUser, Result).RaiseOnError;
+end;
 
 function UiLibMakeAppContainerNode;
 begin

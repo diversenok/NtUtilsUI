@@ -12,8 +12,6 @@ uses
   NtUiBackend.AppContainers;
 
 type
-  IAppContainerNode = NtUiBackend.AppContainers.IAppContainerNode;
-
   TAppContainerListFrame = class (TFrame, IHasSearch, ICanConsumeEscape,
     IGetFocusedNode, IOnNodeSelection, IHasDefaultCaption, INodeDefaultAction)
   published
@@ -33,6 +31,9 @@ type
 
 implementation
 
+uses
+  NtUiCommon.Prototypes, System.SysUtils;
+
 {$BOOLEVAL OFF}
 {$IFOPT R+}{$DEFINE R+}{$ENDIF}
 {$IFOPT Q+}{$DEFINE Q+}{$ENDIF}
@@ -43,7 +44,7 @@ implementation
 
 function TAppContainerListFrame.DefaultCaption;
 begin
-  Result := 'Select AppContainer Profile...'
+  Result := 'AppContainer Profiles'
 end;
 
 procedure TAppContainerListFrame.Loaded;
@@ -81,4 +82,49 @@ begin
   end;
 end;
 
+{ Integration }
+
+function Initializer(const User: ISid): TFrameInitializer;
+begin
+  Result := function (AOwner: TForm): TFrame
+    var
+      UserFrame: TAppContainerListFrame absolute Result;
+    begin
+      UserFrame := TAppContainerListFrame.Create(AOwner);
+      try
+        UserFrame.LoadForUser(User);
+      except
+        UserFrame.Free;
+        raise;
+      end;
+    end;
+end;
+
+procedure NtUiLibShowAppContainers(
+  const User: ISid
+);
+begin
+  if not Assigned(NtUiLibHostFrameShow) then
+    raise ENotSupportedException.Create('Frame host not available');
+
+  NtUiLibHostFrameShow(Initializer(User));
+end;
+
+function NtUiLibSelectAppContainer(
+  Owner: TComponent;
+  const User: ISid
+): TAppContainerInfo;
+var
+  ProfileNode: IAppContainerNode;
+begin
+  if not Assigned(NtUiLibHostFramePick) then
+    raise ENotSupportedException.Create('Frame host not available');
+
+  Profilenode := NtUiLibHostFramePick(Owner, Initializer(User)) as IAppContainerNode;
+  Result := ProfileNode.Info;
+end;
+
+initialization
+  NtUiCommon.Prototypes.NtUiLibShowAppContainers := NtUiLibShowAppContainers;
+  NtUiCommon.Prototypes.NtUiLibSelectAppContainer := NtUiLibSelectAppContainer;
 end.

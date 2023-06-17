@@ -34,9 +34,8 @@ type
 implementation
 
 uses
-  Ntapi.ntseapi, NtUtils.Tokens, NtUtils.Tokens.Info, NtUtils.Security.Sid,
-  NtUtils.SysUtils, NtUiLib.Errors, NtUiFrame.AppContainer.ListAllUsers,
-  NtUiDialog.NodeSelection, Vcl.ComCtrls;
+  Ntapi.ntseapi, NtUtils.Tokens, NtUtils.Tokens.Info, NtUiLib.Errors,
+  NtUiBackend.AppContainers, Vcl.ComCtrls, NtUiCommon.Prototypes;
 
 {$R *.dfm}
 
@@ -44,28 +43,21 @@ uses
 
 procedure TAppContainerFieldFrame.btnSelectClick;
 var
-  NodeProvider: IAppContainerNode;
   Info: TAppContainerInfo;
 begin
+  if not Assigned(NtUiLibSelectAppContainerAllUsers) then
+    Exit;
+
   if not Assigned(FUser) then
     NtxQuerySidToken(NtxCurrentEffectiveToken, TokenUser, FUser).RaiseOnError;
 
   // Show a modal dialog with AppContainer list
-  NodeProvider := TNodeSelectionDialog.Pick(Self,
-    function (AOwner: TForm): TFrame
-    var
-      AppContainerFrame: TAppContainerListAllUsersFrame absolute Result;
-    begin
-      AppContainerFrame := TAppContainerListAllUsersFrame.Create(AOwner);
-      AppContainerFrame.LoadForUser(FUser);
-    end
-  ) as IAppContainerNode;
+  Info := NtUiLibSelectAppContainerAllUsers(Self, FUser);
 
-  Info := NodeProvider.Info;
   FUser := Info.User;
   FSid := Info.Sid;
   tbxMoniker.Text := Info.FullMoniker;
-  tbxMoniker.Hint := NodeProvider.Hint;
+  tbxMoniker.Hint := Info.Hint;
 end;
 
 procedure TAppContainerFieldFrame.cmClearClick;
@@ -84,21 +76,10 @@ end;
 
 function TAppContainerFieldFrame.GetSid;
 begin
-  // Use cached value when possible
   if Assigned(FSid) then
     Exit(FSid);
 
-  if tbxMoniker.Text = '' then
-    Exit(nil);
-
-  // Derive/convert the SID from text
-  if RtlxPrefixString('S-1-', tbxMoniker.Text) then
-    RtlxStringToSid(tbxMoniker.Text, Result).RaiseOnError
-  else
-    RtlxDeriveFullAppContainerSid(tbxMoniker.Text, Result).RaiseOnError;
-
-  // Cache for future use
-  FSid := Result;
+  FSid := UiLibDeriveAppContainer(tbxMoniker.Text);
 end;
 
 procedure TAppContainerFieldFrame.Loaded;

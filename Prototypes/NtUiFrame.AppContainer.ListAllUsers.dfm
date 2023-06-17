@@ -2,7 +2,7 @@ object AppContainerListAllUsersFrame: TAppContainerListAllUsersFrame
   Left = 0
   Top = 0
   Width = 600
-  Height = 439
+  Height = 440
   Constraints.MinHeight = 230
   Constraints.MinWidth = 300
   ParentShowHint = False
@@ -10,14 +10,14 @@ object AppContainerListAllUsersFrame: TAppContainerListAllUsersFrame
   TabOrder = 0
   object lblUsers: TLabel
     Left = 3
-    Top = 8
+    Top = 5
     Width = 59
     Height = 13
     Caption = 'User profile:'
   end
   object tbxUser: TEdit
     Left = 72
-    Top = 5
+    Top = 2
     Width = 447
     Height = 21
     Anchors = [akLeft, akTop, akRight]
@@ -27,7 +27,7 @@ object AppContainerListAllUsersFrame: TAppContainerListAllUsersFrame
   end
   object btnSelectUser: TButton
     Left = 525
-    Top = 3
+    Top = 0
     Width = 75
     Height = 25
     Anchors = [akTop, akRight]
@@ -38,11 +38,11 @@ object AppContainerListAllUsersFrame: TAppContainerListAllUsersFrame
   inline AppContainersFrame: TAppContainerListFrame
     AlignWithMargins = True
     Left = 0
-    Top = 32
+    Top = 29
     Width = 600
-    Height = 407
+    Height = 411
     Margins.Left = 0
-    Margins.Top = 32
+    Margins.Top = 29
     Margins.Right = 0
     Margins.Bottom = 0
     Align = alClient
@@ -51,5 +51,8 @@ object AppContainerListAllUsersFrame: TAppContainerListAllUsersFrame
     ParentShowHint = False
     ShowHint = True
     TabOrder = 2
+    inherited Tree: TDevirtualizedTree
+      Height = 385
+    end
   end
 end

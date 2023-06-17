@@ -1,7 +1,6 @@
-object NodeSelectionDialog: TNodeSelectionDialog
+object FrameHostDialog: TFrameHostDialog
   Left = 0
   Top = 0
-  Caption = 'Select...'
   ClientHeight = 473
   ClientWidth = 614
   Color = clBtnFace
@@ -19,7 +18,7 @@ object NodeSelectionDialog: TNodeSelectionDialog
   PixelsPerInch = 96
   TextHeight = 13
   object btnClose: TButton
-    Left = 5
+    Left = 3
     Top = 445
     Width = 75
     Height = 25
@@ -30,7 +29,7 @@ object NodeSelectionDialog: TNodeSelectionDialog
     OnClick = btnCloseClick
   end
   object btnSelect: TButton
-    Left = 534
+    Left = 536
     Top = 445
     Width = 75
     Height = 25

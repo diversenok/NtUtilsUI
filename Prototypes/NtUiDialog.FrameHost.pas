@@ -1,7 +1,7 @@
-unit NtUiDialog.NodeSelection;
+unit NtUiDialog.FrameHost;
 
 {
-  This module provides a modal dialog for selecting an node item.
+  This module provides a dialog for hosting frames.
 }
 
 interface
@@ -13,7 +13,7 @@ uses
 type
   TFrameInitializer = reference to function (AOwner: TForm): TFrame;
 
-  TNodeSelectionDialog = class(TChildForm)
+  TFrameHostDialog = class(TChildForm)
     btnClose: TButton;
     btnSelect: TButton;
     procedure FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
@@ -23,16 +23,18 @@ type
     FFrame: TFrame;
     FFrameRef: IUnknown;
     procedure FrameSelectionChanged(Sender: TObject);
+  protected
+    procedure AddFrame(Frame: TFrame; AllowSelection: Boolean);
   public
-    procedure AddFrame(Frame: TFrame);
     function GetResult: INodeProvider;
     class function Pick(AOwner: TComponent; const Initializer: TFrameInitializer): INodeProvider; static;
+    class procedure Display(const Initializer: TFrameInitializer); static;
   end;
 
 implementation
 
 uses
-  Winapi.Windows, NtUiCommon.Interfaces, NtUtils.Errors;
+  Winapi.Windows, NtUiCommon.Prototypes, NtUiCommon.Interfaces, NtUtils.Errors;
 
 {$BOOLEVAL OFF}
 {$IFOPT R+}{$DEFINE R+}{$ENDIF}
@@ -40,7 +42,10 @@ uses
 
 {$R *.dfm}
 
-procedure TNodeSelectionDialog.AddFrame;
+procedure TFrameHostDialog.AddFrame;
+const
+  SMALL_MARGIN = 3;
+  BIG_MARGIN = 31;
 var
   SelectionObserver: IOnNodeSelection;
   DefaultCaption: IHasDefaultCaption;
@@ -53,43 +58,73 @@ begin
   FFrame := Frame;
   FFrameRef := IUnknown(FFrame);
 
-  BottomMargin := 33 * CurrentPPI div 96;
-  OtherMargin := 3 * CurrentPPI div 96;
+  if AllowSelection then
+    BottomMargin := BIG_MARGIN * CurrentPPI div 96
+  else
+    BottomMargin := SMALL_MARGIN * CurrentPPI div 96;
 
+  OtherMargin := SMALL_MARGIN * CurrentPPI div 96;
   ClientWidth := FFrame.Width + OtherMargin * 2;
   ClientHeight := FFrame.Height + OtherMargin + BottomMargin;
   FFrame.Parent := Self;
   FFrame.AlignWithMargins := True;
   FFrame.Margins.SetBounds(OtherMargin, OtherMargin, OtherMargin, BottomMargin);
   FFrame.Align := alClient;
+  btnClose.Visible := AllowSelection;
+  btnSelect.Visible := AllowSelection;
 
   if FFrameRef.QueryInterface(IHasDefaultCaption, DefaultCaption).IsSuccess then
-    Caption := DefaultCaption.DefaultCaption;
+    Caption := DefaultCaption.DefaultCaption
+  else
+    Caption := FFrame.ClassName;
 
-  if FFrameRef.QueryInterface(IOnNodeSelection, SelectionObserver).IsSuccess then
+  if AllowSelection then
   begin
-    SelectionObserver.OnSelection := FrameSelectionChanged;
-    FrameSelectionChanged(Self);
-  end;
+    // Subscribe to selection changes
+    if FFrameRef.QueryInterface(IOnNodeSelection,
+      SelectionObserver).IsSuccess then
+    begin
+      SelectionObserver.OnSelection := FrameSelectionChanged;
+      FrameSelectionChanged(Self);
+    end;
 
-  if FFrameRef.QueryInterface(INodeDefaultAction, DefaultAction).IsSuccess then
-  begin
-    DefaultAction.MainActionCaption := 'Select';
-    DefaultAction.OnMainAction := DefaultActionChosen;
+    // Set selection as default action
+    if FFrameRef.QueryInterface(INodeDefaultAction,
+      DefaultAction).IsSuccess then
+    begin
+      DefaultAction.MainActionCaption := 'Select';
+      DefaultAction.OnMainAction := DefaultActionChosen;
+    end;
   end;
 end;
 
-procedure TNodeSelectionDialog.btnCloseClick;
+procedure TFrameHostDialog.btnCloseClick;
 begin
   Close;
 end;
 
-procedure TNodeSelectionDialog.DefaultActionChosen;
+procedure TFrameHostDialog.DefaultActionChosen;
 begin
   ModalResult := mrOk;
 end;
 
-procedure TNodeSelectionDialog.FormKeyDown;
+class procedure TFrameHostDialog.Display;
+var
+  Form: TFrameHostDialog;
+begin
+  Form := TFrameHostDialog.CreateChild(nil, cfmDesktop);
+
+  try
+    Form.AddFrame(Initializer(Form), False);
+  except
+    Form.Free;
+    raise;
+  end;
+
+  Form.Show;
+end;
+
+procedure TFrameHostDialog.FormKeyDown;
 var
   Search: IHasSearch;
   Consumer: ICanConsumeEscape;
@@ -108,7 +143,7 @@ begin
   end;
 end;
 
-procedure TNodeSelectionDialog.FrameSelectionChanged;
+procedure TFrameHostDialog.FrameSelectionChanged;
 var
   FocusedNodeInfo: IGetFocusedNode;
 begin
@@ -117,7 +152,7 @@ begin
     Assigned(FocusedNodeInfo.FocusedNode);
 end;
 
-function TNodeSelectionDialog.GetResult;
+function TFrameHostDialog.GetResult;
 var
   FocusedNodeInfo: IGetFocusedNode;
 begin
@@ -128,14 +163,14 @@ begin
   Result := FocusedNodeInfo.FocusedNode;
 end;
 
-class function TNodeSelectionDialog.Pick;
+class function TFrameHostDialog.Pick;
 var
-  Form: TNodeSelectionDialog;
+  Form: TFrameHostDialog;
 begin
-  Form := TNodeSelectionDialog.CreateChild(AOwner, cfmNormal);
+  Form := TFrameHostDialog.CreateChild(AOwner, cfmApplication);
 
   try
-    Form.AddFrame(Initializer(Form));
+    Form.AddFrame(Initializer(Form), True);
   except
     Form.Free;
     raise;
@@ -148,4 +183,7 @@ begin
     Abort;
 end;
 
+initialization
+  NtUiLibHostFrameShow := TFrameHostDialog.Display;
+  NtUiLibHostFramePick := TFrameHostDialog.Pick;
 end.

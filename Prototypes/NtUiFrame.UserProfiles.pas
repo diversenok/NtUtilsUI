@@ -12,8 +12,6 @@ uses
   NtUiFrame.Search, NtUiCommon.Interfaces, NtUiBackend.UserProfiles;
 
 type
-  IProfileNode = NtUiBackend.UserProfiles.IProfileNode;
-
   TUserProfilesFrame = class(TFrame, IHasSearch, ICanConsumeEscape,
     IGetFocusedNode, IOnNodeSelection, IHasDefaultCaption, INodeDefaultAction)
   published
@@ -34,7 +32,7 @@ type
 implementation
 
 uses
-  NtUtils;
+  NtUtils, NtUtils.Profiles, NtUiCommon.Prototypes;
 
 {$R *.dfm}
 
@@ -42,7 +40,7 @@ uses
 
 function TUserProfilesFrame.DefaultCaption;
 begin
-  Result := 'Select User Profile...';
+  Result := 'User Profiles';
 end;
 
 procedure TUserProfilesFrame.LoadAllUsers;
@@ -72,4 +70,41 @@ begin
   BackendRef := Backend; // Make an owning reference
 end;
 
+{ Integration }
+
+function Initializer(AOwner: TForm): TFrame;
+var
+  UserFrame: TUserProfilesFrame absolute Result;
+begin
+  UserFrame := TUserProfilesFrame.Create(AOwner);
+  try
+    UserFrame.LoadAllUsers;
+  except
+    UserFrame.Free;
+    raise;
+  end;
+end;
+
+procedure NtUiLibShowUserProfiles;
+begin
+  if not Assigned(NtUiLibHostFrameShow) then
+    raise ENotSupportedException.Create('Frame host not available');
+
+  NtUiLibHostFrameShow(Initializer);
+end;
+
+function NtUiLibSelectUserProfile(Owner: TComponent): TProfileInfo;
+var
+  ProfileNode: IProfileNode;
+begin
+  if not Assigned(NtUiLibHostFramePick) then
+    raise ENotSupportedException.Create('Frame host not available');
+
+  Profilenode := NtUiLibHostFramePick(Owner, Initializer) as IProfileNode;
+  Result := ProfileNode.Info;
+end;
+
+initialization
+  NtUiCommon.Prototypes.NtUiLibShowUserProfiles := NtUiLibShowUserProfiles;
+  NtUiCommon.Prototypes.NtUiLibSelectUserProfile := NtUiLibSelectUserProfile;
 end.

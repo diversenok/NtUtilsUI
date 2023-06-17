@@ -12,8 +12,6 @@ uses
   NtUiCommon.Interfaces;
 
 type
-  IAppContainerNode = NtUiFrame.AppContainer.List.IAppContainerNode;
-
   TAppContainerListAllUsersFrame = class (TFrame, IHasSearch, ICanConsumeEscape,
     IGetFocusedNode, IOnNodeSelection, IHasDefaultCaption, INodeDefaultAction)
   published
@@ -36,14 +34,13 @@ type
     property NodeDefaultActionImpl: INodeDefaultAction read GetNodeDefaultActionImpl implements INodeDefaultAction;
     property Impl: TAppContainerListFrame read AppContainersFrame implements IHasDefaultCaption;
   public
-    procedure LoadForUser(const User: ISid);
+    procedure LoadForUser([opt] const SelectedUser: ISid);
   end;
 
 implementation
 
 uses
-  NtUiDialog.NodeSelection, NtUiFrame.UserProfiles, NtUtils.Errors,
-  DevirtualizedTree, DelphiUiLib.Reflection;
+  DelphiUiLib.Reflection, NtUiBackend.AppContainers, NtUiCommon.Prototypes;
 
 {$BOOLEVAL OFF}
 {$IFOPT R+}{$DEFINE R+}{$ENDIF}
@@ -52,20 +49,9 @@ uses
 {$R *.dfm}
 
 procedure TAppContainerListAllUsersFrame.btnSelectUserClick;
-var
-  Profile: IProfileNode;
 begin
-  Profile := TNodeSelectionDialog.Pick(Self,
-    function (AOwner: TForm): TFrame
-    var
-      UserFrame: TUserProfilesFrame absolute Result;
-    begin
-      UserFrame := TUserProfilesFrame.Create(AOwner);
-      UserFrame.LoadAllUsers;
-    end
-  ) as IProfileNode;
-
-  LoadForUser(Profile.Info.User);
+  if Assigned(NtUiLibSelectUserProfile) then
+    LoadForUser(NtUiLibSelectUserProfile(Self).User);
 end;
 
 function TAppContainerListAllUsersFrame.GetCanConsumeEscapeImpl;
@@ -97,11 +83,64 @@ procedure TAppContainerListAllUsersFrame.LoadForUser;
 var
   Representation: TRepresentation;
 begin
-  FUser := User;
+  if not Assigned(SelectedUser) then
+    FUser := UiLibGetDefaultUser
+  else
+    FUser := SelectedUser;
+
   Representation := TType.Represent(FUser);
   tbxUser.Text := Representation.Text;
   tbxUser.Hint := Representation.Hint;
-  AppContainersFrame.LoadForUser(User);
+  AppContainersFrame.LoadForUser(SelectedUser);
 end;
 
+{ Integration }
+
+function Initializer([opt] const DefaultUser: ISid): TFrameInitializer;
+begin
+  Result := function (AOwner: TForm): TFrame
+    var
+      UserFrame: TAppContainerListAllUsersFrame absolute Result;
+    begin
+      UserFrame := TAppContainerListAllUsersFrame.Create(AOwner);
+      try
+        UserFrame.LoadForUser(DefaultUser);
+      except
+        UserFrame.Free;
+        raise;
+      end;
+    end;
+end;
+
+procedure NtUiLibShowAppContainersAllUsers(
+  const User: ISid
+);
+begin
+  if not Assigned(NtUiLibHostFrameShow) then
+    raise ENotSupportedException.Create('Frame host not available');
+
+  NtUiLibHostFrameShow(Initializer(User));
+end;
+
+function NtUiLibSelectAppContainerAllUsers(
+  Owner: TComponent;
+  [opt] const DefaultUser: ISid
+): TAppContainerInfo;
+var
+  ProfileNode: IAppContainerNode;
+begin
+  if not Assigned(NtUiLibHostFramePick) then
+    raise ENotSupportedException.Create('Frame host not available');
+
+  Profilenode := NtUiLibHostFramePick(Owner,
+    Initializer(DefaultUser)) as IAppContainerNode;
+
+  Result := ProfileNode.Info;
+end;
+
+initialization
+  NtUiCommon.Prototypes.NtUiLibShowAppContainersAllUsers :=
+    NtUiLibShowAppContainersAllUsers;
+  NtUiCommon.Prototypes.NtUiLibSelectAppContainerAllUsers :=
+    NtUiLibSelectAppContainerAllUsers;
 end.
