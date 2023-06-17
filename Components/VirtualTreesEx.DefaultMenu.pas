@@ -27,7 +27,7 @@ type
   TDefaultTreeMenu = class
   private
     FTree: TCustomVirtualStringTree;
-    FFallbackMenu: TPopupMenu;
+    FMenu, FFallbackMenu: TPopupMenu;
     FMenuMainAction: TMenuItem;
     FMenuSeparator: TMenuItem;
     FMenuCopy: TMenuItem;
@@ -44,6 +44,7 @@ type
     procedure AttachItemsTo(Menu: TPopupMenu);
     procedure InvokeShortcuts(Key: Word; Shift: TShiftState);
     procedure InvokeMainAction;
+    procedure RefreshShortcuts;
     procedure NotifyPopup(Node: PVirtualNode; Menu: TPopupMenu; Column: TColumnIndex);
     property FallbackMenu: TPopupMenu read FFallbackMenu;
     property OnMainAction: TNodeEvent read FOnMainAction write FOnMainAction;
@@ -106,6 +107,8 @@ begin
   if not Assigned(Menu) then
     Menu := FFallbackMenu;
 
+  FMenu := Menu;
+
   // Attach the item for the main action to the top
   if Assigned(FMenuMainAction.Parent) then
     FMenuMainAction.Parent.Remove(FMenuMainAction);
@@ -117,8 +120,7 @@ begin
   FMenuCopy.SetParentComponent(Menu);
   FMenuCopyColumn.SetParentComponent(Menu);
 
-  // Merge and capture existing and new keyboard shortcuts
-  FShortcuts := TMenuShortCut.Collect(Menu.Items);
+  RefreshShortcuts;
 end;
 
 constructor TDefaultTreeMenu.Create;
@@ -234,6 +236,14 @@ begin
   // Enable the separator if there are items to separate
   FMenuSeparator.Visible := (Assigned(Menu) or FMenuMainAction.Visible) and
     FMenuCopy.Visible;
+end;
+
+procedure TDefaultTreeMenu.RefreshShortcuts;
+begin
+  if Assigned(FMenu) then
+    FShortcuts := TMenuShortCut.Collect(FMenu.Items)
+  else
+    FShortcuts := nil;
 end;
 
 procedure TDefaultTreeMenu.SetMainActionText;

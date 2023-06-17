@@ -45,6 +45,7 @@ type
     constructor Create(AOwner: TComponent); override;
     procedure DeleteSelectedNodesEx(SelectSomethingAfter: Boolean = True);
     procedure SelectSometing;
+    procedure RefreshPopupMenuShortcuts;
     property MainActionMenuText: String read GetMainActionMenuText write SetMainActionMenuText;
     destructor Destroy; override;
   published
@@ -291,6 +292,11 @@ end;
 function TVirtualStringTreeEx.OverrideMainActionMenuEnabled;
 begin
   Result := True;
+end;
+
+procedure TVirtualStringTreeEx.RefreshPopupMenuShortcuts;
+begin
+  FDefaultMenus.RefreshShortcuts;
 end;
 
 procedure TVirtualStringTreeEx.SelectSometing;
