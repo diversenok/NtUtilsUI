@@ -17,12 +17,12 @@ var
   { Common: Frame Host }
 
   NtUiLibHostFrameShow: procedure (
-    const Initializer: TFrameInitializer
+    Initializer: TFrameInitializer
   );
 
   NtUiLibHostFramePick: function (
     AOwner: TComponent;
-    const Initializer: TFrameInitializer
+    Initializer: TFrameInitializer
   ): INodeProvider;
 
   { User Profiles }

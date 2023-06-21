@@ -27,8 +27,8 @@ type
     procedure AddFrame(Frame: TFrame; AllowSelection: Boolean);
   public
     function GetResult: INodeProvider;
-    class function Pick(AOwner: TComponent; const Initializer: TFrameInitializer): INodeProvider; static;
-    class procedure Display(const Initializer: TFrameInitializer); static;
+    class function Pick(AOwner: TComponent; Initializer: TFrameInitializer): INodeProvider; static;
+    class procedure Display(Initializer: TFrameInitializer); static;
   end;
 
 implementation

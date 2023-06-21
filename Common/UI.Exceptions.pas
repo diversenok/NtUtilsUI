@@ -20,16 +20,16 @@ type
   // Custom exception-safe invokers for automatic events
   TExceptionSafeInvoker = record
     class procedure NoParameters(
-      const Callback: TEventCallback
+      Callback: TEventCallback
     ); static;
 
     class procedure OneParameter<T>(
-      const Callback: TEventCallback<T>;
+      Callback: TEventCallback<T>;
       const Parameter: T
     ); static;
 
     class procedure TwoParameters<T1, T2>(
-      const Callback: TEventCallback<T1, T2>;
+      Callback: TEventCallback<T1, T2>;
       const Parameter1: T1;
       const Parameter2: T2
     ); static;
