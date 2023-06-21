@@ -87,4 +87,14 @@ object AppContainerListFrame: TAppContainerListFrame
         Width = 400
       end>
   end
+  object PopupMenu: TPopupMenu
+    Left = 72
+    Top = 112
+    object cmInspect: TMenuItem
+      Caption = 'Inspect...'
+      Default = True
+      ShortCut = 13
+      OnClick = cmInspectClick
+    end
+  end
 end

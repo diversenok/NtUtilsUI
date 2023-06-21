@@ -35,6 +35,10 @@ var
 
   { AppContainer Profiles }
 
+  NtUiLibShowAppContainer: procedure(
+    const Info: TAppContainerInfo
+  );
+
   NtUiLibShowAppContainers: procedure(
     const User: ISid
   );

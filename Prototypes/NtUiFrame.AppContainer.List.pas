@@ -9,14 +9,18 @@ interface
 uses
   Vcl.Controls, System.Classes, Vcl.Forms, VirtualTrees, VirtualTreesEx,
   DevirtualizedTree, NtUiFrame.Search, NtUtils, NtUiCommon.Interfaces,
-  NtUiBackend.AppContainers;
+  NtUiBackend.AppContainers, Vcl.Menus;
 
 type
   TAppContainerListFrame = class (TFrame, IHasSearch, ICanConsumeEscape,
     IGetFocusedNode, IOnNodeSelection, IHasDefaultCaption, INodeDefaultAction)
+    PopupMenu: TPopupMenu;
+    cmInspect: TMenuItem;
+    procedure cmInspectClick(Sender: TObject);
   published
     SearchBox: TSearchFrame;
     Tree: TDevirtualizedTree;
+    procedure FrameMainActionSet(Sender: TObject);
   private
     Backend: TTreeNodeInterfaceProvider;
     BackendRef: IUnknown;
@@ -32,7 +36,7 @@ type
 implementation
 
 uses
-  NtUiCommon.Prototypes, System.SysUtils;
+  NtUtils.Errors, NtUiCommon.Prototypes, System.SysUtils, Winapi.Windows;
 
 {$BOOLEVAL OFF}
 {$IFOPT R+}{$DEFINE R+}{$ENDIF}
@@ -42,9 +46,32 @@ uses
 
 { TAppContainersFrame }
 
+procedure TAppContainerListFrame.cmInspectClick(Sender: TObject);
+var
+  NodeProvider: INodeProvider;
+  AppContainerNode: IAppContainerNode;
+begin
+  if not Assigned(NtUiLibShowAppContainer) then
+    Exit;
+
+  NodeProvider := Backend.FocusedNode;
+
+  if Assigned(NodeProvider) and NodeProvider.QueryInterface(IAppContainerNode,
+    AppContainerNode).IsSuccess then
+    NtUiLibShowAppContainer(AppContainerNode.Info);
+end;
+
 function TAppContainerListFrame.DefaultCaption;
 begin
   Result := 'AppContainer Profiles'
+end;
+
+procedure TAppContainerListFrame.FrameMainActionSet;
+begin
+  // Demote the inspect menu from the default Enter to Ctrl+Enter
+  cmInspect.ShortCut := scCtrl or VK_RETURN;
+  cmInspect.Default := False;
+  Tree.RefreshPopupMenuShortcuts;
 end;
 
 procedure TAppContainerListFrame.Loaded;
@@ -53,6 +80,12 @@ begin
   SearchBox.AttachToTree(Tree);
   Backend := TTreeNodeInterfaceProvider.Create(Tree, [teSelectionChange]);
   BackendRef := Backend; // Make an owning reference
+
+  if Assigned(NtUiLibShowAppContainer) then
+  begin
+    Tree.PopupMenuEx := PopupMenu;
+    Backend.OnMainActionSet := FrameMainActionSet;
+  end;
 end;
 
 procedure TAppContainerListFrame.LoadForUser;

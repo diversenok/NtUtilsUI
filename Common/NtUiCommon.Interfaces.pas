@@ -118,8 +118,11 @@ type
   private
     FOnNodeSelection: TNotifyEvent;
     FOnMainAction: TNodeProviderEvent;
+    FOnMainActionSet: TNotifyEvent;
     procedure TreeSelectionChanged(Sender: TBaseVirtualTree; Node: PVirtualNode);
     procedure TreeMainAction(Node: PVirtualNode);
+    function GetOnMainActionSet: TNotifyEvent;
+    procedure SetOnMainActionSet(const Value: TNotifyEvent);
   public
     procedure SetStatus(const Status: TNtxStatus);
     function NodeCount(const ProviderId: TGuid): Cardinal;
@@ -138,6 +141,7 @@ type
     procedure SetOnMainAction(const Value: TNodeProviderEvent);
     function GetMainActionCaption: String;
     procedure SetMainActionCaption(const Value: String);
+    property OnMainActionSet: TNotifyEvent read GetOnMainActionSet write SetOnMainActionSet;
     constructor Create(Tree: TDevirtualizedTree; SubscribeTo: TTreeEventSubscription = []);
   end;
 
@@ -287,6 +291,11 @@ begin
   Result := FOnMainAction;
 end;
 
+function TTreeNodeInterfaceProvider.GetOnMainActionSet;
+begin
+  Result := FOnMainActionSet;
+end;
+
 function TTreeNodeInterfaceProvider.GetOnSelection;
 begin
   Result := FOnNodeSelection;
@@ -372,7 +381,15 @@ begin
       FTree.OnMainAction := TreeMainAction
     else
       FTree.OnMainAction := nil;
+
+    if Assigned(FOnMainActionSet) then
+      FOnMainActionSet(Self);
   end;
+end;
+
+procedure TTreeNodeInterfaceProvider.SetOnMainActionSet;
+begin
+  FOnMainActionSet := Value;
 end;
 
 procedure TTreeNodeInterfaceProvider.SetOnSelection;
