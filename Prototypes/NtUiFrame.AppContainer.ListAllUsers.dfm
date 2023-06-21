@@ -22,7 +22,7 @@ object AppContainerListAllUsersFrame: TAppContainerListAllUsersFrame
     Height = 21
     Anchors = [akLeft, akTop, akRight]
     ReadOnly = True
-    TabOrder = 0
+    TabOrder = 1
     Text = '(not selected)'
   end
   object btnSelectUser: TButton
@@ -32,7 +32,7 @@ object AppContainerListAllUsersFrame: TAppContainerListAllUsersFrame
     Height = 25
     Anchors = [akTop, akRight]
     Caption = 'Change...'
-    TabOrder = 1
+    TabOrder = 2
     OnClick = btnSelectUserClick
   end
   inline AppContainersFrame: TAppContainerListFrame
@@ -50,7 +50,7 @@ object AppContainerListAllUsersFrame: TAppContainerListAllUsersFrame
     Constraints.MinWidth = 300
     ParentShowHint = False
     ShowHint = True
-    TabOrder = 2
+    TabOrder = 0
     inherited Tree: TDevirtualizedTree
       Height = 385
     end

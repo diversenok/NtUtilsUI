@@ -70,6 +70,7 @@ begin
   FFrame.AlignWithMargins := True;
   FFrame.Margins.SetBounds(OtherMargin, OtherMargin, OtherMargin, BottomMargin);
   FFrame.Align := alClient;
+  FFrame.TabOrder := 0;
   btnClose.Visible := AllowSelection;
   btnSelect.Visible := AllowSelection;
 

@@ -88,13 +88,13 @@ function Initializer(const User: ISid): TFrameInitializer;
 begin
   Result := function (AOwner: TForm): TFrame
     var
-      UserFrame: TAppContainerListFrame absolute Result;
+      Frame: TAppContainerListFrame absolute Result;
     begin
-      UserFrame := TAppContainerListFrame.Create(AOwner);
+      Frame := TAppContainerListFrame.Create(AOwner);
       try
-        UserFrame.LoadForUser(User);
+        Frame.LoadForUser(User);
       except
-        UserFrame.Free;
+        Frame.Free;
         raise;
       end;
     end;

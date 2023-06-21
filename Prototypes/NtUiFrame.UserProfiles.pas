@@ -74,13 +74,13 @@ end;
 
 function Initializer(AOwner: TForm): TFrame;
 var
-  UserFrame: TUserProfilesFrame absolute Result;
+  Frame: TUserProfilesFrame absolute Result;
 begin
-  UserFrame := TUserProfilesFrame.Create(AOwner);
+  Frame := TUserProfilesFrame.Create(AOwner);
   try
-    UserFrame.LoadAllUsers;
+    Frame.LoadAllUsers;
   except
-    UserFrame.Free;
+    Frame.Free;
     raise;
   end;
 end;

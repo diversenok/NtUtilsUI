@@ -100,13 +100,13 @@ function Initializer([opt] const DefaultUser: ISid): TFrameInitializer;
 begin
   Result := function (AOwner: TForm): TFrame
     var
-      UserFrame: TAppContainerListAllUsersFrame absolute Result;
+      Frame: TAppContainerListAllUsersFrame absolute Result;
     begin
-      UserFrame := TAppContainerListAllUsersFrame.Create(AOwner);
+      Frame := TAppContainerListAllUsersFrame.Create(AOwner);
       try
-        UserFrame.LoadForUser(DefaultUser);
+        Frame.LoadForUser(DefaultUser);
       except
-        UserFrame.Free;
+        Frame.Free;
         raise;
       end;
     end;
@@ -132,7 +132,7 @@ begin
   if not Assigned(NtUiLibHostFramePick) then
     raise ENotSupportedException.Create('Frame host not available');
 
-  Profilenode := NtUiLibHostFramePick(Owner,
+  ProfileNode := NtUiLibHostFramePick(Owner,
     Initializer(DefaultUser)) as IAppContainerNode;
 
   Result := ProfileNode.Info;
