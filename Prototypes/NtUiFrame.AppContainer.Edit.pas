@@ -79,7 +79,8 @@ begin
   if Assigned(FSid) then
     Exit(FSid);
 
-  FSid := UiLibDeriveAppContainer(tbxMoniker.Text);
+  Result := UiLibDeriveAppContainer(tbxMoniker.Text);
+  FSid := Result;
 end;
 
 procedure TAppContainerFieldFrame.Loaded;
