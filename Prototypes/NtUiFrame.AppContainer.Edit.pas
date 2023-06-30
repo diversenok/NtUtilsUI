@@ -34,8 +34,8 @@ type
 implementation
 
 uses
-  Ntapi.ntseapi, NtUtils.Tokens, NtUtils.Tokens.Info, NtUiLib.Errors,
-  NtUiBackend.AppContainers, Vcl.ComCtrls, NtUiCommon.Prototypes;
+  Ntapi.ntseapi, NtUtils.Tokens, NtUtils.Tokens.Info, NtUiBackend.AppContainers,
+  Vcl.ComCtrls, NtUiCommon.Prototypes;
 
 {$R *.dfm}
 

@@ -37,7 +37,7 @@ type
 implementation
 
 uses
-  Ntapi.ntstatus, DelphiUtils.AutoObjects, NtUtils.Lsa.Sid, NtUiLib.Errors,
+  Ntapi.ntstatus, DelphiUtils.AutoObjects, NtUtils.Lsa.Sid,
   NtUiLib.AutoCompletion.Sid, UI.Builtin.DsObjectPicker,
   UI.Prototypes.Sid.Cheatsheet, UI.Prototypes.Forms;
 
