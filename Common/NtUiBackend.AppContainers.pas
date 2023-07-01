@@ -51,12 +51,25 @@ function UiLibEnumerateAppContainers(
   [opt] const ParentSid: ISid = nil
 ): TNtxStatus;
 
+// Add property nodes for AppContainer
+procedure UiLibMakeAppContainerPropertyNodes(
+  Tree: TDevirtualizedTree;
+  const Info: TAppContainerInfo
+);
+
+// Invoke the inspect menu on a property node
+procedure UiLibInspectAppContainerProperty(
+  const Info: TAppContainerInfo;
+  NodeIndex: Integer
+);
+
 implementation
 
 uses
   Ntapi.ntseapi, NtUtils.SysUtils, NtUtils.Security.Sid, NtUtils.Tokens,
-  NtUtils.Tokens.Info, NtUtils.Packages, DevirtualizedTree.Provider,
-  NtUiLib.Errors, DelphiUiLib.Reflection.Strings, UI.Colors;
+  NtUtils.Tokens.Info, NtUtils.Packages, NtUtils.Profiles, Vcl.Graphics,
+  Vcl.Controls, DevirtualizedTree.Provider, NtUiLib.Errors,
+  DelphiUiLib.Reflection.Strings, UI.Colors, UI.Helper, NtUiCommon.Prototypes;
 
 {$BOOLEVAL OFF}
 {$IFOPT R+}{$DEFINE R+}{$ENDIF}
@@ -173,6 +186,141 @@ begin
     RtlxQueryAppContainer(Info, Sids[i], User);
     Providers[i] := UiLibMakeAppContainerNode(Info);
   end;
+end;
+
+procedure UiLibMakeAppContainerPropertyNodes(
+  Tree: TDevirtualizedTree;
+  const Info: TAppContainerInfo
+);
+var
+  Node: IEditableNodeProvider;
+  ParentSid: ISid;
+  Status: TNtxStatus;
+  IsPackage: Boolean;
+  FolderPath: String;
+  CurrentUser: ISid;
+begin
+  Tree.BeginUpdateAuto;
+  Tree.Clear;
+
+  IsPackage := not Info.IsChild and PkgxIsValidFamilyName(Info.Moniker);
+
+  // Type
+  Node := TEditableNodeProvider.Create(2);
+  Node.EnabledMainActionMenu := False;
+  Node.ColumnText[0] := 'Type';
+
+  if IsPackage then
+    Node.ColumnText[1] := 'Package'
+  else if Info.IsChild then
+    Node.ColumnText[1] := 'Child'
+  else
+    Node.ColumnText[1] := 'Parent';
+
+  Tree.AddChildEx(nil, Node);
+
+  // SID
+  Node := TEditableNodeProvider.Create(2);
+  Node.EnabledMainActionMenu := False;
+  Node.ColumnText[0] := 'SID';
+  Node.ColumnText[1] := RtlxSidToString(Info.Sid);
+  Tree.AddChildEx(nil, Node);
+
+  // Parent SID
+  Node := TEditableNodeProvider.Create(2);
+  Node.EnabledMainActionMenu := False;
+  Node.ColumnText[0] := 'Parent SID';
+
+  if Info.IsChild then
+  begin
+    Status := RtlxGetAppContainerParent(Info.Sid, ParentSid);
+
+    if Status.IsSuccess then
+    begin
+      Node.ColumnText[1] := RtlxSidToString(ParentSid);
+      Node.FontStyleForColumn[1] := [TFontStyle.fsUnderline];
+      Node.FontColorForColumn[1] := clHotLight;
+      Node.Cursor := crHandPoint;
+      Node.EnabledMainActionMenu := True;
+    end
+    else
+    begin
+      Node.ColumnText[1] := '<Unable to query>';
+      Node.Hint := Status.ToString;
+    end;
+  end
+  else
+    Node.ColumnText[1] := 'N/A';
+
+  Tree.AddChildEx(nil, Node);
+
+  // Full moniker
+  Node := TEditableNodeProvider.Create(2);
+  Node.EnabledMainActionMenu := False;
+  Node.ColumnText[0] := 'Full Moniker';
+  Node.ColumnText[1] := Info.FullMoniker;
+  Tree.AddChildEx(nil, Node);
+
+  // Display name
+  Node := TEditableNodeProvider.Create(2);
+  Node.EnabledMainActionMenu := False;
+  Node.ColumnText[0] := 'Display Name';
+  Node.ColumnText[1] := Info.DisplayName;
+  Tree.AddChildEx(nil, Node);
+
+  // Friendly name
+  Node := TEditableNodeProvider.Create(2);
+  Node.EnabledMainActionMenu := False;
+  Node.ColumnText[0] := 'Friendly Name';
+  Node.ColumnText[1] := Info.FriendlyName;
+  Tree.AddChildEx(nil, Node);
+
+  // Registry path
+  Node := TEditableNodeProvider.Create(2);
+  Node.EnabledMainActionMenu := False;
+  Node.ColumnText[0] := 'Registry Path';
+  Node.ColumnText[1] := RtlxQueryStoragePathAppContaier(Info);
+  Tree.AddChildEx(nil, Node);
+
+  // File path
+  Node := TEditableNodeProvider.Create(2);
+  Node.EnabledMainActionMenu := False;
+  Node.ColumnText[0] := 'File Path';
+
+  if NtxQuerySidToken(NtxCurrentEffectiveToken, TokenUser,
+    CurrentUser).IsSuccess and RtlxEqualSids(CurrentUser, Info.User) then
+  begin
+    // Querying folder only works for on current user
+    Status := UnvxQueryFolderAppContainer(Info.Sid, FolderPath);
+
+    if Status.IsSuccess then
+      Node.ColumnText[1] := FolderPath
+    else
+    begin
+      Node.ColumnText[1] := '<Unable to query>';
+      Node.Hint := Status.ToString;
+    end;
+  end
+  else
+  begin
+    Node.ColumnText[1] := '<Unable to query>';
+    Node.Hint := 'Cannot query information for another user';
+  end;
+
+  Tree.AddChildEx(nil, Node);
+end;
+
+procedure UiLibInspectAppContainerProperty;
+var
+  ParentSid: ISid;
+  ParentInfo: TAppContainerInfo;
+begin
+  if not Assigned(NtUiLibShowAppContainer) or (NodeIndex <> 2) then
+    Exit;
+
+  RtlxGetAppContainerParent(Info.Sid, ParentSid).RaiseOnError;
+  RtlxQueryAppContainer(ParentInfo, ParentSid, Info.User).RaiseOnError;
+  NtUiLibShowAppContainer(ParentInfo);
 end;
 
 end.
