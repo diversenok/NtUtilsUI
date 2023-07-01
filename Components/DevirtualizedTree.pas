@@ -8,13 +8,14 @@ unit DevirtualizedTree;
 interface
 
 uses
-  VirtualTrees, VirtualTreesEx, Vcl.Graphics, System.Classes, System.Types;
+  VirtualTrees, VirtualTreesEx, Vcl.Graphics, Vcl.Controls,
+  System.Classes, System.Types;
 
 type
   PVirtualNode = VirtualTrees.PVirtualNode;
 
   INodeProvider = interface
-    ['{7C43FFE3-DF9C-4F2C-AB77-6C07D96F9D34}']
+    ['{C2052EE1-1351-4EAE-A042-91D10CF7D268}']
     procedure Attach(Node: PVirtualNode);
     procedure Detach;
     procedure Initialize;
@@ -22,26 +23,38 @@ type
 
     function GetTree: TBaseVirtualTree;
     function GetNode: PVirtualNode;
-    function GetColumnText(Index: Integer): String;
+    function GetColumnText(Column: TColumnIndex): String;
     function GetHint: String;
-    function GetColor: TColor;
     function GetHasColor: Boolean;
-    function GetFontColor: TColor;
+    function GetColor: TColor;
     function GetHasFontColor: Boolean;
-    function GetFontStyle: TFontStyles;
+    function GetFontColor: TColor;
+    function GetHasFontColorForColumn(Column: TColumnIndex): Boolean;
+    function GetFontColorForColumn(Column: TColumnIndex): TColor;
     function GetHasFontStyle: Boolean;
+    function GetFontStyle: TFontStyles;
+    function GetHasFontStyleForColumn(Column: TColumnIndex): Boolean;
+    function GetFontStyleForColumn(Column: TColumnIndex): TFontStyles;
+    function GetHasCursor: Boolean;
+    function GetCursor: TCursor;
     function GetEnabledMainActionMenu: Boolean;
 
     property Tree: TBaseVirtualTree read GetTree;
     property Node: PVirtualNode read GetNode;
-    property ColumnText[Index: Integer]: String read GetColumnText;
+    property ColumnText[Column: TColumnIndex]: String read GetColumnText;
     property Hint: String read GetHint;
-    property Color: TColor read GetColor;
     property HasColor: Boolean read GetHasColor;
-    property FontColor: TColor read GetFontColor;
+    property Color: TColor read GetColor;
     property HasFontColor: Boolean read GetHasFontColor;
-    property FontStyle: TFontStyles read GetFontStyle;
+    property FontColor: TColor read GetFontColor;
+    property HasFontColorForColumn[Column: TColumnIndex]: Boolean read GetHasFontColorForColumn;
+    property FontColorForColumn[Column: TColumnIndex]: TColor read GetFontColorForColumn;
     property HasFontStyle: Boolean read GetHasFontStyle;
+    property FontStyle: TFontStyles read GetFontStyle;
+    property HasFontStyleForColumn[Column: TColumnIndex]: Boolean read GetHasFontStyleForColumn;
+    property FontStyleForColumn[Column: TColumnIndex]: TFontStyles read GetFontStyleForColumn;
+    property HasCursor: Boolean read GetHasCursor;
+    property Cursor: TCursor read GetCursor;
     property EnabledMainActionMenu: Boolean read GetEnabledMainActionMenu;
 
     procedure NotifyChecked;
@@ -75,6 +88,7 @@ type
     procedure ValidateNodeDataSize(var Size: Integer); override;
     function DoExpanding(Node: PVirtualNode): Boolean; override;
     function DoCollapsing(Node: PVirtualNode): Boolean; override;
+    procedure DoGetCursor(var Cursor: TCursor); override;
     procedure DoFreeNode(Node: PVirtualNode); override;
     procedure DoInitNode(Parent, Node: PVirtualNode; var InitStates: TVirtualNodeInitStates); override;
   public
@@ -155,15 +169,19 @@ begin
 end;
 
 procedure TDevirtualizedTree.DoBeforeItemErase;
+var
+  Provider: INodeProvider;
 begin
   // Pre-load background color
-  if Node.HasProvider and Node.Provider.HasColor then
-    Color := Node.Provider.Color;
+  if Node.TryGetProvider(Provider) and Provider.HasColor then
+    Color := Provider.Color;
 
   inherited;
 end;
 
 procedure TDevirtualizedTree.DoChange;
+var
+  Provider: INodeProvider;
 begin
   inherited;
 
@@ -171,104 +189,136 @@ begin
   begin
     // Use the supplied node when available
 
-    if Node.HasProvider then
-      Node.Provider.NotifySelected;
+    if Node.TryGetProvider(Provider) then
+      Provider.NotifySelected;
   end
   else
   begin
     // Cannot tell which node changed; need to notify all of them
 
     for Node in Nodes do
-      if Node.HasProvider then
-        Node.Provider.NotifySelected;
+      if Node.TryGetProvider(Provider) then
+        Provider.NotifySelected;
   end;
 end;
 
 procedure TDevirtualizedTree.DoChecked;
+var
+  Provider: INodeProvider;
 begin
   inherited;
 
-  if Node.HasProvider then
-    Node.Provider.NotifyChecked;
+  if Node.TryGetProvider(Provider) then
+    Provider.NotifyChecked;
 end;
 
 function TDevirtualizedTree.DoCollapsing;
+var
+  Provider: INodeProvider;
 begin
   Result := inherited;
 
-  if Node.HasProvider then
-    Node.Provider.NotifyCollapsing(Result);
+  if Node.TryGetProvider(Provider) then
+    Provider.NotifyCollapsing(Result);
 end;
 
 function TDevirtualizedTree.DoExpanding;
+var
+  Provider: INodeProvider;
 begin
   Result := inherited;
 
-  if Node.HasProvider then
-    Node.Provider.NotifyExpanding(Result);
+  if Node.TryGetProvider(Provider) then
+    Provider.NotifyExpanding(Result);
 end;
 
 procedure TDevirtualizedTree.DoFreeNode;
+var
+  Provider: INodeProvider;
 begin
-  if Node.HasProvider then
-    Node.Provider.Detach;
+  if Node.TryGetProvider(Provider) then
+    Provider.Detach;
+
+  inherited;
+end;
+
+procedure TDevirtualizedTree.DoGetCursor;
+var
+  Provider: INodeProvider;
+begin
+  if GetNodeAt(ScreenToClient(Mouse.CursorPos)).TryGetProvider(Provider) and
+    Provider.HasCursor then
+    Cursor := Provider.Cursor;
 
   inherited;
 end;
 
 function TDevirtualizedTree.DoGetNodeHint;
+var
+  Provider: INodeProvider;
 begin
   Result := inherited;
 
   // Override inherited hint with the one provided by the node
-  if not Assigned(OnGetHint) and Node.HasProvider then
-    Result := Node.Provider.Hint;
+  if not Assigned(OnGetHint) and Node.TryGetProvider(Provider) then
+    Result := Provider.Hint;
 end;
 
 procedure TDevirtualizedTree.DoGetText;
+var
+  Provider: INodeProvider;
 begin
   // (Copied initialization from the parent)
   if not (vsInitialized in pEventArgs.Node.States) then
     InitNode(pEventArgs.Node);
 
   // Pre-load the text
-  if pEventArgs.Node.HasProvider then
-    pEventArgs.CellText := pEventArgs.Node.Provider.ColumnText[
-      pEventArgs.Column];
+  if pEventArgs.Node.TryGetProvider(Provider) then
+    pEventArgs.CellText := Provider.ColumnText[pEventArgs.Column];
 
   inherited;
 end;
 
 procedure TDevirtualizedTree.DoInitNode;
+var
+  Provider: INodeProvider;
 begin
   inherited;
 
-  if Node.HasProvider then
-    Node.Provider.Initialize;
+  if Node.TryGetProvider(Provider) then
+    Provider.Initialize;
 end;
 
 procedure TDevirtualizedTree.DoPaintText;
+var
+  Provider: INodeProvider;
 begin
   // Pre-load font styles
-  if (TextType = ttNormal) and Node.HasProvider then
+  if (TextType = ttNormal) and Node.TryGetProvider(Provider) then
   begin
-    if Node.Provider.HasFontColor then
-      Canvas.Font.Color := Node.Provider.FontColor;
+    if Provider.HasFontColorForColumn[Column] then
+      Canvas.Font.Color := Provider.FontColorForColumn[Column]
+    else if Provider.HasFontColor then
+      Canvas.Font.Color := Provider.FontColor;
 
-    if Node.Provider.HasFontStyle then
-      Canvas.Font.Style := Node.Provider.FontStyle;
+    if Provider.HasFontStyleForColumn[Column] then
+      Canvas.Font.Style := Provider.FontStyleForColumn[Column]
+    else if Provider.HasFontStyle then
+      Canvas.Font.Style := Provider.FontStyle;
   end;
 
   inherited;
 end;
 
 procedure TDevirtualizedTree.DoRemoveFromSelection;
+var
+  Provider: INodeProvider;
 begin
   inherited;
 
   // Note: do not invoke events on a half-destroyed form
-  if not (csDestroying in ComponentState) and Node.HasProvider then
-    Node.Provider.NotifySelected;
+  if not (csDestroying in ComponentState) and Node.TryGetProvider(Provider) then
+    Provider.NotifySelected;
 end;
 
 function TDevirtualizedTree.InsertNodeEx;
@@ -279,8 +329,10 @@ begin
 end;
 
 function TDevirtualizedTree.OverrideMainActionMenuEnabled;
+var
+  Provider: INodeProvider;
 begin
-  if Node.HasProvider and not Node.Provider.EnabledMainActionMenu then
+  if Node.TryGetProvider(Provider) and not Provider.EnabledMainActionMenu then
     Result := False
   else
     Result := inherited;
