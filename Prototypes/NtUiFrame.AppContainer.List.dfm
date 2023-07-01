@@ -52,6 +52,7 @@ object AppContainerListFrame: TAppContainerListFrame
     TreeOptions.MiscOptions = [toAcceptOLEDrop, toFullRepaintOnResize, toInitOnSave, toToggleOnDblClick, toWheelPanning]
     TreeOptions.PaintOptions = [toHideFocusRect, toHotTrack, toShowButtons, toShowDropmark, toShowTreeLines, toThemeAware, toUseBlendedImages, toUseExplorerTheme]
     TreeOptions.SelectionOptions = [toFullRowSelect, toMultiSelect, toRightClickSelect]
+    OnNodeDblClick = TreeNodeDblClick
     Touch.InteractiveGestures = [igPan, igPressAndTap]
     Touch.InteractiveGestureOptions = [igoPanSingleFingerHorizontal, igoPanSingleFingerVertical, igoPanInertia, igoPanGutter, igoParentPassthrough]
     NoItemsText = 'No items to display'

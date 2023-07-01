@@ -17,6 +17,8 @@ type
     PopupMenu: TPopupMenu;
     cmInspect: TMenuItem;
     procedure cmInspectClick(Sender: TObject);
+    procedure TreeNodeDblClick(Sender: TBaseVirtualTree;
+      const HitInfo: THitInfo);
   published
     SearchBox: TSearchFrame;
     Tree: TDevirtualizedTree;
@@ -113,6 +115,12 @@ begin
       for Child in Children do
         Backend.AddItem(Child, Parent);
   end;
+end;
+
+procedure TAppContainerListFrame.TreeNodeDblClick;
+begin
+  if cmInspect.Default then
+    cmInspectClick(Sender);
 end;
 
 { Integration }
