@@ -28,10 +28,11 @@ type
     FValidMask: UInt64;
     FValue: UInt64;
     FIsReadOnly: Boolean;
-    function SuppressReadOnly: IAutoReleasable;
+    function SuppressTreeReadOnly: IAutoReleasable;
     procedure RefreshText(Editing: Boolean = False);
     procedure RefreshItems;
     procedure SetValue(const NewValue: UInt64);
+    procedure SetTreeReadOnly(const Value: Boolean);
     procedure SetReadOnly(const Value: Boolean);
   public
     procedure LoadType(ATypeInfo: Pointer);
@@ -66,7 +67,7 @@ end;
 
 procedure TBitsFrame.LoadAccessMaskType;
 begin
-  SuppressReadOnly;
+  SuppressTreeReadOnly;
   FTypeSize := SizeOf(TAccessMask);
   UiLibAddAccessMaskNodes(Tree, ATypeInfo, GenericMapping, FValidMask,
     ShowMiscRights);
@@ -75,7 +76,7 @@ end;
 
 procedure TBitsFrame.LoadType;
 begin
-  SuppressReadOnly;
+  SuppressTreeReadOnly;
   UiLibAddBitNodes(Tree, ATypeInfo, FTypeSize, FValidMask);
   Value := 0;
 end;
@@ -89,6 +90,7 @@ var
   FlagNode: IFlagNode;
 begin
   Tree.BeginUpdateAuto;
+  SuppressTreeReadOnly;
   Tree.OnChecked := nil;
   Auto.Delay(
     procedure
@@ -130,13 +132,16 @@ begin
   btnClear.Visible := not Value;
   btnAll.Visible := not Value;
   tbxValue.ReadOnly := Value;
+  SetTreeReadOnly(Value);
+  RefreshText;
+end;
 
+procedure TBitsFrame.SetTreeReadOnly;
+begin
   if Value then
     Tree.TreeOptions.MiscOptions := Tree.TreeOptions.MiscOptions + [toReadOnly]
   else
     Tree.TreeOptions.MiscOptions := Tree.TreeOptions.MiscOptions - [toReadOnly];
-
-  RefreshText;
 end;
 
 procedure TBitsFrame.SetValue;
@@ -146,15 +151,15 @@ begin
   RefreshItems;
 end;
 
-function TBitsFrame.SuppressReadOnly;
+function TBitsFrame.SuppressTreeReadOnly;
 begin
-  if IsReadOnly then
+  if FIsReadOnly then
   begin
-    IsReadOnly := False;
+    SetTreeReadOnly(False);
     Result := Auto.Delay(
       procedure
       begin
-        IsReadOnly := True;
+        SetTreeReadOnly(True);
       end
     );
   end
