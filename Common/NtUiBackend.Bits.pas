@@ -7,7 +7,7 @@ unit NtUiBackend.Bits;
 interface
 
 uses
-  DevirtualizedTree;
+  Ntapi.WinNt, DevirtualizedTree;
 
 type
   IFlagNode = interface (INodeProvider)
@@ -26,6 +26,15 @@ procedure UiLibAddBitNodes(
   ATypeInfo: Pointer;
   out TypeSize: Integer;
   out FullMask: UInt64
+);
+
+// Collect and add tree nodes for an access mask type
+procedure UiLibAddAccessMaskNodes(
+  Tree: TDevirtualizedTree;
+  ATypeInfo: Pointer;
+  const GenericMapping: TGenericMapping;
+  out FullMask: UInt64;
+  ShowMiscRights: Boolean = True
 );
 
 implementation
@@ -163,48 +172,45 @@ begin
     end;
 end;
 
-procedure UiLibCollectBitNodes(
-  const RttiContext: TRttiContext;
-  const RttiType: TRttiType;
-  out Flags: TArray<IFlagNode>;
-  out SubEnumGroups: TArray<TArrayGroup<UInt64, IFlagNode>>;
-  var FullMask: UInt64
-);
+function UiLibCollectFlagNodes(
+  const Attributes: TCustomAttributeArray;
+  TypeSize: Integer;
+  Filter: UInt64 = UInt64(-1)
+): TArray<IFlagNode>;
 var
-  Attributes: TCustomAttributeArray;
   a: TCustomAttribute;
-  SubEnums: TArray<IFlagNode>;
   Count: Integer;
 begin
-  // Collect all (explicit + inherited) attribtues
-  Attributes := RttixEnumerateAttributes(RttiContext, RttiType);
-
-  for a in Attributes do
-    if a is ValidBitsAttribute then
-    begin
-      // Save the valid mask
-      FullMask := ValidBitsAttribute(a).ValidMask;
-      Break;
-    end;
-
   // Count flags
   Count := 0;
   for a in Attributes do
     if a is FlagNameAttribute then
-      Inc(Count);
+      if FlagNameAttribute(a).Flag.Value and not Filter = 0 then      
+        Inc(Count);
 
-  SetLength(Flags, Count);
+  SetLength(Result, Count);
 
   // Save flags
   Count := 0;
   for a in Attributes do
     if a is FlagNameAttribute then
-    begin
-      Flags[Count] := TFlagNode.Create(RttiType.TypeSize,
-        FlagNameAttribute(a).Flag, FlagNameAttribute(a).Flag.Value, False);
-      Inc(Count)
-    end;
+      if FlagNameAttribute(a).Flag.Value and not Filter = 0 then      
+      begin
+        Result[Count] := TFlagNode.Create(TypeSize, FlagNameAttribute(a).Flag, 
+          FlagNameAttribute(a).Flag.Value, False);
+        Inc(Count)
+      end;
+end;
 
+function UiLibCollectSubEnumNodes(
+  const Attributes: TCustomAttributeArray;
+  TypeSize: Integer
+): TArray<TArrayGroup<UInt64, IFlagNode>>;
+var
+  a: TCustomAttribute;
+  SubEnums: TArray<IFlagNode>;
+  Count: Integer;
+begin
   // Count sub enums
   Count := 0;
   for a in Attributes do
@@ -218,13 +224,13 @@ begin
   for a in Attributes do
     if a is SubEnumAttribute then
     begin
-      SubEnums[Count] := TFlagNode.Create(RttiType.TypeSize,
+      SubEnums[Count] := TFlagNode.Create(TypeSize,
         SubEnumAttribute(a).Flag, SubEnumAttribute(a).Mask, True);
       Inc(Count)
     end;
 
   // Group all sub-enums by masks
-  SubEnumGroups := TArray.GroupBy<IFlagNode, UInt64>(SubEnums,
+  Result := TArray.GroupBy<IFlagNode, UInt64>(SubEnums,
     function (const Node: IFlagNode): UInt64
     begin
       Result := Node.Mask;
@@ -232,10 +238,27 @@ begin
   );
 end;
 
+procedure UiLibUpdateFullMask(
+  const Attributes: TCustomAttributeArray;
+  var FullMask: UInt64  
+);
+var
+  a: TCustomAttribute;
+begin
+  for a in Attributes do
+    if a is ValidBitsAttribute then
+    begin
+      // Save the valid mask
+      FullMask := ValidBitsAttribute(a).ValidMask;
+      Break;
+    end;
+end;
+
 procedure UiLibAddBitNodes;
 var
   RttiContext: TRttiContext;
   RttiType: TRttiType;
+  Attributes: TCustomAttributeArray;
   Flags: TArray<IFlagNode>;
   SubEnums: TArray<TArrayGroup<UInt64, IFlagNode>>;
   UseRootNodes: Boolean;
@@ -270,8 +293,12 @@ begin
       SubEnums := nil;
   end
   else if (RttiType is TRttiOrdinalType) or (RttiType is TRttiInt64Type) then
-    // Other numeric type
-    UiLibCollectBitNodes(RttiContext, RttiType, Flags, SubEnums, FullMask)
+  begin
+    // Collect flags and sub-enums from all (explicit + inherited) attribtues
+    Attributes := RttixEnumerateAttributes(RttiContext, RttiType);
+    Flags := UiLibCollectFlagNodes(Attributes, RttiType.TypeSize);
+    SubEnums := UiLibCollectSubEnumNodes(Attributes, RttiType.TypeSize);
+  end
   else
     raise EArgumentException.Create('Ordinal type expected');
 
@@ -330,6 +357,94 @@ begin
 
     if Assigned(GroupRootRef) then
       Tree.Expanded[GroupRootRef] := True;
+  end;
+end;
+
+procedure UiLibAddRightsGroup(
+  const Attributes: TCustomAttributeArray;
+  Tree: TDevirtualizedTree;
+  const GroupName: String;
+  GroupMask: Cardinal;
+  AdditionalFilter: Cardinal = Cardinal(-1)
+);
+var
+  GroupNode: IEditableNodeProvider;
+  FlagNodes: TArray<IFlagNode>;
+  FlagNode: IFlagNode;
+begin
+  FlagNodes := UiLibCollectFlagNodes(Attributes, SizeOf(Cardinal), GroupMask and 
+    AdditionalFilter);
+
+  if Length(FlagNodes) = 0 then
+    Exit;
+  
+  GroupNode := TEditableNodeProvider.Create;
+  GroupNode.ColumnText[0] := GroupName;
+  GroupNode.Hint := BuildHint('Mask', IntToHexEx(GroupMask));
+  Tree.AddChildEx(nil, GroupNode);
+
+  for FlagNode in FlagNodes do
+  begin
+    Tree.AddChildEx(GroupNode.Node, FlagNode);
+    Tree.CheckType[FlagNode.Node] := ctCheckBox;
+  end;
+
+  Tree.Expanded[GroupNode.Node] := True;
+end;
+
+procedure UiLibAddAccessMaskNodes;
+var
+  RttiContext: TRttiContext;
+  RttiType: TRttiType;
+  Attributes: TCustomAttributeArray;
+begin
+  RttiContext := TRttiContext.Create;
+  RttiType := RttiContext.GetType(ATypeInfo);
+
+  if not (RttiType is TRttiOrdinalType) then
+    raise EArgumentException.Create('Ordinal type expected');
+  
+  // Use all (explicit and inherited) attributes
+  Attributes := RttixEnumerateAttributes(RttiContext, RttiType);
+  
+  case RttiType.TypeSize of
+    1: FullMask := Byte(-1);
+    2: FullMask := Word(-1);
+    4: FullMask := Cardinal(-1);
+  else
+    FullMask := UInt64(-1);
+  end;
+
+  // Allow the attributes to override the Full Access mask
+  UiLibUpdateFullMask(Attributes, FullMask);
+
+  Tree.BeginUpdateAuto;
+  Tree.Clear;
+  Tree.TreeOptions.PaintOptions := Tree.TreeOptions.PaintOptions + [toShowRoot];
+  
+  // Add groups of rights
+  UiLibAddRightsGroup(Attributes, Tree, 'Read', GenericMapping.GenericRead, 
+    SPECIFIC_RIGHTS_ALL);
+
+  UiLibAddRightsGroup(Attributes, Tree, 'Write', GenericMapping.GenericWrite, 
+    SPECIFIC_RIGHTS_ALL);
+
+  UiLibAddRightsGroup(Attributes, Tree, 'Execute',
+    GenericMapping.GenericExecute, SPECIFIC_RIGHTS_ALL);
+
+  UiLibAddRightsGroup(Attributes, Tree, 'Other', 
+    (FullMask and SPECIFIC_RIGHTS_ALL) and not GenericMapping.GenericRead 
+    and not GenericMapping.GenericWrite and not GenericMapping.GenericExecute);
+
+  UiLibAddRightsGroup(Attributes, Tree, 'Standard', FullMask and 
+    STANDARD_RIGHTS_ALL);  
+
+  if ShowMiscRights then
+  begin
+    UiLibAddRightsGroup(Attributes, Tree, 'Generic', GENERIC_RIGHTS_ALL); 
+  
+    UiLibAddRightsGroup(Attributes, Tree, 'Miscellaneous', MAXIMUM_ALLOWED or 
+      ACCESS_SYSTEM_SECURITY); 
   end;
 end;
 

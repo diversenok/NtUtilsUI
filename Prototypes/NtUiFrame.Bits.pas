@@ -9,7 +9,8 @@ interface
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes,
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, VirtualTrees,
-  VirtualTreesEx, DevirtualizedTree, Vcl.StdCtrls, Vcl.ExtCtrls;
+  VirtualTreesEx, DevirtualizedTree, Vcl.StdCtrls, Vcl.ExtCtrls, Ntapi.WinNt,
+  DelphiUtils.AutoObjects;
 
 type
   TBitsFrame = class(TFrame)
@@ -27,12 +28,18 @@ type
     FValidMask: UInt64;
     FValue: UInt64;
     FIsReadOnly: Boolean;
+    function SuppressReadOnly: IAutoReleasable;
     procedure RefreshText(Editing: Boolean = False);
     procedure RefreshItems;
     procedure SetValue(const NewValue: UInt64);
     procedure SetReadOnly(const Value: Boolean);
   public
     procedure LoadType(ATypeInfo: Pointer);
+    procedure LoadAccessMaskType(
+      ATypeInfo: Pointer;
+      const GenericMapping: TGenericMapping;
+      ShowMiscRights: Boolean
+    );
     property Value: UInt64 read FValue write SetValue;
     property IsReadOnly: Boolean read FIsReadOnly write SetReadOnly;
   end;
@@ -41,7 +48,7 @@ implementation
 
 uses
   NtUiBackend.Bits, VirtualTrees.Types, UI.Helper, UI.Colors,
-  DelphiUiLib.Reflection.Strings, DelphiUiLib.Strings, DelphiUtils.AutoObjects;
+  DelphiUiLib.Reflection.Strings, DelphiUiLib.Strings;
 
 {$R *.dfm}
 
@@ -57,23 +64,18 @@ begin
   Value := 0;
 end;
 
-procedure TBitsFrame.LoadType;
-var
-  ReadOnlyReverter: IAutoReleasable;
+procedure TBitsFrame.LoadAccessMaskType;
 begin
-  // Modifying the tree doesn't work in read-only mode; temporarily disable it
-  if IsReadOnly then
-  begin
-    IsReadOnly := False;
-    ReadOnlyReverter := Auto.Delay(
-      procedure
-      begin
-        IsReadOnly := True;
-      end
-    );
-  end;
+  SuppressReadOnly;
+  FTypeSize := SizeOf(TAccessMask);
+  UiLibAddAccessMaskNodes(Tree, ATypeInfo, GenericMapping, FValidMask,
+    ShowMiscRights);
+  Value := 0;
+end;
 
-  // Populate the nodes
+procedure TBitsFrame.LoadType;
+begin
+  SuppressReadOnly;
   UiLibAddBitNodes(Tree, ATypeInfo, FTypeSize, FValidMask);
   Value := 0;
 end;
@@ -142,6 +144,22 @@ begin
   FValue := NewValue;
   RefreshText;
   RefreshItems;
+end;
+
+function TBitsFrame.SuppressReadOnly;
+begin
+  if IsReadOnly then
+  begin
+    IsReadOnly := False;
+    Result := Auto.Delay(
+      procedure
+      begin
+        IsReadOnly := True;
+      end
+    );
+  end
+  else
+    Result := nil;
 end;
 
 procedure TBitsFrame.tbxValueChange;
