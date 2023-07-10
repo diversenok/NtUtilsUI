@@ -211,7 +211,12 @@ begin
   VST.BeginUpdateAuto;
 
   for NewData in TGroupNodeData.CreateMany(Groups) do
-    VST.AddChild(VST.RootNode, NewData);
+  begin
+    VST.AddChildEx(VST.RootNode, NewData);
+
+    if toCheckSupport in VST.TreeOptions.MiscOptions then
+      VST.CheckType[NewData.Node] := ctCheckBox;
+  end;
 end;
 
 constructor TFrameGroups.Create;

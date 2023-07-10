@@ -35,7 +35,6 @@ type
   protected
     function DoCompare(Node1, Node2: PVirtualNode; Column: TColumnIndex): Integer; override;
     function DoGetPopupMenu(Node: PVirtualNode; Column: TColumnIndex; Position: TPoint): TPopupMenu; override;
-    procedure DoInitNode(Parent, Node: PVirtualNode; var InitStates: TVirtualNodeInitStates); override;
     procedure DoRemoveFromSelection(Node: PVirtualNode); override;
     procedure DblClick; override;
     procedure KeyDown(var Key: Word; Shift: TShiftState); override;
@@ -252,15 +251,6 @@ begin
 
   // Update visibility of the built-in items
   FDefaultMenus.NotifyPopup(Node, Result, Column);
-end;
-
-procedure TVirtualStringTreeEx.DoInitNode;
-begin
-  // Pre-populate checkboxes by default when the feature is enabled
-  if toCheckSupport in TreeOptions.MiscOptions then
-    CheckType[Node] := ctCheckBox;
-
-  inherited;
 end;
 
 procedure TVirtualStringTreeEx.DoRemoveFromSelection;

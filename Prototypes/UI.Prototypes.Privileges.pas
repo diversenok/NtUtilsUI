@@ -240,10 +240,13 @@ begin
   VST.RootNodeCount := 0;
   for NodeData in TPrivilegeNodeData.CreateMany(New) do
   begin
-    if toCheckSupport in VST.TreeOptions.MiscOptions then
-      NodeData.SetColoringMode(FColoringUnChecked);
+    VST.AddChildEx(VST.RootNode, NodeData);
 
-    VST.AddChild(VST.RootNode).Provider := NodeData;
+    if toCheckSupport in VST.TreeOptions.MiscOptions then
+    begin
+      NodeData.SetColoringMode(FColoringUnChecked);
+      VST.CheckType[NodeData.Node] := ctCheckBox;
+    end;
   end;
 end;
 
