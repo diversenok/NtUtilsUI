@@ -10,10 +10,10 @@ uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes,
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, VirtualTrees,
   VirtualTreesEx, DevirtualizedTree, Vcl.StdCtrls, Vcl.ExtCtrls, Ntapi.WinNt,
-  DelphiUtils.AutoObjects;
+  DelphiUtils.AutoObjects, NtUiCommon.Interfaces;
 
 type
-  TBitsFrame = class(TFrame)
+  TBitsFrame = class(TFrame, IHasDefaultCaption)
     Tree: TDevirtualizedTree;
     BottomPanel: TPanel;
     tbxValue: TEdit;
@@ -34,6 +34,7 @@ type
     procedure SetValue(const NewValue: UInt64);
     procedure SetTreeReadOnly(const Value: Boolean);
     procedure SetReadOnly(const Value: Boolean);
+    function DefaultCaption: String;
   public
     procedure LoadType(ATypeInfo: Pointer);
     procedure LoadAccessMaskType(
@@ -49,7 +50,7 @@ implementation
 
 uses
   NtUiBackend.Bits, VirtualTrees.Types, UI.Helper, UI.Colors,
-  DelphiUiLib.Reflection.Strings, DelphiUiLib.Strings;
+  DelphiUiLib.Reflection.Strings, DelphiUiLib.Strings, NtUiCommon.Prototypes;
 
 {$R *.dfm}
 
@@ -63,6 +64,14 @@ end;
 procedure TBitsFrame.btnClearClick;
 begin
   Value := 0;
+end;
+
+function TBitsFrame.DefaultCaption;
+begin
+  if FIsReadOnly then
+    Result := 'Bit Mask Viewer'
+  else
+    Result := 'Bit Mask Editor'
 end;
 
 procedure TBitsFrame.LoadAccessMaskType;
@@ -209,4 +218,60 @@ begin
   RefreshItems;
 end;
 
+procedure NtUiLibShowBitMask(
+  const Value: UInt64;
+  ATypeInfo: Pointer
+);
+begin
+  if not Assigned(NtUiLibHostFrameShow) then
+    raise ENotSupportedException.Create('Frame host not available');
+
+  NtUiLibHostFrameShow(
+    function (AOwner: TForm): TFrame
+    var
+      Frame: TBitsFrame absolute Result;
+    begin
+      Frame := TBitsFrame.Create(AOwner);
+      try
+        Frame.LoadType(ATypeInfo);
+        Frame.Value := Value;
+        Frame.IsReadOnly := True;
+      except
+        Frame.Free;
+        raise;
+      end;
+    end
+  );
+end;
+
+procedure NtUiLibShowAccessMask(
+  const Value: TAccessMask;
+  ATypeInfo: Pointer;
+  const GenericMapping: TGenericMapping
+);
+begin
+  if not Assigned(NtUiLibHostFrameShow) then
+    raise ENotSupportedException.Create('Frame host not available');
+
+  NtUiLibHostFrameShow(
+    function (AOwner: TForm): TFrame
+    var
+      Frame: TBitsFrame absolute Result;
+    begin
+      Frame := TBitsFrame.Create(AOwner);
+      try
+        Frame.LoadAccessMaskType(ATypeInfo, GenericMapping, False);
+        Frame.Value := Value;
+        Frame.IsReadOnly := True;
+      except
+        Frame.Free;
+        raise;
+      end;
+    end
+  );
+end;
+
+initialization
+  NtUiCommon.Prototypes.NtUiLibShowBitMask := NtUiLibShowBitMask;
+  NtUiCommon.Prototypes.NtUiLibShowAccessMask := NtUiLibShowAccessMask;
 end.

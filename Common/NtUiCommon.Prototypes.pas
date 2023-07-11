@@ -7,7 +7,7 @@ unit NtUiCommon.Prototypes;
 interface
 
 uses
-  NtUtils, NtUtils.Profiles, NtUtils.Security.AppContainer,
+  Ntapi.WinNt, NtUtils, NtUtils.Profiles, NtUtils.Security.AppContainer,
   DevirtualizedTree, NtUiDialog.FrameHost, System.Classes;
 
 type
@@ -24,6 +24,19 @@ var
     AOwner: TComponent;
     Initializer: TFrameInitializer
   ): INodeProvider;
+
+  { Bit Masks }
+
+  NtUiLibShowBitMask: procedure (
+    const Value: UInt64;
+    ATypeInfo: Pointer
+  );
+
+  NtUiLibShowAccessMask: procedure (
+    const Value: TAccessMask;
+    ATypeInfo: Pointer;
+    const GenericMapping: TGenericMapping
+  );
 
   { User Profiles }
 
