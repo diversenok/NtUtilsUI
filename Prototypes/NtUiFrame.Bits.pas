@@ -10,7 +10,7 @@ uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes,
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, VirtualTrees,
   VirtualTreesEx, DevirtualizedTree, Vcl.StdCtrls, Vcl.ExtCtrls, Ntapi.WinNt,
-  DelphiUtils.AutoObjects, NtUiCommon.Interfaces;
+  DelphiUtils.AutoObjects, NtUiCommon.Interfaces, NtUiBackend.Bits;
 
 type
   TBitsFrame = class(TFrame, IHasDefaultCaption)
@@ -49,8 +49,8 @@ type
 implementation
 
 uses
-  NtUiBackend.Bits, VirtualTrees.Types, UI.Helper, UI.Colors,
-  DelphiUiLib.Reflection.Strings, DelphiUiLib.Strings, NtUiCommon.Prototypes;
+  VirtualTrees.Types, UI.Helper, UI.Colors, DelphiUiLib.Reflection.Strings,
+  DelphiUiLib.Strings, NtUiCommon.Prototypes;
 
 {$R *.dfm}
 

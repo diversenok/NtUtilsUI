@@ -45,6 +45,15 @@ uses
   DevirtualizedTree.Provider, UI.Helper, VirtualTrees.Types, System.SysUtils;
 
 type
+  TNodeGroup = record
+    Name: String;
+    Mask: UInt64;
+    UseMaskHint : Boolean;
+    IsDefault: Boolean;
+    CheckBoxType: TCheckType;
+    Nodes: TArray<IFlagNode>;
+  end;
+
   TFlagNode = class (TNodeProvider, IFlagNode)
   protected
     FSize: Integer;
@@ -94,12 +103,23 @@ begin
   Result := FFlag.Value;
 end;
 
-procedure UiLibCollectEnumNodes(
+function SizeToMask(
+  TypeSize: Integer
+): UInt64;
+begin
+  case TypeSize of
+    1: Result := Byte(-1);
+    2: Result := Word(-1);
+    4: Result := Cardinal(-1);
+  else
+    Result := Uint64(-1);
+  end;
+end;
+
+function UiLibCollectEnumNodes(
   const RttiContext: TRttiContext;
-  const RttiEnumType: TRttiEnumerationType;
-  var FullMask: UInt64;
-  out SubEnums: TArray<IFlagNode>
-);
+  const RttiEnumType: TRttiEnumerationType
+): TNodeGroup;
 var
   Attributes: TCustomAttributeArray;
   a: TCustomAttribute;
@@ -109,6 +129,13 @@ var
   FlagName: TFlagName;
   i, Count: Integer;
 begin
+  // Use the default group
+  Result.Name := 'Options group';
+  Result.Mask := SizeToMask(RttiEnumType.TypeSize);
+  Result.UseMaskHint := False;
+  Result.IsDefault := True;
+  Result.CheckBoxType := ctRadioButton;
+
   Attributes := RttiEnumType.GetAttributes;
 
   // By default, accept the entire range
@@ -146,7 +173,7 @@ begin
 
   // Save valid names
   Names := RttiEnumType.GetNames;
-  SetLength(SubEnums, Count);
+  SetLength(Result.Nodes, Count);
 
   Count := 0;
   for i := 0 to RttiEnumType.MaxValue do
@@ -166,50 +193,21 @@ begin
               NamingStyle.Prefix, NamingStyle.Suffix);
         end;
 
-      SubEnums[Count] := TFlagNode.Create(RttiEnumType.TypeSize, FlagName,
-        FullMask, True);
+      Result.Nodes[Count] := TFlagNode.Create(RttiEnumType.TypeSize, FlagName,
+        SizeToMask(RttiEnumType.TypeSize), True);
       Inc(Count);
     end;
-end;
-
-function UiLibCollectFlagNodes(
-  const Attributes: TCustomAttributeArray;
-  TypeSize: Integer;
-  Filter: UInt64 = UInt64(-1)
-): TArray<IFlagNode>;
-var
-  a: TCustomAttribute;
-  Count: Integer;
-begin
-  // Count flags
-  Count := 0;
-  for a in Attributes do
-    if a is FlagNameAttribute then
-      if FlagNameAttribute(a).Flag.Value and not Filter = 0 then      
-        Inc(Count);
-
-  SetLength(Result, Count);
-
-  // Save flags
-  Count := 0;
-  for a in Attributes do
-    if a is FlagNameAttribute then
-      if FlagNameAttribute(a).Flag.Value and not Filter = 0 then      
-      begin
-        Result[Count] := TFlagNode.Create(TypeSize, FlagNameAttribute(a).Flag, 
-          FlagNameAttribute(a).Flag.Value, False);
-        Inc(Count)
-      end;
 end;
 
 function UiLibCollectSubEnumNodes(
   const Attributes: TCustomAttributeArray;
   TypeSize: Integer
-): TArray<TArrayGroup<UInt64, IFlagNode>>;
+): TArray<TNodeGroup>;
 var
   a: TCustomAttribute;
   SubEnums: TArray<IFlagNode>;
-  Count: Integer;
+  Groups: TArray<TArrayGroup<UInt64, IFlagNode>>;
+  Count, i: Integer;
 begin
   // Count sub enums
   Count := 0;
@@ -230,17 +228,103 @@ begin
     end;
 
   // Group all sub-enums by masks
-  Result := TArray.GroupBy<IFlagNode, UInt64>(SubEnums,
+  Groups := TArray.GroupBy<IFlagNode, UInt64>(SubEnums,
     function (const Node: IFlagNode): UInt64
     begin
       Result := Node.Mask;
     end
   );
+
+  // Convert them into node groups
+  SetLength(Result, Length(Groups));
+
+  for i := 0 to High(Result) do
+  begin
+    Result[i].Name := 'Options group';
+    Result[i].Mask := Groups[i].Key;
+    Result[i].UseMaskHint := True;
+    Result[i].IsDefault := True;
+    Result[i].CheckBoxType := ctRadioButton;
+    Result[i].Nodes := Groups[i].Values;
+  end;
+end;
+
+function UiLibCollectFlagNodes(
+  const Attributes: TCustomAttributeArray;
+  TypeSize: Integer;
+  Filter: UInt64 = UInt64(-1)
+): TArray<IFlagNode>;
+var
+  a: TCustomAttribute;
+  Count: Integer;
+begin
+  // Count flags
+  Count := 0;
+  for a in Attributes do
+    if a is FlagNameAttribute then
+      if FlagNameAttribute(a).Flag.Value and not Filter = 0 then
+        Inc(Count);
+
+  SetLength(Result, Count);
+
+  // Save flags
+  Count := 0;
+  for a in Attributes do
+    if a is FlagNameAttribute then
+      if FlagNameAttribute(a).Flag.Value and not Filter = 0 then
+      begin
+        Result[Count] := TFlagNode.Create(TypeSize, FlagNameAttribute(a).Flag,
+          FlagNameAttribute(a).Flag.Value, False);
+        Inc(Count)
+      end;
+end;
+
+function UiLibCollectAllFlagNodes(
+  const Attributes: TCustomAttributeArray;
+  TypeSize: Integer
+): TArray<TNodeGroup>;
+var
+  GroupAttributes: TArray<FlagGroupAttribute>;
+  i: Integer;
+begin
+  // Infer flag groups from the type information
+  RttixFilterAttributes(Attributes, FlagGroupAttribute,
+    TCustomAttributeArray(GroupAttributes));
+
+  if Length(GroupAttributes) > 0 then
+  begin
+    // Convert them into node groups
+    SetLength(Result, Length(GroupAttributes));
+
+    for i := 0 to High(GroupAttributes) do
+    begin
+      Result[i].Name := GroupAttributes[i].Flag.Name;
+      Result[i].Mask := GroupAttributes[i].Flag.Value;
+      Result[i].UseMaskHint := True;
+      Result[i].IsDefault := False;
+      Result[i].CheckBoxType := ctCheckBox;
+    end;
+  end
+  else
+  begin
+    // Construct a default groups
+    SetLength(Result, 1);
+    Result[0].Name := 'Flags';
+    Result[0].Mask := SizeToMask(TypeSize);
+    Result[0].UseMaskHint := False;
+    Result[0].IsDefault := True;
+    Result[0].CheckBoxType := ctCheckBox;
+  end;
+
+  // Collect nodes for each group
+  for i := 0 to High(Result) do
+    Result[i].Nodes := UiLibCollectFlagNodes(Attributes, TypeSize,
+      Result[i].Mask);
 end;
 
 procedure UiLibUpdateFullMask(
   const Attributes: TCustomAttributeArray;
-  var FullMask: UInt64  
+  var FullMask: UInt64
 );
 var
   a: TCustomAttribute;
@@ -254,142 +338,96 @@ begin
     end;
 end;
 
+procedure UiLibAddNodeGroups(
+  Tree: TDevirtualizedTree;
+  var Groups: TArray<TNodeGroup>
+);
+var
+  i, j: Integer;
+  HideRoot: Boolean;
+  GroupNode: IEditableNodeProvider;
+  ParentNode: PVirtualNode;
+  FlagNode: IFlagNode;
+begin
+  // Remove empty groups
+  j := 0;
+  for i := 0 to High(Groups) do
+    if Length(Groups[i].Nodes) > 0 then
+    begin
+      if i <> j then
+        Groups[j] := Groups[i];
+      Inc(j);
+    end;
+
+  SetLength(Groups, j);
+
+  // Omit groups in unambiguous scenarios
+  HideRoot := (Length(Groups) = 1) and Groups[0].IsDefault;
+
+  Tree.BeginUpdateAuto;
+  Tree.Clear;
+
+  if HideRoot then
+    Tree.TreeOptions.PaintOptions := Tree.TreeOptions.PaintOptions - [toShowRoot]
+  else
+    Tree.TreeOptions.PaintOptions := Tree.TreeOptions.PaintOptions + [toShowRoot];
+
+  // Add all groups and nodex
+  for i := 0 to High(Groups) do
+  begin
+    if not HideRoot then
+    begin
+      // Add the group node
+      GroupNode := TEditableNodeProvider.Create;
+      GroupNode.ColumnText[0] := Groups[i].Name;
+
+      if Groups[i].UseMaskHint then
+        GroupNode.Hint := BuildHint('Mask', IntToHexEx(Groups[i].Mask));
+
+      ParentNode := Tree.AddChildEx(nil, GroupNode).Node;
+    end
+    else
+      ParentNode := nil;
+
+    // Add nested nodes
+    for FlagNode in Groups[i].Nodes do
+    begin
+      Tree.AddChildEx(ParentNode, FlagNode);
+      Tree.CheckType[FlagNode.Node] := Groups[i].CheckBoxType;
+    end;
+
+    if Assigned(ParentNode) then
+      Tree.Expanded[ParentNode] := True;
+  end;
+end;
+
 procedure UiLibAddBitNodes;
 var
   RttiContext: TRttiContext;
   RttiType: TRttiType;
   Attributes: TCustomAttributeArray;
-  Flags: TArray<IFlagNode>;
-  SubEnums: TArray<TArrayGroup<UInt64, IFlagNode>>;
-  UseRootNodes: Boolean;
-  GroupRoot: IEditableNodeProvider;
-  GroupRootRef: PVirtualNode;
-  Node: INodeProvider;
-  i, j: Integer;
+  Groups: TArray<TNodeGroup>;
 begin
   RttiContext := TRttiContext.Create;
   RttiType := RttiContext.GetType(ATypeInfo);
   TypeSize := RttiType.TypeSize;
-
-  case RttiType.TypeSize of
-    1: FullMask := Byte(-1);
-    2: FullMask := Word(-1);
-    4: FullMask := Cardinal(-1);
-  else
-    FullMask := UInt64(-1);
-  end;
+  FullMask := SizeToMask(TypeSize);
 
   if RttiType is TRttiEnumerationType then
-  begin
     // Enumerations have no bit flags and one sub enum group
-    Flags := nil;
-    SetLength(SubEnums, 1);
-    SubEnums[0].Key := FullMask;
-
-    UiLibCollectEnumNodes(RttiContext, TRttiEnumerationType(RttiType), FullMask,
-      SubEnums[0].Values);
-
-    if Length(SubEnums[0].Values) = 0 then
-      SubEnums := nil;
-  end
+    Groups := [UiLibCollectEnumNodes(RttiContext, TRttiEnumerationType(RttiType))]
   else if (RttiType is TRttiOrdinalType) or (RttiType is TRttiInt64Type) then
   begin
     // Collect flags and sub-enums from all (explicit + inherited) attribtues
     Attributes := RttixEnumerateAttributes(RttiContext, RttiType);
-    Flags := UiLibCollectFlagNodes(Attributes, RttiType.TypeSize);
-    SubEnums := UiLibCollectSubEnumNodes(Attributes, RttiType.TypeSize);
+    Groups := UiLibCollectAllFlagNodes(Attributes, RttiType.TypeSize);
+    Groups := Groups + UiLibCollectSubEnumNodes(Attributes, RttiType.TypeSize);
   end
   else
     raise EArgumentException.Create('Ordinal type expected');
 
-  // Group nodes in ambiguous scenarios
-  UseRootNodes := ((Length(Flags) > 0) and (Length(SubEnums) > 0)) or
-    (Length(SubEnums) >= 2);
-
-  Tree.BeginUpdateAuto;
-  Tree.Clear;
-
-  if UseRootNodes then
-    Tree.TreeOptions.PaintOptions := Tree.TreeOptions.PaintOptions + [toShowRoot]
-  else
-    Tree.TreeOptions.PaintOptions := Tree.TreeOptions.PaintOptions - [toShowRoot];
-
-  // Add flags
-  if Length(Flags) > 0 then
-  begin
-    if UseRootNodes then
-    begin
-      GroupRoot := TEditableNodeProvider.Create;
-      GroupRoot.ColumnText[0] := 'Flags';
-      GroupRootRef := Tree.AddChildEx(nil, GroupRoot).Node;
-    end
-    else
-      GroupRootRef := nil;
-
-    for i := 0 to High(Flags) do
-    begin
-      Node := Tree.AddChildEx(GroupRootRef, Flags[i]);
-      Tree.CheckType[Node.Node] := ctCheckBox;
-    end;
-
-    if Assigned(GroupRootRef) then
-      Tree.Expanded[GroupRootRef] := True;
-  end;
-
-  // Add each group for sub enums
-  for j := 0 to High(SubEnums) do
-  begin
-    if UseRootNodes then
-    begin
-      GroupRoot := TEditableNodeProvider.Create;
-      GroupRoot.ColumnText[0] := 'Options group';
-      GroupRoot.Hint := BuildHint('Mask', IntToHexEx(SubEnums[j].Key));
-      GroupRootRef := Tree.AddChildEx(nil, GroupRoot).Node;
-    end
-    else
-      GroupRootRef := nil;
-
-    for i := 0 to High(SubEnums[j].Values) do
-    begin
-      Node := Tree.AddChildEx(GroupRootRef, SubEnums[j].Values[i]);
-      Tree.CheckType[Node.Node] := ctRadioButton;
-    end;
-
-    if Assigned(GroupRootRef) then
-      Tree.Expanded[GroupRootRef] := True;
-  end;
-end;
-
-procedure UiLibAddRightsGroup(
-  const Attributes: TCustomAttributeArray;
-  Tree: TDevirtualizedTree;
-  const GroupName: String;
-  GroupMask: Cardinal;
-  AdditionalFilter: Cardinal = Cardinal(-1)
-);
-var
-  GroupNode: IEditableNodeProvider;
-  FlagNodes: TArray<IFlagNode>;
-  FlagNode: IFlagNode;
-begin
-  FlagNodes := UiLibCollectFlagNodes(Attributes, SizeOf(Cardinal), GroupMask and 
-    AdditionalFilter);
-
-  if Length(FlagNodes) = 0 then
-    Exit;
-  
-  GroupNode := TEditableNodeProvider.Create;
-  GroupNode.ColumnText[0] := GroupName;
-  GroupNode.Hint := BuildHint('Mask', IntToHexEx(GroupMask));
-  Tree.AddChildEx(nil, GroupNode);
-
-  for FlagNode in FlagNodes do
-  begin
-    Tree.AddChildEx(GroupNode.Node, FlagNode);
-    Tree.CheckType[FlagNode.Node] := ctCheckBox;
-  end;
-
-  Tree.Expanded[GroupNode.Node] := True;
+  // Add the grouped nodes
+  UiLibAddNodeGroups(Tree, Groups);
 end;
 
 procedure UiLibAddAccessMaskNodes;
@@ -397,55 +435,84 @@ var
   RttiContext: TRttiContext;
   RttiType: TRttiType;
   Attributes: TCustomAttributeArray;
+  Groups: TArray<TNodeGroup>;
+  Group: TNodeGroup;
 begin
   RttiContext := TRttiContext.Create;
   RttiType := RttiContext.GetType(ATypeInfo);
 
   if not (RttiType is TRttiOrdinalType) then
     raise EArgumentException.Create('Ordinal type expected');
-  
+
   // Use all (explicit and inherited) attributes
   Attributes := RttixEnumerateAttributes(RttiContext, RttiType);
-  
-  case RttiType.TypeSize of
-    1: FullMask := Byte(-1);
-    2: FullMask := Word(-1);
-    4: FullMask := Cardinal(-1);
-  else
-    FullMask := UInt64(-1);
-  end;
 
   // Allow the attributes to override the Full Access mask
+  FullMask := SizeToMask(RttiType.TypeSize);
   UiLibUpdateFullMask(Attributes, FullMask);
 
   Tree.BeginUpdateAuto;
   Tree.Clear;
-  Tree.TreeOptions.PaintOptions := Tree.TreeOptions.PaintOptions + [toShowRoot];
-  
+
+  if ShowMiscRights then
+    SetLength(Groups, 7)
+  else
+    SetLength(Groups, 5);
+
+  Group.UseMaskHint := True;
+  Group.IsDefault := False;
+  Group.CheckBoxType := ctCheckBox;
+
   // Add groups of rights
-  UiLibAddRightsGroup(Attributes, Tree, 'Read', GenericMapping.GenericRead, 
-    SPECIFIC_RIGHTS_ALL);
+  Group.Name := 'Read';
+  Group.Mask := GenericMapping.GenericRead;
+  Group.Nodes := UiLibCollectFlagNodes(Attributes, RttiType.TypeSize,
+    Group.Mask and SPECIFIC_RIGHTS_ALL);
+  Groups[0] := Group;
 
-  UiLibAddRightsGroup(Attributes, Tree, 'Write', GenericMapping.GenericWrite, 
-    SPECIFIC_RIGHTS_ALL);
+  Group.Name := 'Write';
+  Group.Mask := GenericMapping.GenericWrite;
+  Group.Nodes := UiLibCollectFlagNodes(Attributes, RttiType.TypeSize,
+    Group.Mask and SPECIFIC_RIGHTS_ALL);
+  Groups[1] := Group;
 
-  UiLibAddRightsGroup(Attributes, Tree, 'Execute',
-    GenericMapping.GenericExecute, SPECIFIC_RIGHTS_ALL);
+  Group.Name := 'Execute';
+  Group.Mask := GenericMapping.GenericExecute;
+  Group.Nodes := UiLibCollectFlagNodes(Attributes, RttiType.TypeSize,
+    Group.Mask and SPECIFIC_RIGHTS_ALL);
+  Groups[2] := Group;
 
-  UiLibAddRightsGroup(Attributes, Tree, 'Other', 
-    (FullMask and SPECIFIC_RIGHTS_ALL) and not GenericMapping.GenericRead 
-    and not GenericMapping.GenericWrite and not GenericMapping.GenericExecute);
+  Group.Name := 'Other';
+  Group.Mask := (FullMask and SPECIFIC_RIGHTS_ALL)
+    and not GenericMapping.GenericRead and not GenericMapping.GenericWrite
+    and not GenericMapping.GenericExecute;
+  Group.Nodes := UiLibCollectFlagNodes(Attributes, RttiType.TypeSize,
+    Group.Mask);
+  Groups[3] := Group;
 
-  UiLibAddRightsGroup(Attributes, Tree, 'Standard', FullMask and 
-    STANDARD_RIGHTS_ALL);  
+  Group.Name := 'Standard';
+  Group.Mask := FullMask and STANDARD_RIGHTS_ALL;
+  Group.Nodes := UiLibCollectFlagNodes(Attributes, RttiType.TypeSize,
+    Group.Mask);
+  Groups[4] := Group;
 
   if ShowMiscRights then
   begin
-    UiLibAddRightsGroup(Attributes, Tree, 'Generic', GENERIC_RIGHTS_ALL); 
-  
-    UiLibAddRightsGroup(Attributes, Tree, 'Miscellaneous', MAXIMUM_ALLOWED or 
-      ACCESS_SYSTEM_SECURITY); 
+    Group.Name := 'Generic';
+    Group.Mask := GENERIC_RIGHTS_ALL;
+    Group.Nodes := UiLibCollectFlagNodes(Attributes, RttiType.TypeSize,
+      Group.Mask);
+    Groups[5] := Group;
+
+    Group.Name := 'Miscellaneous';
+    Group.Mask := MAXIMUM_ALLOWED or ACCESS_SYSTEM_SECURITY;
+    Group.Nodes := UiLibCollectFlagNodes(Attributes, RttiType.TypeSize,
+      Group.Mask);
+    Groups[6] := Group;
   end;
+
+  // Add the groups of flags
+  UiLibAddNodeGroups(Tree, Groups);
 end;
 
 end.
