@@ -1,4 +1,4 @@
-object SidEditor: TSidEditor
+inherited SidEditor: TSidEditor
   Left = 0
   Top = 0
   Width = 600

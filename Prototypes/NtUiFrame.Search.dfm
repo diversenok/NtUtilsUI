@@ -1,4 +1,4 @@
-object SearchFrame: TSearchFrame
+inherited SearchFrame: TSearchFrame
   Left = 0
   Top = 0
   Width = 436

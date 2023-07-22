@@ -5,10 +5,10 @@ interface
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes,
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls,
-  VCL.ImgList, NtUtils;
+  NtUtils, NtUiFrame;
 
 type
-  TSidEditor = class(TFrame)
+  TSidEditor = class(TBaseFrame)
     tbxSid: TEdit;
     btnDsPicker: TButton;
     btnCheatsheet: TButton;
@@ -17,15 +17,16 @@ type
     procedure tbxSidChange(Sender: TObject);
     procedure tbxSidEnter(Sender: TObject);
   private
-    FLoaded, FInitialized: Boolean;
-    FImages: TImageList;
+    FInitialized: Boolean;
     FOnDsObjectPicked: TNotifyEvent;
     FOnSidChanged: TNotifyEvent;
     SidCache: ISid;
     function GetSid: ISid;
     procedure SetSid(const Sid: ISid);
+    procedure DsPickerIconChanged(ImageList: TImageList; ImageIndex: Integer);
+    procedure CheatsheetIconChanged(ImageList: TImageList; ImageIndex: Integer);
   protected
-    procedure Loaded; override;
+    procedure LoadedOnce; override;
     procedure FrameEnabledChanged(var Message: TMessage); message CM_ENABLEDCHANGED;
   public
     function TryGetSid(out Sid: ISid): TNtxStatus;
@@ -38,9 +39,8 @@ type
 implementation
 
 uses
-  Ntapi.ntstatus, DelphiUtils.AutoObjects, NtUtils.Lsa.Sid,
-  NtUiLib.AutoCompletion.Sid, UI.Builtin.DsObjectPicker,
-  UI.Prototypes.Sid.Cheatsheet, UI.Prototypes.Forms;
+  Ntapi.ntstatus, NtUtils.Lsa.Sid, NtUiLib.AutoCompletion.Sid,
+  UI.Builtin.DsObjectPicker, UI.Prototypes.Sid.Cheatsheet, UI.Prototypes.Forms;
 
 {$R *.dfm}
 {$R '..\Icons\SidEditor.res'}
@@ -71,6 +71,18 @@ begin
     FOnDsObjectPicked(Self);
 end;
 
+procedure TSidEditor.CheatsheetIconChanged;
+begin
+  btnCheatsheet.Images := ImageList;
+  btnCheatsheet.ImageIndex := ImageIndex;
+end;
+
+procedure TSidEditor.DsPickerIconChanged;
+begin
+  btnDsPicker.Images := ImageList;
+  btnDsPicker.ImageIndex := ImageIndex;
+end;
+
 procedure TSidEditor.FrameEnabledChanged;
 begin
   inherited;
@@ -84,36 +96,11 @@ begin
   TryGetSid(Result).RaiseOnError;
 end;
 
-procedure TSidEditor.Loaded;
-var
-  Icon: TIcon;
+procedure TSidEditor.LoadedOnce;
 begin
   inherited;
-
-  if FLoaded then
-    Exit;
-
-  FLoaded := True;
-
-  // Add icons to the buttons
-  FImages := TImageList.Create(Self);
-  FImages.ColorDepth := cd32Bit;
-  FImages.Width := 16 * CurrentPPI div 96;
-  FImages.Height := 16 * CurrentPPI div 96;
-  btnDsPicker.Images := FImages;
-  btnCheatsheet.Images := FImages;
-
-  try
-    Icon := Auto.From(TIcon.Create).Self;
-    Icon.LoadFromResourceName(HInstance, 'SidEditor.DsObjectPicker');
-    btnDsPicker.ImageIndex := FImages.AddIcon(Icon);
-
-    Icon := Auto.From(TIcon.Create).Self;
-    Icon.LoadFromResourceName(HInstance, 'SidEditor.Cheatsheet');
-    btnCheatsheet.ImageIndex := FImages.AddIcon(Icon);
-  except
-    ; // Missing icons should not prevent loading
-  end;
+  RegisterResourceIcon('SidEditor.DsObjectPicker', DsPickerIconChanged);
+  RegisterResourceIcon('SidEditor.Cheatsheet', CheatsheetIconChanged);
 end;
 
 procedure TSidEditor.SetSid;

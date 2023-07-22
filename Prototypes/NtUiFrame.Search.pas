@@ -9,10 +9,11 @@ interface
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes,
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls,
-  Vcl.ExtCtrls, VirtualTrees, DevirtualizedTree, NtUiCommon.Interfaces;
+  Vcl.ExtCtrls, VirtualTrees, DevirtualizedTree, NtUiFrame,
+  NtUiCommon.Interfaces;
 
 type
-  TSearchFrame = class(TFrame, IHasSearch, ICanConsumeEscape)
+  TSearchFrame = class(TBaseFrame, IHasSearch, ICanConsumeEscape)
     tbxSearchBox: TButtonedEdit;
     cbxColumn: TComboBox;
     Splitter: TSplitter;
@@ -23,20 +24,18 @@ type
     procedure tbxSearchBoxKeyDown(Sender: TObject; var Key: Word;
       Shift: TShiftState);
   private
-    FLoaded: Boolean;
-    FImages: TImageList;
     FTree: TDevirtualizedTree;
     FColumnIndexes: TArray<TColumnIndex>;
     FOnQueryChange: TNotifyEvent;
-    procedure LoadIcons;
     procedure UpdateColumns;
     function GetQueryText: String;
     function GetHasQueryText: Boolean;
     function GetQueryColumn: Integer;
     procedure ColumnVisibilityChanged(const Sender: TBaseVirtualTree; const Column: TColumnIndex; Visible: Boolean);
+    procedure LeftButtonIconChanged(ImageList: TImageList; ImageIndex: Integer);
+    procedure RightButtonIconChanged(ImageList: TImageList; ImageIndex: Integer);
   protected
-    procedure Loaded; override;
-    procedure ChangeScale(M, D: Integer; isDpiChange: Boolean); override;
+    procedure LoadedOnce; override;
   public
     procedure ClearQuery;
     property HasQueryText: Boolean read GetHasQueryText;
@@ -52,7 +51,7 @@ type
 implementation
 
 uses
-  Vcl.ImgList, DelphiUtils.AutoObjects, VirtualTreesEx, UI.Helper;
+  VirtualTreesEx, UI.Helper;
 
 {$R *.dfm}
 {$R '..\Icons\SearchBox.res'}
@@ -88,14 +87,6 @@ begin
   // Notify subscribers
   if Assigned(FOnQueryChange) then
     FOnQueryChange(Self);
-end;
-
-procedure TSearchFrame.ChangeScale(M, D: Integer; isDpiChange: Boolean);
-begin
-  inherited;
-
-  if isDpiChange and FLoaded then
-    LoadIcons;
 end;
 
 procedure TSearchFrame.ClearQuery;
@@ -135,43 +126,24 @@ begin
   Result := tbxSearchBox.Text;
 end;
 
-procedure TSearchFrame.Loaded;
+procedure TSearchFrame.LeftButtonIconChanged;
 begin
-  inherited;
-
-  if FLoaded then
-    Exit;
-
-  FLoaded := True;
-  FImages := TImageList.Create(Self);
-  FImages.ColorDepth := cd32Bit;
-  tbxSearchBox.Images := FImages;
-  LoadIcons;
+  tbxSearchBox.Images := ImageList;
+  tbxSearchBox.LeftButton.ImageIndex := ImageIndex;
+  tbxSearchBox.LeftButton.Visible := Assigned(ImageList);
 end;
 
-procedure TSearchFrame.LoadIcons;
-var
-  Icon: TIcon;
+procedure TSearchFrame.LoadedOnce;
 begin
-  tbxSearchBox.LeftButton.ImageIndex := -1;
-  tbxSearchBox.RightButton.ImageIndex := -1;
+  inherited;
+  RegisterResourceIcon('SearchBox.Search', LeftButtonIconChanged);
+  RegisterResourceIcon('SearchBox.Clear', RightButtonIconChanged);
+end;
 
-  FImages.Clear;
-  FImages.Width := 16 * CurrentPPI div 96;
-  FImages.Height := 16 * CurrentPPI div 96;
-
-  try
-    Icon := Auto.From(TIcon.Create).Self;
-    Icon.LoadFromResourceName(HInstance, 'SearchBox.Search');
-    tbxSearchBox.LeftButton.ImageIndex := FImages.AddIcon(Icon);
-    tbxSearchBox.LeftButton.Visible := True;
-
-    Icon := Auto.From(TIcon.Create).Self;
-    Icon.LoadFromResourceName(HInstance, 'SearchBox.Clear');
-    tbxSearchBox.RightButton.ImageIndex := FImages.AddIcon(Icon);
-  except
-    ; // Missing icons should not prevent loading
-  end;
+procedure TSearchFrame.RightButtonIconChanged;
+begin
+  tbxSearchBox.Images := ImageList;
+  tbxSearchBox.RightButton.ImageIndex := ImageIndex;
 end;
 
 procedure TSearchFrame.SetSearchFocus;
