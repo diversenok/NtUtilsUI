@@ -26,6 +26,7 @@ type
     procedure SetSid(const Sid: ISid);
   protected
     procedure Loaded; override;
+    procedure FrameEnabledChanged(var Message: TMessage); message CM_ENABLEDCHANGED;
   public
     function TryGetSid(out Sid: ISid): TNtxStatus;
     property Sid: ISid read GetSid write SetSid;
@@ -68,6 +69,14 @@ begin
 
   if Assigned(FOnDsObjectPicked) then
     FOnDsObjectPicked(Self);
+end;
+
+procedure TSidEditor.FrameEnabledChanged;
+begin
+  inherited;
+  tbxSid.Enabled := Enabled;
+  btnCheatsheet.Enabled := Enabled;
+  btnDsPicker.Enabled := Enabled;
 end;
 
 function TSidEditor.GetSid;

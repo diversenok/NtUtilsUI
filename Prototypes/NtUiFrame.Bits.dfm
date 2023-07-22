@@ -3,6 +3,8 @@ object BitsFrame: TBitsFrame
   Top = 0
   Width = 320
   Height = 317
+  Constraints.MinHeight = 100
+  Constraints.MinWidth = 200
   ParentShowHint = False
   ShowHint = True
   TabOrder = 0
@@ -35,7 +37,7 @@ object BitsFrame: TBitsFrame
         Options = [coAllowClick, coDraggable, coEnabled, coParentBidiMode, coParentColor, coResizable, coVisible, coAutoSpring, coSmartResize, coAllowFocus, coDisableAnimatedResize, coEditable, coStyleColor]
         Position = 0
         Text = 'Name'
-        Width = 320
+        Width = 316
       end>
   end
   object BottomPanel: TPanel
