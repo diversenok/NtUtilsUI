@@ -231,7 +231,7 @@ begin
 
   if FMenuCopyColumn.Visible then
     FMenuCopyColumn.Caption := Format('Copy "%s"',
-      [FTree.Header.Columns[Column].CaptionText]);
+      [FTree.Header.Columns[Column].Text]);
 
   // Enable the separator if there are items to separate
   FMenuSeparator.Visible := (Assigned(Menu) or FMenuMainAction.Visible) and
