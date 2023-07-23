@@ -37,7 +37,7 @@ object BitsFrame: TBitsFrame
         Options = [coAllowClick, coDraggable, coEnabled, coParentBidiMode, coParentColor, coResizable, coVisible, coAutoSpring, coSmartResize, coAllowFocus, coDisableAnimatedResize, coEditable, coStyleColor]
         Position = 0
         Text = 'Name'
-        Width = 316
+        Width = 320
       end>
   end
   object BottomPanel: TPanel

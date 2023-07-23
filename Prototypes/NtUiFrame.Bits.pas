@@ -81,14 +81,18 @@ begin
   FTypeSize := SizeOf(TAccessMask);
   UiLibAddAccessMaskNodes(Tree, ATypeInfo, GenericMapping, FValidMask,
     ShowGenericRights, ShowMiscRights);
-  Value := 0;
+
+  // Update item states
+  SetValue(FValue);
 end;
 
 procedure TBitsFrame.LoadType;
 begin
   SuppressTreeReadOnly;
   UiLibAddBitNodes(Tree, ATypeInfo, FTypeSize, FValidMask);
-  Value := 0;
+
+  // Update item states
+  SetValue(FValue);
 end;
 
 procedure TBitsFrame.RefreshItems;
