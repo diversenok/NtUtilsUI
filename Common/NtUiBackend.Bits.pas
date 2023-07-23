@@ -34,6 +34,7 @@ procedure UiLibAddAccessMaskNodes(
   ATypeInfo: Pointer;
   const GenericMapping: TGenericMapping;
   out FullMask: UInt64;
+  ShowGenericRights: Boolean = True;
   ShowMiscRights: Boolean = True
 );
 
@@ -437,6 +438,7 @@ var
   Attributes: TCustomAttributeArray;
   Groups: TArray<TNodeGroup>;
   Group: TNodeGroup;
+  i: Integer;
 begin
   RttiContext := TRttiContext.Create;
   RttiType := RttiContext.GetType(ATypeInfo);
@@ -454,8 +456,10 @@ begin
   Tree.BeginUpdateAuto;
   Tree.Clear;
 
-  if ShowMiscRights then
+  if ShowMiscRights and ShowGenericRights then
     SetLength(Groups, 7)
+  else if ShowMiscRights or ShowGenericRights then
+    SetLength(Groups, 6)
   else
     SetLength(Groups, 5);
 
@@ -496,19 +500,25 @@ begin
     Group.Mask);
   Groups[4] := Group;
 
-  if ShowMiscRights then
+  i := 5;
+
+  if ShowGenericRights then
   begin
     Group.Name := 'Generic';
     Group.Mask := GENERIC_RIGHTS_ALL;
     Group.Nodes := UiLibCollectFlagNodes(Attributes, RttiType.TypeSize,
       Group.Mask);
-    Groups[5] := Group;
+    Groups[i] := Group;
+    Inc(i);
+  end;
 
+  if ShowMiscRights then
+  begin
     Group.Name := 'Miscellaneous';
     Group.Mask := MAXIMUM_ALLOWED or ACCESS_SYSTEM_SECURITY;
     Group.Nodes := UiLibCollectFlagNodes(Attributes, RttiType.TypeSize,
       Group.Mask);
-    Groups[6] := Group;
+    Groups[i] := Group;
   end;
 
   // Add the groups of flags

@@ -40,6 +40,7 @@ type
     procedure LoadAccessMaskType(
       ATypeInfo: Pointer;
       const GenericMapping: TGenericMapping;
+      ShowGenericRights: Boolean;
       ShowMiscRights: Boolean
     );
     property Value: UInt64 read FValue write SetValue;
@@ -79,7 +80,7 @@ begin
   SuppressTreeReadOnly;
   FTypeSize := SizeOf(TAccessMask);
   UiLibAddAccessMaskNodes(Tree, ATypeInfo, GenericMapping, FValidMask,
-    ShowMiscRights);
+    ShowGenericRights, ShowMiscRights);
   Value := 0;
 end;
 
@@ -260,7 +261,7 @@ begin
     begin
       Frame := TBitsFrame.Create(AOwner);
       try
-        Frame.LoadAccessMaskType(ATypeInfo, GenericMapping, False);
+        Frame.LoadAccessMaskType(ATypeInfo, GenericMapping, False, False);
         Frame.Value := Value;
         Frame.IsReadOnly := True;
       except
