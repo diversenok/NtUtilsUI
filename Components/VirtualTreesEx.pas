@@ -47,6 +47,8 @@ type
     procedure RefreshPopupMenuShortcuts;
     property MainActionMenuText: String read GetMainActionMenuText write SetMainActionMenuText;
     destructor Destroy; override;
+    procedure MoveSelectedNodesUp;
+    procedure MoveSelectedNodesDown;
   published
     property DrawSelectionMode default smBlendedRectangle;
     property HintMode default hmHint;
@@ -277,6 +279,52 @@ begin
 
   // Process shortcuts on all menu items
   FDefaultMenus.InvokeShortcuts(Key, Shift);
+end;
+
+procedure TVirtualStringTreeEx.MoveSelectedNodesDown;
+var
+  Nodes: TArray<PVirtualNode>;
+  Next: PVirtualNode;
+  i: Integer;
+begin
+  try
+    BeginUpdate;
+    Nodes := SelectedNodes.ToArray;
+
+    for i := High(Nodes) downto 0 do
+    begin
+      Next := GetNext(Nodes[i]);
+
+      // Move each node after next but without passing previously moved
+      if Assigned(Next) and ((i = High(Nodes)) or (Next <> Nodes[i + 1])) then
+        MoveTo(Nodes[i], Next, amInsertAfter, False);
+    end;
+  finally
+    EndUpdate;
+  end;
+end;
+
+procedure TVirtualStringTreeEx.MoveSelectedNodesUp;
+var
+  Nodes: TArray<PVirtualNode>;
+  Previous: PVirtualNode;
+  i: Integer;
+begin
+  try
+    BeginUpdate;
+    Nodes := SelectedNodes.ToArray;
+
+    for i := 0 to High(Nodes) do
+    begin
+      Previous := GetPrevious(Nodes[i]);
+
+      // Move each node before previous but without passing previously moved
+      if Assigned(Previous) and ((i = 0) or (Previous <> Nodes[i - 1])) then
+        MoveTo(Nodes[i], Previous, amInsertBefore, False);
+    end;
+  finally
+    EndUpdate;
+  end;
 end;
 
 function TVirtualStringTreeEx.OverrideMainActionMenuEnabled;

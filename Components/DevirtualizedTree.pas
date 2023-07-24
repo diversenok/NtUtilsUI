@@ -97,6 +97,12 @@ type
     function InsertNodeEx(Node: PVirtualNode; Mode: TVTNodeAttachMode; const Provider: INodeProvider): INodeProvider;
   end;
 
+// Collect node providers from node enumerator
+function CollectNodeProviders(
+  const NodeEnumeration: TVTVirtualNodeEnumeration;
+  const ProviderId: TGuid
+): TArray<INodeProvider>;
+
 procedure Register;
 
 implementation
@@ -342,6 +348,31 @@ procedure TDevirtualizedTree.ValidateNodeDataSize;
 begin
   inherited;
   Size := SizeOf(INodeProvider);
+end;
+
+{ Functions }
+
+function CollectNodeProviders;
+var
+  Node: PVirtualNode;
+  Provider: INodeProvider;
+  Count: Integer;
+begin
+  Count := 0;
+
+  for Node in NodeEnumeration do
+    if Node.HasProvider(ProviderId) then
+      Inc(Count);
+
+  SetLength(Result, Count);
+  Count := 0;
+
+  for Node in NodeEnumeration do
+    if Node.TryGetProvider(ProviderId, Provider) then
+    begin
+      Result[Count] := Provider;
+      Inc(Count);
+    end;
 end;
 
 end.
