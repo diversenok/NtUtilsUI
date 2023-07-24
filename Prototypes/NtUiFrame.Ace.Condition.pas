@@ -38,7 +38,7 @@ implementation
 uses
   UI.Colors, NtUtils.Security, Vcl.ImgList;
 
-{$R ..\Icons\Icon.Verify.res}
+{$R ..\Icons\Resources.Icon.Verify.res}
 {$R *.dfm}
 
 procedure TAceConditionFrame.btnNormalizeClick;
@@ -62,7 +62,7 @@ end;
 procedure TAceConditionFrame.LoadedOnce;
 begin
   inherited;
-  RegisterResourceIcon('Icon.Verify', NormalizeIconChanged);
+  RegisterResourceIcon('Resources.Icon.Verify', NormalizeIconChanged);
 end;
 
 procedure TAceConditionFrame.NormalizeIconChanged;
