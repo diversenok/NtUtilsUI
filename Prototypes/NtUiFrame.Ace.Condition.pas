@@ -27,18 +27,17 @@ type
     procedure LoadedOnce; override;
     procedure FrameEnabledChanged(var Message: TMessage); message CM_ENABLEDCHANGED;
   public
-    function TryGetCondition(out Value: IMemory): TNtxStatus;
-    function TrySetCondition(const Value: IMemory): TNtxStatus;
-    property Condition: IMemory read GetCondition write SetCondition;
+    function TryGetCondition([MayReturnNil] out Value: IMemory): TNtxStatus;
+    function TrySetCondition([opt] const Value: IMemory): TNtxStatus;
+    [MayReturnNil] property Condition: IMemory read GetCondition write SetCondition;
     property OnConditionChange: TNotifyEvent read FOnConditionChanged write FOnConditionChanged;
   end;
 
 implementation
 
 uses
-  UI.Colors, NtUtils.Security, Vcl.ImgList;
+  UI.Colors, NtUtils.Security, Vcl.ImgList, Resources.Icon.Verify;
 
-{$R ..\Icons\Resources.Icon.Verify.res}
 {$R *.dfm}
 
 procedure TAceConditionFrame.btnNormalizeClick;
@@ -62,7 +61,7 @@ end;
 procedure TAceConditionFrame.LoadedOnce;
 begin
   inherited;
-  RegisterResourceIcon('Resources.Icon.Verify', NormalizeIconChanged);
+  RegisterResourceIcon(RESOURSES_ICON_VERIFY, NormalizeIconChanged);
 end;
 
 procedure TAceConditionFrame.NormalizeIconChanged;
