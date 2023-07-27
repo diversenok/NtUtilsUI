@@ -171,6 +171,7 @@ begin
 
     // Perform deletion
     DeleteSelectedNodes;
+    ClearSelection;
 
     // Select and focus the candidate
     if Assigned(SelectionCandidate) then
