@@ -5,15 +5,11 @@ inherited AclFrame: TAclFrame
   ParentShowHint = False
   ShowHint = True
   object Tree: TDevirtualizedTree
-    AlignWithMargins = True
     Left = 0
-    Top = 0
+    Top = 24
     Width = 757
-    Height = 265
-    Margins.Left = 0
-    Margins.Top = 0
-    Margins.Right = 28
-    Margins.Bottom = 0
+    Height = 241
+    AccessibleName = 'PopupMenu'
     Align = alClient
     ClipboardFormats.Strings = (
       'CSV'
@@ -30,9 +26,11 @@ inherited AclFrame: TAclFrame
     TreeOptions.PaintOptions = [toHideFocusRect, toHotTrack, toShowButtons, toShowDropmark, toThemeAware, toUseBlendedImages, toUseExplorerTheme]
     TreeOptions.SelectionOptions = [toFullRowSelect, toMultiSelect, toRightClickSelect]
     OnAddToSelection = SelectionChanged
+    OnGetPopupMenu = TreeGetPopupMenu
     OnRemoveFromSelection = SelectionChanged
     Touch.InteractiveGestures = [igPan, igPressAndTap]
     Touch.InteractiveGestureOptions = [igoPanSingleFingerHorizontal, igoPanSingleFingerVertical, igoPanInertia, igoPanGutter, igoParentPassthrough]
+    PopupMenuEx = PopupMenu
     NoItemsText = 'No items to display'
     Columns = <
       item
@@ -114,62 +112,140 @@ inherited AclFrame: TAclFrame
         Width = 200
       end>
   end
-  object btnUp: TButton
+  object RightPanel: TPanel
+    AlignWithMargins = True
     Left = 760
-    Top = 0
+    Top = 24
     Width = 25
-    Height = 25
-    Hint = 'Move selected items up'
-    Anchors = [akTop, akRight]
-    Enabled = False
-    ImageAlignment = iaCenter
+    Height = 241
+    Margins.Top = 0
+    Margins.Right = 0
+    Margins.Bottom = 0
+    Align = alRight
+    BevelOuter = bvNone
+    ShowCaption = False
     TabOrder = 1
-    OnClick = btnUpClick
+    object btnAdd: TButton
+      Left = 0
+      Top = 58
+      Width = 25
+      Height = 25
+      Hint = 'Add a new ACE (Ctrl+N)'
+      Anchors = [akRight]
+      ImageAlignment = iaCenter
+      TabOrder = 1
+      OnClick = btnAddClick
+    end
+    object btnCanonicalize: TButton
+      Left = 0
+      Top = 108
+      Width = 25
+      Height = 25
+      Hint = 'Canonicalize/normalize the ACL (Ctrl+Shift+N)'
+      Anchors = [akRight]
+      Enabled = False
+      ImageAlignment = iaCenter
+      TabOrder = 2
+      OnClick = btnCanonicalizeClick
+    end
+    object btnDelete: TButton
+      Left = 0
+      Top = 157
+      Width = 25
+      Height = 25
+      Hint = 'Delete selected items'
+      Anchors = [akRight]
+      Enabled = False
+      ImageAlignment = iaCenter
+      TabOrder = 3
+      OnClick = btnDeleteClick
+    end
+    object btnDown: TButton
+      Left = 0
+      Top = 216
+      Width = 25
+      Height = 25
+      Hint = 'Move selected items down'
+      Anchors = [akRight, akBottom]
+      Enabled = False
+      ImageAlignment = iaCenter
+      TabOrder = 4
+      OnClick = btnDownClick
+    end
+    object btnUp: TButton
+      Left = 0
+      Top = 0
+      Width = 25
+      Height = 25
+      Hint = 'Move selected items up'
+      Anchors = [akTop, akRight]
+      Enabled = False
+      ImageAlignment = iaCenter
+      TabOrder = 0
+      OnClick = btnUpClick
+    end
   end
-  object btnDown: TButton
-    Left = 760
-    Top = 240
-    Width = 25
-    Height = 25
-    Hint = 'Move selected items down'
-    Anchors = [akRight, akBottom]
-    Enabled = False
-    ImageAlignment = iaCenter
+  inline Search: TSearchFrame
+    AlignWithMargins = True
+    Left = 0
+    Top = 0
+    Width = 785
+    Height = 21
+    Margins.Left = 0
+    Margins.Top = 0
+    Margins.Right = 0
+    Align = alTop
+    Constraints.MinHeight = 21
+    Constraints.MinWidth = 240
     TabOrder = 2
-    OnClick = btnDownClick
+    inherited Splitter: TSplitter
+      Left = 619
+    end
+    inherited tbxSearchBox: TButtonedEdit
+      Width = 619
+    end
+    inherited cbxColumn: TComboBox
+      Left = 625
+    end
   end
-  object btnCanonicalize: TButton
-    Left = 760
-    Top = 120
-    Width = 25
-    Height = 25
-    Hint = 'Canonicalize ACL'
-    Anchors = [akRight]
-    Enabled = False
-    ImageAlignment = iaCenter
-    TabOrder = 3
-    OnClick = btnCanonicalizeClick
+  object PopupMenu: TPopupMenu
+    Left = 232
+    Top = 88
+    object cmEdit: TMenuItem
+      Caption = 'Edit...'
+      ShortCut = 113
+      OnClick = cmEditClick
+    end
+    object cmDelete: TMenuItem
+      Caption = 'Delete'
+      ShortCut = 46
+      OnClick = btnDeleteClick
+    end
+    object cmUp: TMenuItem
+      Caption = 'Move Up'
+      ShortCut = 32806
+      OnClick = btnUpClick
+    end
+    object cmDown: TMenuItem
+      Caption = 'Move Down'
+      ShortCut = 32808
+      OnClick = btnDownClick
+    end
   end
-  object btnAdd: TButton
-    Left = 760
-    Top = 65
-    Width = 25
-    Height = 25
-    Hint = 'Add a new ACE'
-    Anchors = [akRight]
-    ImageAlignment = iaCenter
-    TabOrder = 4
-  end
-  object btnDelete: TButton
-    Left = 760
-    Top = 174
-    Width = 25
-    Height = 25
-    Hint = 'Delete selected items'
-    Anchors = [akRight]
-    Enabled = False
-    ImageAlignment = iaCenter
-    TabOrder = 5
-    OnClick = btnDeleteClick
+  object ActionList: TActionList
+    Left = 152
+    Top = 88
+    object alxNew: TAction
+      ShortCut = 16462
+      OnExecute = btnAddClick
+    end
+    object alxCanonicalize: TAction
+      ShortCut = 24654
+      OnExecute = btnCanonicalizeClick
+    end
+    object alxEdit: TAction
+      ShortCut = 16453
+      OnExecute = cmEditClick
+    end
   end
 end

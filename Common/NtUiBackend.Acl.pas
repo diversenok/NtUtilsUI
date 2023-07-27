@@ -47,6 +47,13 @@ procedure UiLibUnhideAceSpecificColumns(
   AceType: TAceType
 );
 
+// Add a new ACE node to the ACL tree control preserving canonical order
+procedure UiLibAddAceNode(
+  Tree: TDevirtualizedTree;
+  [opt] const Ace: TAceData;
+  AccessMaskType: Pointer
+);
+
 // Add ACE nodes to the ACL tree control
 procedure UiLibAddAclNodes(
   Tree: TDevirtualizedTree;
@@ -133,7 +140,7 @@ begin
     FColumnText[colAceAccessMask] := RepresentType(
       TypeInfo(TMandatoryLabelMask), FAce.Mask).Text
   else  
-    FColumnText[colAceAccessMask] := RepresentType(FAccessMaskType, 
+    FColumnText[colAceAccessMask] := RepresentType(FAccessMaskType,
       FAce.Mask).Text;
 
   FColumnText[colAceAccessMaskNumeric] := IntToHexEx(FAce.Mask, 6);
@@ -147,8 +154,8 @@ begin
   end
   else
   begin
-    FColumnText[colServerSid] := 'N/A';
-    FColumnText[colServerSidRaw] := 'N/A';
+    FColumnText[colServerSid] := '';
+    FColumnText[colServerSidRaw] := '';
   end;
 
   if FAce.AceType in CallbackAces then
@@ -182,7 +189,8 @@ begin
     THintSection.New('Flags', FColumnText[colAceFlags]),
     THintSection.New('Access Mask', FColumnText[colAceAccessMask]),
     THintSection.New('SID', FColumnText[colSid]),
-    THintSection.New('Condition', FColumnText[colCondition])    
+    THintSection.New('Server SID', FColumnText[colServerSid]),
+    THintSection.New('Condition', FColumnText[colCondition])
   ]);
 
   FHasFontColor := BitTest(FAce.AceFlags and INHERIT_ONLY_ACE);
@@ -229,6 +237,55 @@ begin
   else if AceType = ACCESS_ALLOWED_COMPOUND_ACE_TYPE then
     Tree.Header.Columns[colServerSid].Options :=
       Tree.Header.Columns[colServerSid].Options + [coVisible];
+end;
+
+function UiLibChooseAceIndex(
+  Tree: TDevirtualizedTree;
+  Category: TAceCategory
+): PVirtualNode;
+var
+  CurrentCategory: TAceCategory;
+  Node: PVirtualNode;
+  NodeProvider: IAceNode;
+begin
+  // Insert as the last by default
+  Result := nil;
+
+  for Node in Tree.Nodes do
+    if Node.TryGetProvider(IAceNode, NodeProvider) then
+    begin
+      // Determine which category the ACE belongs to
+      CurrentCategory := RtlxGetCategoryAce(NodeProvider.Ace.AceType,
+        NodeProvider.Ace.AceFlags);
+
+      // Insert right before the next category
+      if CurrentCategory > Category then
+        Exit(Node);
+    end;
+end;
+
+procedure UiLibAddAceNode;
+var
+  NewNode: IAceNode;
+  InsertBefore: PVirtualNode;
+begin
+  Tree.BeginUpdateAuto;
+
+  // Deteremine where to insert the new ACE
+  InsertBefore := UiLibChooseAceIndex(Tree, RtlxGetCategoryAce(Ace.AceType,
+    Ace.AceFlags));
+
+  // Create its provider
+  NewNode := UiLibMakeAceNode(Ace, AccessMaskType);
+
+  // Add it to the tree
+  if Assigned(InsertBefore) then
+    Tree.InsertNodeEx(InsertBefore, amInsertBefore, NewNode)
+  else
+    Tree.AddChildEx(nil, NewNode);
+
+  // Update column visibility
+  UiLibUnhideAceSpecificColumns(Tree, Ace.AceType);
 end;
 
 procedure UiLibAddAclNodes;
