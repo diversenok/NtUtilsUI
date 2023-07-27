@@ -328,9 +328,20 @@ begin
 end;
 
 function TDevirtualizedTree.InsertNodeEx;
+var
+  NewNode: PVirtualNode;
 begin
   Assert(Assigned(Provider), 'Provider must not be null');
-  Provider.Attach(inherited InsertNode(Node, Mode, Pointer(IInterface(Provider))));
+
+  // Note: InsertNode doesn't have an overload that takes an interface as a
+  // parameter like AddNode does. Reproduce AddNode's behavior by adding the
+  // provider as a pointer and then adjutsing its lifetime.
+  NewNode := inherited InsertNode(Node, Mode, Pointer(Provider));
+  Include(NewNode.States, vsReleaseCallOnUserDataRequired);
+  Provider._AddRef;
+
+  // Notify the provider of completion
+  Provider.Attach(NewNode);
   Result := Provider;
 end;
 
