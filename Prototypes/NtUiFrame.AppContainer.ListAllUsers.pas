@@ -13,7 +13,8 @@ uses
 
 type
   TAppContainerListAllUsersFrame = class (TFrame, IHasSearch, ICanConsumeEscape,
-    IGetFocusedNode, IOnNodeSelection, IHasDefaultCaption, INodeDefaultAction)
+    IHasDefaultCaption, IAllowsDefaultNodeAction, IHasModalResult,
+    IHasModalResultObservation)
   published
     lblUsers: TLabel;
     tbxUser: TEdit;
@@ -24,14 +25,12 @@ type
     FUser: ISid;
     function GetHasSearchImpl: IHasSearch;
     function GetCanConsumeEscapeImpl: ICanConsumeEscape;
-    function GetFocusedNodeImpl: IGetFocusedNode;
-    function GetOnNodeSelectionImpl: IOnNodeSelection;
-    function GetNodeDefaultActionImpl: INodeDefaultAction;
+    function GetNodeDefaultActionImpl: IAllowsDefaultNodeAction;
+    function GetModalResultObservation: IHasModalResultObservation;
     property HasSearchImpl: IHasSearch read GetHasSearchImpl implements IHasSearch;
     property CanConsumeEscapeImpl: ICanConsumeEscape read GetCanConsumeEscapeImpl implements ICanConsumeEscape;
-    property FocusedNodeImpl: IGetFocusedNode read GetFocusedNodeImpl implements IGetFocusedNode;
-    property OnNodeSelectionImpl: IOnNodeSelection read GetOnNodeSelectionImpl implements IOnNodeSelection;
-    property NodeDefaultActionImpl: INodeDefaultAction read GetNodeDefaultActionImpl implements INodeDefaultAction;
+    property NodeDefaultActionImpl: IAllowsDefaultNodeAction read GetNodeDefaultActionImpl implements IAllowsDefaultNodeAction;
+    property ModalResultObservationImpl: IHasModalResultObservation read GetModalResultObservation implements IHasModalResult, IHasModalResultObservation;
     property Impl: TAppContainerListFrame read AppContainersFrame implements IHasDefaultCaption;
   public
     procedure LoadForUser([opt] const SelectedUser: ISid);
@@ -59,22 +58,17 @@ begin
   Result := AppContainersFrame;
 end;
 
-function TAppContainerListAllUsersFrame.GetFocusedNodeImpl;
-begin
-  Result := AppContainersFrame;
-end;
-
 function TAppContainerListAllUsersFrame.GetHasSearchImpl;
 begin
   Result := AppContainersFrame;
 end;
 
-function TAppContainerListAllUsersFrame.GetNodeDefaultActionImpl;
+function TAppContainerListAllUsersFrame.GetModalResultObservation;
 begin
   Result := AppContainersFrame;
 end;
 
-function TAppContainerListAllUsersFrame.GetOnNodeSelectionImpl;
+function TAppContainerListAllUsersFrame.GetNodeDefaultActionImpl;
 begin
   Result := AppContainersFrame;
 end;

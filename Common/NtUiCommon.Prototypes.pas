@@ -23,7 +23,7 @@ var
   NtUiLibHostFramePick: function (
     AOwner: TComponent;
     Initializer: TFrameInitializer
-  ): INodeProvider;
+  ): IInterface;
 
   { Bit Masks }
 

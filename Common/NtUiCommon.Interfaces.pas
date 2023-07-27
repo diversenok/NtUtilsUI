@@ -40,52 +40,60 @@ type
   { Tree interfaces }
 
   // Indicates a component that allows enumerating all devirtualized nodes
-  IGetNodes = interface
+  IHasNodes = interface
     ['{4B2C5DD6-52AF-4C3B-A831-B985DFA0B10E}']
     function NodeCount(const ProviderId: TGuid): Cardinal;
     function Nodes(const ProviderId: TGuid): TArray<INodeProvider>;
   end;
 
   // Indicates a component that allows enumerating selected devirtualized nodes
-  IGetSelectedNodes = interface
+  IHasSelectedNodes = interface
     ['{E7D0A799-5719-4CA0-A76C-819C1AEF45EB}']
     function SelectedNodeCount(const ProviderId: TGuid): Cardinal;
     function SelectedNodes(const ProviderId: TGuid): TArray<INodeProvider>;
   end;
 
+  // Indicates a component that allows observing node selection changes
+  IHasSelectedNodesObservation = interface (IHasSelectedNodes)
+    ['{CE3DD21D-BD55-44E8-B923-12DF4F62233D}']
+    function GetOnSelectionChange: TNotifyEvent;
+    procedure SetOnSelectionChange(const Callback: TNotifyEvent);
+    property OnSelectionChange: TNotifyEvent read GetOnSelectionChange write SetOnSelectionChange;
+  end;
+
   // Indicates a component that allows enumerating checked devirtualized nodes
-  IGetCheckedNodes = interface
+  IHasCheckedNodes = interface
     ['{7E5EF7D7-2A31-4DD2-A643-6DAE99F4F032}']
     function CheckedNodeCount(const ProviderId: TGuid): Cardinal;
     function CheckedNodes(const ProviderId: TGuid): TArray<INodeProvider>;
   end;
 
+  // Indicates a component that allows observing node check state changes
+  IHasCheckedNodesObservation = interface (IHasCheckedNodes)
+    ['{E0F17AE7-E36D-4B6A-A495-5D495026D60D}']
+    function GetOnCheckedChange: TNotifyEvent;
+    procedure SetOnCheckedChange(const Callback: TNotifyEvent);
+    property OnCheckedChange: TNotifyEvent read GetOnCheckedChange write SetOnCheckedChange;
+  end;
+
   // Indicates a component allowing to retrieve the focused devirtualized node
-  IGetFocusedNode = interface
+  IHasFocusedNode = interface
     ['{3B4E5A9A-C832-429B-9440-F2FC2399214E}']
     function FocusedNode: INodeProvider;
   end;
 
   // Indicates a component that allows modifying devirtualized nodes
-  ISetNodes = interface
+  IAllowsEditingNodes = interface
     ['{05DA3293-63D8-42CB-B26A-AFA502C56A42}']
     function BeginUpdateAuto: IAutoReleasable;
     procedure ClearItems;
     procedure AddItem(const Item: INodeProvider; const Parent: INodeProvider = nil);
   end;
 
-  // Indicates a component that allows observing node selection changes
-  IOnNodeSelection = interface
-    ['{CE3DD21D-BD55-44E8-B923-12DF4F62233D}']
-    function GetOnSelection: TNotifyEvent;
-    procedure SetOnSelection(const Callback: TNotifyEvent);
-    property OnSelection: TNotifyEvent read GetOnSelection write SetOnSelection;
-  end;
-
   TNodeProviderEvent = procedure (const Node: INodeProvider) of object;
 
   // Indicates a component that allows controlling default tree menu action
-  INodeDefaultAction = interface
+  IAllowsDefaultNodeAction = interface
     ['{2B8590CB-A205-4018-9975-97CB0C0F87BD}']
     function GetOnMainAction: TNodeProviderEvent;
     procedure SetOnMainAction(const Value: TNodeProviderEvent);
@@ -95,11 +103,38 @@ type
     property MainActionCaption: String read GetMainActionCaption write SetMainActionCaption;
   end;
 
+  // Indicates a component that controls button caption for the modal dialog host
+  IHasModalCaptions = interface
+    ['{730893B5-A88C-42A0-9AC3-C7CD1867CA48}']
+    function GetConfirmationCaption: String;
+    function GetCancellationCaption: String;
+    property ConfirmationCaption: String read GetConfirmationCaption;
+    property CancellationCaption: String read GetCancellationCaption;
+  end;
+
+  // Indicates a component that allows returning a result from a modal dialog
+  IHasModalResult = interface
+    ['{F5CFA05F-11FE-46BD-8004-01696E95103D}']
+    function GetModalResult: IInterface;
+    property ModalResult: IInterface read GetModalResult;
+  end;
+
+  // Indicates ability to observe changes to modal result availability
+  IHasModalResultObservation = interface (IHasModalResult)
+    ['{54D9BDA1-4689-4650-828E-174D1C14897F}']
+    function GetOnModalResultChanged: TNotifyEvent;
+    procedure SetOnModalResultChanged(const Callback: TNotifyEvent);
+    property OnModalResultChanged: TNotifyEvent
+      read GetOnModalResultChanged
+      write SetOnModalResultChanged;
+  end;
+
 { Delegatable implementation }
 
 type
   TTreeEventSubscription = set of (
-    teSelectionChange
+    teSelectionChange,
+    teCheckedChange
   );
 
   TBaseTreeExtension = class abstract (TInterfacedObject)
@@ -113,13 +148,18 @@ type
   end;
 
   TTreeNodeInterfaceProvider = class (TBaseTreeExtension, ICanShowStatus,
-    IGetNodes, IGetSelectedNodes, IGetCheckedNodes, IGetFocusedNode, ISetNodes,
-    IOnNodeSelection, INodeDefaultAction)
+    IHasNodes, IHasSelectedNodes, IHasSelectedNodesObservation,
+    IHasCheckedNodes, IHasCheckedNodesObservation, IHasFocusedNode, IAllowsEditingNodes,
+    IAllowsDefaultNodeAction, IHasModalResult, IHasModalResultObservation)
   private
-    FOnNodeSelection: TNotifyEvent;
+    FOnNodeSelectionChange: TNotifyEvent;
+    FOnNodeCheckedChange: TNotifyEvent;
+    FOnModalResultChange: TNotifyEvent;
     FOnMainAction: TNodeProviderEvent;
     FOnMainActionSet: TNotifyEvent;
+    FModalResultFilter: TGuid;
     procedure TreeSelectionChanged(Sender: TBaseVirtualTree; Node: PVirtualNode);
+    procedure TreeCheckedChanged(Sender: TBaseVirtualTree; Node: PVirtualNode);
     procedure TreeMainAction(Node: PVirtualNode);
     function GetOnMainActionSet: TNotifyEvent;
     procedure SetOnMainActionSet(const Value: TNotifyEvent);
@@ -135,13 +175,19 @@ type
     function BeginUpdateAuto: IAutoReleasable;
     procedure ClearItems;
     procedure AddItem(const Item: INodeProvider; const Parent: INodeProvider = nil);
-    function GetOnSelection: TNotifyEvent;
-    procedure SetOnSelection(const Callback: TNotifyEvent);
+    function GetOnSelectionChange: TNotifyEvent;
+    procedure SetOnSelectionChange(const Callback: TNotifyEvent);
+    function GetOnCheckedChange: TNotifyEvent;
+    procedure SetOnCheckedChange(const Callback: TNotifyEvent);
     function GetOnMainAction: TNodeProviderEvent;
     procedure SetOnMainAction(const Value: TNodeProviderEvent);
     function GetMainActionCaption: String;
     procedure SetMainActionCaption(const Value: String);
     property OnMainActionSet: TNotifyEvent read GetOnMainActionSet write SetOnMainActionSet;
+    function GetModalResult: IInterface;
+    function GetOnModalResultChanged: TNotifyEvent;
+    procedure SetOnModalResultChanged(const Callback: TNotifyEvent);
+    property ModalResultFilter: TGuid read FModalResultFilter write FModalResultFilter;
     constructor Create(Tree: TDevirtualizedTree; SubscribeTo: TTreeEventSubscription = []);
   end;
 
@@ -263,10 +309,20 @@ constructor TTreeNodeInterfaceProvider.Create;
 begin
   inherited Create(Tree);
 
-  if Assigned(Tree) and (teSelectionChange in SubscribeTo) then
+  if Assigned(Tree) then
   begin
-    Tree.OnAddToSelection := TreeSelectionChanged;
-    Tree.OnRemoveFromSelection := TreeSelectionChanged;
+    // Selection events
+    if teSelectionChange in SubscribeTo then
+    begin
+      Tree.OnAddToSelection := TreeSelectionChanged;
+      Tree.OnRemoveFromSelection := TreeSelectionChanged;
+    end;
+
+    // Check state event
+    if teCheckedChange in SubscribeTo then
+      Tree.OnChecked := TreeCheckedChanged;
+
+    FModalResultFilter := INodeProvider;
   end;
 end;
 
@@ -286,6 +342,18 @@ begin
     Result := '';
 end;
 
+function TTreeNodeInterfaceProvider.GetModalResult;
+begin
+  if not Attached or (FTree.SelectedCount <> 1) or not
+    FTree.FocusedNode.TryGetProvider(FModalResultFilter, Result) then
+    Result := nil;
+end;
+
+function TTreeNodeInterfaceProvider.GetOnCheckedChange;
+begin
+  Result := FOnNodeCheckedChange;
+end;
+
 function TTreeNodeInterfaceProvider.GetOnMainAction;
 begin
   Result := FOnMainAction;
@@ -296,9 +364,14 @@ begin
   Result := FOnMainActionSet;
 end;
 
-function TTreeNodeInterfaceProvider.GetOnSelection;
+function TTreeNodeInterfaceProvider.GetOnModalResultChanged;
 begin
-  Result := FOnNodeSelection;
+  Result := FOnModalResultChange;
+end;
+
+function TTreeNodeInterfaceProvider.GetOnSelectionChange;
+begin
+  Result := FOnNodeSelectionChange;
 end;
 
 function TTreeNodeInterfaceProvider.NodeCount;
@@ -371,6 +444,11 @@ begin
     FTree.MainActionMenuText := Value;
 end;
 
+procedure TTreeNodeInterfaceProvider.SetOnCheckedChange;
+begin
+  FOnNodeCheckedChange := Callback;
+end;
+
 procedure TTreeNodeInterfaceProvider.SetOnMainAction;
 begin
   FOnMainAction := Value;
@@ -392,9 +470,14 @@ begin
   FOnMainActionSet := Value;
 end;
 
-procedure TTreeNodeInterfaceProvider.SetOnSelection;
+procedure TTreeNodeInterfaceProvider.SetOnModalResultChanged;
 begin
-  FOnNodeSelection := Callback;
+  FOnModalResultChange := Callback;
+end;
+
+procedure TTreeNodeInterfaceProvider.SetOnSelectionChange;
+begin
+  FOnNodeSelectionChange := Callback;
 end;
 
 procedure TTreeNodeInterfaceProvider.SetStatus;
@@ -408,6 +491,12 @@ begin
     Tree.NoItemsText := 'Unable to query:'#$D#$A + Status.ToString;
 end;
 
+procedure TTreeNodeInterfaceProvider.TreeCheckedChanged;
+begin
+  if Assigned(FOnNodeCheckedChange) then
+    FOnNodeCheckedChange(Sender);
+end;
+
 procedure TTreeNodeInterfaceProvider.TreeMainAction;
 var
   Provider: INodeProvider;
@@ -418,8 +507,11 @@ end;
 
 procedure TTreeNodeInterfaceProvider.TreeSelectionChanged;
 begin
-  if Assigned(FOnNodeSelection) then
-    FOnNodeSelection(Sender);
+  if Assigned(FOnNodeSelectionChange) then
+    FOnNodeSelectionChange(Sender);
+
+  if Assigned(FOnModalResultChange) then
+    FOnModalResultChange(Sender);
 end;
 
 end.

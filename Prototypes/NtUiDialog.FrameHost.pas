@@ -19,15 +19,17 @@ type
     procedure FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
     procedure btnCloseClick(Sender: TObject);
     procedure DefaultActionChosen(const Node: INodeProvider);
+    procedure btnSelectClick(Sender: TObject);
   private
     FFrame: TFrame;
     FFrameRef: IUnknown;
-    procedure FrameSelectionChanged(Sender: TObject);
+    FFrameModalResult: IInterface;
+    procedure FrameModalResultChanged(Sender: TObject);
   protected
-    procedure AddFrame(Frame: TFrame; AllowSelection: Boolean);
+    procedure AddFrame(Frame: TFrame; AllowModal: Boolean);
   public
-    function GetResult: INodeProvider;
-    class function Pick(AOwner: TComponent; Initializer: TFrameInitializer): INodeProvider; static;
+    property FrameModalResult: IInterface read FFrameModalResult;
+    class function Pick(AOwner: TComponent; Initializer: TFrameInitializer): IInterface; static;
     class procedure Display(Initializer: TFrameInitializer); static;
   end;
 
@@ -47,9 +49,10 @@ const
   SMALL_MARGIN = 3;
   BIG_MARGIN = 31;
 var
-  SelectionObserver: IOnNodeSelection;
+  ModalResultObservation: IHasModalResultObservation;
+  ModalCaptions: IHasModalCaptions;
   DefaultCaption: IHasDefaultCaption;
-  DefaultAction: INodeDefaultAction;
+  DefaultAction: IAllowsDefaultNodeAction;
   BottomMargin, OtherMargin: Integer;
 begin
   if not Assigned(Frame) then
@@ -58,7 +61,7 @@ begin
   FFrame := Frame;
   FFrameRef := IUnknown(FFrame);
 
-  if AllowSelection then
+  if AllowModal then
     BottomMargin := BIG_MARGIN * CurrentPPI div 96
   else
     BottomMargin := SMALL_MARGIN * CurrentPPI div 96;
@@ -71,29 +74,37 @@ begin
   FFrame.Margins.SetBounds(OtherMargin, OtherMargin, OtherMargin, BottomMargin);
   FFrame.Align := alClient;
   FFrame.TabOrder := 0;
-  btnClose.Visible := AllowSelection;
-  btnSelect.Visible := AllowSelection;
+  btnClose.Visible := AllowModal;
+  btnSelect.Visible := AllowModal;
 
   if FFrameRef.QueryInterface(IHasDefaultCaption, DefaultCaption).IsSuccess then
     Caption := DefaultCaption.DefaultCaption
   else
     Caption := FFrame.ClassName;
 
-  if AllowSelection then
+  if AllowModal then
   begin
-    // Subscribe to selection changes
-    if FFrameRef.QueryInterface(IOnNodeSelection,
-      SelectionObserver).IsSuccess then
+    // Subscribe to modal result changes
+    if FFrameRef.QueryInterface(IHasModalResultObservation,
+      ModalResultObservation).IsSuccess then
     begin
-      SelectionObserver.OnSelection := FrameSelectionChanged;
-      FrameSelectionChanged(Self);
+      ModalResultObservation.OnModalResultChanged := FrameModalResultChanged;
+      FrameModalResultChanged(Self);
     end;
 
-    // Set selection as default action
-    if FFrameRef.QueryInterface(INodeDefaultAction,
+    // Adjust button captions
+    if FFrameRef.QueryInterface(IHasModalCaptions,
+      ModalCaptions).IsSuccess then
+    begin
+      btnSelect.Caption := ModalCaptions.ConfirmationCaption;
+      btnClose.Caption := ModalCaptions.CancellationCaption;
+    end;
+
+    // Set the default action on the frame
+    if FFrameRef.QueryInterface(IAllowsDefaultNodeAction,
       DefaultAction).IsSuccess then
     begin
-      DefaultAction.MainActionCaption := 'Select';
+      DefaultAction.MainActionCaption := btnSelect.Caption;
       DefaultAction.OnMainAction := DefaultActionChosen;
     end;
   end;
@@ -104,8 +115,20 @@ begin
   Close;
 end;
 
+procedure TFrameHostDialog.btnSelectClick;
+var
+  ModalResultImpl: IHasModalResult;
+begin
+  // Retrieve the modal result from the frame
+  if FFrameRef.QueryInterface(IHasModalResult, ModalResultImpl).IsSuccess then
+    FFrameModalResult := ModalResultImpl.ModalResult
+  else
+    FFrameModalResult := nil;
+end;
+
 procedure TFrameHostDialog.DefaultActionChosen;
 begin
+  FFrameModalResult := Node;
   ModalResult := mrOk;
 end;
 
@@ -144,24 +167,13 @@ begin
   end;
 end;
 
-procedure TFrameHostDialog.FrameSelectionChanged;
+procedure TFrameHostDialog.FrameModalResultChanged;
 var
-  FocusedNodeInfo: IGetFocusedNode;
+  ModalResultImpl: IHasModalResult;
 begin
   btnSelect.Enabled := Assigned(FFrameRef) and FFrameRef.QueryInterface(
-    IGetFocusedNode, FocusedNodeInfo).IsSuccess and
-    Assigned(FocusedNodeInfo.FocusedNode);
-end;
-
-function TFrameHostDialog.GetResult;
-var
-  FocusedNodeInfo: IGetFocusedNode;
-begin
-  if not Assigned(FFrameRef) or not FFrameRef.QueryInterface(
-    IGetFocusedNode, FocusedNodeInfo).IsSuccess then
-    Exit(nil);
-
-  Result := FocusedNodeInfo.FocusedNode;
+    IHasModalResult, ModalResultImpl).IsSuccess and
+    Assigned(ModalResultImpl.ModalResult);
 end;
 
 class function TFrameHostDialog.Pick;
@@ -178,7 +190,7 @@ begin
   end;
 
   Form.ShowModal;
-  Result := Form.GetResult;
+  Result := Form.FrameModalResult;
 
   if not Assigned(Result) then
     Abort;

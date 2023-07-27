@@ -9,11 +9,12 @@ interface
 uses
   Vcl.Controls, System.Classes, Vcl.Forms, VirtualTrees, VirtualTreesEx,
   DevirtualizedTree, NtUiFrame.Search, NtUtils, NtUiCommon.Interfaces,
-  NtUiBackend.AppContainers, Vcl.Menus;
+  NtUiBackend.AppContainers, Vcl.Menus, NtUiFrame;
 
 type
   TAppContainerListFrame = class (TFrame, IHasSearch, ICanConsumeEscape,
-    IGetFocusedNode, IOnNodeSelection, IHasDefaultCaption, INodeDefaultAction)
+    IHasDefaultCaption, IAllowsDefaultNodeAction, IHasModalResult,
+    IHasModalResultObservation)
     PopupMenu: TPopupMenu;
     cmInspect: TMenuItem;
     procedure cmInspectClick(Sender: TObject);
@@ -26,7 +27,7 @@ type
   private
     Backend: TTreeNodeInterfaceProvider;
     BackendRef: IUnknown;
-    property BackendImpl: TTreeNodeInterfaceProvider read Backend implements IGetFocusedNode, IOnNodeSelection, INodeDefaultAction;
+    property BackendImpl: TTreeNodeInterfaceProvider read Backend implements IHasModalResult, IHasModalResultObservation, IAllowsDefaultNodeAction;
     property SearchImpl: TSearchFrame read SearchBox implements IHasSearch, ICanConsumeEscape;
     function DefaultCaption: String;
   protected

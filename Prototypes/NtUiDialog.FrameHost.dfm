@@ -38,5 +38,6 @@ object FrameHostDialog: TFrameHostDialog
     Default = True
     ModalResult = 1
     TabOrder = 1
+    OnClick = btnSelectClick
   end
 end
