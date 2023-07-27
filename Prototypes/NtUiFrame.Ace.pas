@@ -13,7 +13,8 @@ uses
   NtUiFrame, NtUiFrame.Hex.Edit, NtUiFrame.Guid, NtUiCommon.Interfaces;
 
 type
-  TAceFrame = class(TFrame, ICanConsumeEscape)
+  TAceFrame = class(TFrame, ICanConsumeEscape, IHasDefaultCaption,
+    IHasModalCaptions, IHasModalResult)
     cbxType: TComboBox;
     lblType: TLabel;
     lblFlags: TLabel;
@@ -50,6 +51,10 @@ type
   protected
     procedure Loaded; override;
     function ConsumesEscape: Boolean;
+    function DefaultCaption: String;
+    function GetConfirmationCaption: String;
+    function GetCancellationCaption: String;
+    function GetModalResult: IInterface;
   public
     procedure LoadType(
       AccessMaskType: Pointer;
@@ -61,7 +66,8 @@ type
 implementation
 
 uses
-  NtUtils, NtUtils.Security, UI.Colors, NtUiLib.TaskDialog;
+  NtUtils, NtUtils.Security, UI.Colors, NtUiLib.TaskDialog,
+  NtUiCommon.Prototypes;
 
 {$R *.dfm}
 
@@ -104,6 +110,11 @@ end;
 function TAceFrame.ConsumesEscape;
 begin
   Result := cbxType.DroppedDown;
+end;
+
+function TAceFrame.DefaultCaption;
+begin
+  Result := 'ACE Editor';
 end;
 
 function TAceFrame.GetAce;
@@ -156,6 +167,21 @@ begin
   Result := TAceType(cbxType.ItemIndex);
 end;
 
+function TAceFrame.GetCancellationCaption;
+begin
+  Result := 'Cancel';
+end;
+
+function TAceFrame.GetConfirmationCaption;
+begin
+  Result := 'OK';
+end;
+
+function TAceFrame.GetModalResult;
+begin
+  Result := Auto.Copy(Ace);
+end;
+
 procedure TAceFrame.Loaded;
 begin
   inherited;
@@ -166,8 +192,11 @@ end;
 
 procedure TAceFrame.LoadType;
 begin
-  Assert(Assigned(AccessMaskType));
-  FMaskType := AccessMaskType;
+  if Assigned(AccessMaskType) then
+    FMaskType := AccessMaskType
+  else
+    FMaskType := TypeInfo(TAccessMask);
+
   FGenericMapping := GenericMapping;
   UpdateMaskType;
 end;
@@ -252,4 +281,84 @@ begin
     fmxAccessMask.LoadAccessMaskType(FMaskType, FGenericMapping, True, False);
 end;
 
+{ Integration }
+
+function Initializer(
+  AccessMaskType: Pointer;
+  const GenericMapping: TGenericMapping
+): TFrameInitializer;
+begin
+  Result := function (AOwner: TForm): TFrame
+    var
+      Frame: TAceFrame absolute Result;
+    begin
+      Frame := TAceFrame.Create(AOwner);
+      try
+        Frame.LoadType(AccessMaskType, GenericMapping);
+      except
+        Frame.Free;
+        raise;
+      end;
+    end;
+end;
+
+function InitializerEx(
+  AccessMaskType: Pointer;
+  const GenericMapping: TGenericMapping;
+  const Ace: TAceData
+): TFrameInitializer;
+begin
+  Result := function (AOwner: TForm): TFrame
+    var
+      Frame: TAceFrame absolute Result;
+    begin
+      Frame := TAceFrame.Create(AOwner);
+      try
+        Frame.LoadType(AccessMaskType, GenericMapping);
+        Frame.Ace := Ace;
+      except
+        Frame.Free;
+        raise;
+      end;
+    end;
+end;
+
+function NtUiLibCreateAce(
+  Owner: TComponent;
+  AccessMaskType: Pointer;
+  const GenericMapping: TGenericMapping
+): TAceData;
+var
+  ModalResult: IInterface;
+begin
+  if not Assigned(NtUiLibHostFramePick) then
+    raise ENotSupportedException.Create('Frame host not available');
+
+  ModalResult := NtUiLibHostFramePick(Owner, Initializer(AccessMaskType,
+    GenericMapping));
+
+  Result := TAceData((ModalResult as IMemory).Data^);
+end;
+
+function NtUiLibEditAce(
+  Owner: TComponent;
+  AccessMaskType: Pointer;
+  const GenericMapping: TGenericMapping;
+  const Ace: TAceData
+): TAceData;
+var
+  ModalResult: IInterface;
+begin
+  if not Assigned(NtUiLibHostFramePick) then
+    raise ENotSupportedException.Create('Frame host not available');
+
+  ModalResult := NtUiLibHostFramePick(Owner, InitializerEx(AccessMaskType,
+    GenericMapping, Ace));
+
+  Result := TAceData((ModalResult as IMemory).Data^);
+end;
+
+initialization
+  NtUiCommon.Prototypes.NtUiLibCreateAce := NtUiLibCreateAce;
+  NtUiCommon.Prototypes.NtUiLibEditAce := NtUiLibEditAce;
 end.

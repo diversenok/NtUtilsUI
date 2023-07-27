@@ -195,7 +195,7 @@ object AceFrame: TAceFrame
             Options = [coAllowClick, coDraggable, coEnabled, coParentBidiMode, coParentColor, coResizable, coVisible, coAutoSpring, coSmartResize, coAllowFocus, coDisableAnimatedResize, coEditable, coStyleColor]
             Position = 0
             Text = 'Name'
-            Width = 252
+            Width = 256
           end>
       end
       inherited BottomPanel: TPanel
@@ -228,7 +228,7 @@ object AceFrame: TAceFrame
             Options = [coAllowClick, coDraggable, coEnabled, coParentBidiMode, coParentColor, coResizable, coVisible, coAutoSpring, coSmartResize, coAllowFocus, coDisableAnimatedResize, coEditable, coStyleColor]
             Position = 0
             Text = 'Name'
-            Width = 334
+            Width = 338
           end>
       end
       inherited BottomPanel: TPanel

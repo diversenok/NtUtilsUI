@@ -8,7 +8,7 @@ interface
 
 uses
   Ntapi.WinNt, NtUtils, NtUtils.Profiles, NtUtils.Security.AppContainer,
-  DevirtualizedTree, NtUiDialog.FrameHost, System.Classes;
+  NtUtils.Security.Acl, DevirtualizedTree, NtUiDialog.FrameHost, System.Classes;
 
 type
   TFrameInitializer = NtUiDialog.FrameHost.TFrameInitializer;
@@ -69,6 +69,21 @@ var
     Owner: TComponent;
     [opt] const DefaultUser: ISid = nil
   ): TAppContainerInfo;
+
+  { ACE }
+
+  NtUiLibCreateAce: function (
+    Owner: TComponent;
+    AccessMaskType: Pointer;
+    const GenericMapping: TGenericMapping
+  ): TAceData;
+
+  NtUiLibEditAce: function (
+    Owner: TComponent;
+    AccessMaskType: Pointer;
+    const GenericMapping: TGenericMapping;
+    const Ace: TAceData
+  ): TAceData;
 
 implementation
 

@@ -23,7 +23,7 @@ object FrameHostDialog: TFrameHostDialog
     Width = 75
     Height = 25
     Anchors = [akLeft, akBottom]
-    Caption = 'Close'
+    Caption = 'Cancel'
     ModalResult = 8
     TabOrder = 0
     OnClick = btnCloseClick
@@ -36,7 +36,6 @@ object FrameHostDialog: TFrameHostDialog
     Anchors = [akRight, akBottom]
     Caption = 'Select'
     Default = True
-    ModalResult = 1
     TabOrder = 1
     OnClick = btnSelectClick
   end

@@ -124,6 +124,8 @@ begin
     FFrameModalResult := ModalResultImpl.ModalResult
   else
     FFrameModalResult := nil;
+
+  ModalResult := mrOk;
 end;
 
 procedure TFrameHostDialog.DefaultActionChosen;
