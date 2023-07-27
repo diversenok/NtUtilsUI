@@ -1,14 +1,15 @@
 inherited AclFrame: TAclFrame
-  Width = 785
-  Height = 265
-  Constraints.MinHeight = 145
+  Width = 620
+  Height = 230
+  Constraints.MinHeight = 165
+  Constraints.MinWidth = 320
   ParentShowHint = False
   ShowHint = True
   object Tree: TDevirtualizedTree
     Left = 0
-    Top = 24
-    Width = 757
-    Height = 241
+    Top = 25
+    Width = 592
+    Height = 205
     AccessibleName = 'PopupMenu'
     Align = alClient
     ClipboardFormats.Strings = (
@@ -26,6 +27,7 @@ inherited AclFrame: TAclFrame
     TreeOptions.PaintOptions = [toHideFocusRect, toHotTrack, toShowButtons, toShowDropmark, toThemeAware, toUseBlendedImages, toUseExplorerTheme]
     TreeOptions.SelectionOptions = [toFullRowSelect, toMultiSelect, toRightClickSelect]
     OnAddToSelection = SelectionChanged
+    OnDblClick = cmEditClick
     OnGetPopupMenu = TreeGetPopupMenu
     OnRemoveFromSelection = SelectionChanged
     Touch.InteractiveGestures = [igPan, igPressAndTap]
@@ -37,7 +39,7 @@ inherited AclFrame: TAclFrame
         Options = [coAllowClick, coDraggable, coEnabled, coParentBidiMode, coParentColor, coResizable, coVisible, coAutoSpring, coSmartResize, coAllowFocus, coDisableAnimatedResize, coEditable, coStyleColor]
         Position = 0
         Text = 'Use'
-        Width = 100
+        Width = 110
       end
       item
         Options = [coAllowClick, coDraggable, coEnabled, coParentBidiMode, coParentColor, coResizable, coAutoSpring, coSmartResize, coAllowFocus, coDisableAnimatedResize, coEditable, coStyleColor]
@@ -48,50 +50,50 @@ inherited AclFrame: TAclFrame
       item
         Options = [coAllowClick, coDraggable, coEnabled, coParentBidiMode, coParentColor, coResizable, coVisible, coAutoSpring, coSmartResize, coAllowFocus, coDisableAnimatedResize, coEditable, coStyleColor]
         Position = 2
-        Text = 'Access'
-        Width = 200
-      end
-      item
-        Options = [coAllowClick, coDraggable, coEnabled, coParentBidiMode, coParentColor, coResizable, coAutoSpring, coSmartResize, coAllowFocus, coDisableAnimatedResize, coEditable, coStyleColor]
-        Position = 3
-        Text = 'Access (numeric)'
-        Width = 100
-      end
-      item
-        Options = [coAllowClick, coDraggable, coEnabled, coParentBidiMode, coParentColor, coResizable, coVisible, coAutoSpring, coSmartResize, coAllowFocus, coDisableAnimatedResize, coEditable, coStyleColor]
-        Position = 4
         Text = 'SID'
         Width = 220
       end
       item
         Options = [coAllowClick, coDraggable, coEnabled, coParentBidiMode, coParentColor, coResizable, coAutoSpring, coSmartResize, coAllowFocus, coDisableAnimatedResize, coEditable, coStyleColor]
-        Position = 5
+        Position = 3
         Text = 'SID (raw)'
         Width = 280
       end
       item
         Options = [coAllowClick, coDraggable, coEnabled, coParentBidiMode, coParentColor, coResizable, coAutoSpring, coSmartResize, coAllowFocus, coDisableAnimatedResize, coEditable, coStyleColor]
-        Position = 6
+        Position = 4
         Text = 'Server SID'
         Width = 220
       end
       item
         Options = [coAllowClick, coDraggable, coEnabled, coParentBidiMode, coParentColor, coResizable, coAutoSpring, coSmartResize, coAllowFocus, coDisableAnimatedResize, coEditable, coStyleColor]
-        Position = 7
+        Position = 5
         Text = 'Server SID (raw)'
         Width = 280
       end
       item
         Options = [coAllowClick, coDraggable, coEnabled, coParentBidiMode, coParentColor, coResizable, coAutoSpring, coSmartResize, coAllowFocus, coDisableAnimatedResize, coEditable, coStyleColor]
-        Position = 8
+        Position = 6
         Text = 'Condition'
         Width = 180
       end
       item
         Options = [coAllowClick, coDraggable, coEnabled, coParentBidiMode, coParentColor, coResizable, coVisible, coAutoSpring, coSmartResize, coAllowFocus, coDisableAnimatedResize, coEditable, coStyleColor]
+        Position = 7
+        Text = 'Access'
+        Width = 230
+      end
+      item
+        Options = [coAllowClick, coDraggable, coEnabled, coParentBidiMode, coParentColor, coResizable, coAutoSpring, coSmartResize, coAllowFocus, coDisableAnimatedResize, coEditable, coStyleColor]
+        Position = 8
+        Text = 'Access (numeric)'
+        Width = 100
+      end
+      item
+        Options = [coAllowClick, coDraggable, coEnabled, coParentBidiMode, coParentColor, coResizable, coAutoSpring, coSmartResize, coAllowFocus, coDisableAnimatedResize, coEditable, coStyleColor]
         Position = 9
         Text = 'Flags'
-        Width = 200
+        Width = 220
       end
       item
         Options = [coAllowClick, coDraggable, coEnabled, coParentBidiMode, coParentColor, coResizable, coAutoSpring, coSmartResize, coAllowFocus, coDisableAnimatedResize, coEditable, coStyleColor]
@@ -114,10 +116,10 @@ inherited AclFrame: TAclFrame
   end
   object RightPanel: TPanel
     AlignWithMargins = True
-    Left = 760
-    Top = 24
+    Left = 595
+    Top = 25
     Width = 25
-    Height = 241
+    Height = 205
     Margins.Top = 0
     Margins.Right = 0
     Margins.Bottom = 0
@@ -127,7 +129,7 @@ inherited AclFrame: TAclFrame
     TabOrder = 1
     object btnAdd: TButton
       Left = 0
-      Top = 58
+      Top = 48
       Width = 25
       Height = 25
       Hint = 'Add a new ACE (Ctrl+N)'
@@ -138,7 +140,7 @@ inherited AclFrame: TAclFrame
     end
     object btnCanonicalize: TButton
       Left = 0
-      Top = 108
+      Top = 90
       Width = 25
       Height = 25
       Hint = 'Canonicalize/normalize the ACL (Ctrl+Shift+N)'
@@ -150,7 +152,7 @@ inherited AclFrame: TAclFrame
     end
     object btnDelete: TButton
       Left = 0
-      Top = 157
+      Top = 132
       Width = 25
       Height = 25
       Hint = 'Delete selected items'
@@ -162,7 +164,7 @@ inherited AclFrame: TAclFrame
     end
     object btnDown: TButton
       Left = 0
-      Top = 216
+      Top = 180
       Width = 25
       Height = 25
       Hint = 'Move selected items down'
@@ -189,23 +191,24 @@ inherited AclFrame: TAclFrame
     AlignWithMargins = True
     Left = 0
     Top = 0
-    Width = 785
+    Width = 620
     Height = 21
     Margins.Left = 0
     Margins.Top = 0
     Margins.Right = 0
+    Margins.Bottom = 4
     Align = alTop
     Constraints.MinHeight = 21
     Constraints.MinWidth = 240
     TabOrder = 2
     inherited Splitter: TSplitter
-      Left = 619
+      Left = 454
     end
     inherited tbxSearchBox: TButtonedEdit
-      Width = 619
+      Width = 454
     end
     inherited cbxColumn: TComboBox
-      Left = 625
+      Left = 460
     end
   end
   object PopupMenu: TPopupMenu
@@ -213,6 +216,7 @@ inherited AclFrame: TAclFrame
     Top = 88
     object cmEdit: TMenuItem
       Caption = 'Edit...'
+      Default = True
       ShortCut = 113
       OnClick = cmEditClick
     end

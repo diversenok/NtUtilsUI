@@ -9,22 +9,6 @@ interface
 uses
   Ntapi.WinNt, DevirtualizedTree, NtUtils, NtUtils.Security.Acl;
 
-const
-  colUse = 0;
-  colAceType = 1;
-  colAceAccessMask = 2;
-  colAceAccessMaskNumeric = 3;
-  colSid = 4;
-  colSidRaw = 5;
-  colServerSid = 6;
-  colServerSidRaw = 7;
-  colCondition = 8;
-  colAceFlags = 9;
-  colObjectType = 10;
-  colInheritedObjectType = 11;
-  colSddl = 12;
-  colMax = 13;
-
 type
   IAceNode = interface (INodeProvider)
     ['{67AD9995-0881-4561-8CFD-25178E8F5537}']
@@ -44,7 +28,7 @@ function UiLibMakeAceNode(
 // Make sure ACE-specific columns are visible in the tree
 procedure UiLibUnhideAceSpecificColumns(
   Tree: TDevirtualizedTree;
-  AceType: TAceType
+  const Ace: TAceData
 );
 
 // Add a new ACE node to the ACL tree control preserving canonical order
@@ -77,6 +61,22 @@ uses
   NtUiLib.Errors, VirtualTrees, DevirtualizedTree.Provider,
   DelphiUiLib.Reflection, DelphiUiLib.Strings, DelphiUiLib.Reflection.Strings,
   UI.Colors, UI.Helper, VirtualTrees.Types, Vcl.Graphics;
+
+const
+  colUse = 0;
+  colAceType = 1;
+  colSid = 2;
+  colSidRaw = 3;
+  colServerSid = 4;
+  colServerSidRaw = 5;
+  colCondition = 6;
+  colAceAccessMask = 7;
+  colAceAccessMaskNumeric = 8;
+  colAceFlags = 9;
+  colObjectType = 10;
+  colInheritedObjectType = 11;
+  colSddl = 12;
+  colMax = 13;
 
 type
   TAceNode = class (TNodeProvider, IAceNode)
@@ -123,9 +123,9 @@ begin
   else if FAce.AceType = SYSTEM_MANDATORY_LABEL_ACE_TYPE then
     FColumnText[colUse] := 'Mandatory Label'
   else if FAce.AceType = SYSTEM_RESOURCE_ATTRIBUTE_ACE_TYPE then
-    FColumnText[colUse] := 'Resource Attribute'
+    FColumnText[colUse] := 'Attribute'
   else if FAce.AceType = SYSTEM_SCOPED_POLICY_ID_ACE_TYPE then
-    FColumnText[colUse] := 'Scoped Policy ID'
+    FColumnText[colUse] := 'Policy ID'
   else if FAce.AceType = SYSTEM_PROCESS_TRUST_LABEL_ACE_TYPE then
     FColumnText[colUse] := 'Trust Label'
   else if FAce.AceType = SYSTEM_ACCESS_FILTER_ACE_TYPE then
@@ -172,14 +172,14 @@ begin
     ACE_OBJECT_TYPE_PRESENT) then
     FColumnText[colObjectType] := RtlxGuidToString(FAce.ObjectType)
   else
-    FColumnText[colObjectType] := '(none)';
+    FColumnText[colObjectType] := '';
 
   if (FAce.AceType in ObjectAces) and BitTest(FAce.ObjectFlags and 
     ACE_INHERITED_OBJECT_TYPE_PRESENT) then
     FColumnText[colInheritedObjectType] := RtlxGuidToString(
       FAce.InheritedObjectType)
   else
-    FColumnText[colInheritedObjectType] := '(none)';
+    FColumnText[colInheritedObjectType] := '';
 
   if not AdvxAceToSddl(FAce, FColumnText[colSddl]).IsSuccess then
     FColumnText[colSddl] := '(invalid)';
@@ -229,14 +229,19 @@ end;
 procedure UiLibUnhideAceSpecificColumns;
 begin
   // Condition for callback ACEs
-  if AceType in CallbackAces then
+  if Ace.AceType in CallbackAces then
     Tree.Header.Columns[colCondition].Options :=
       Tree.Header.Columns[colCondition].Options + [coVisible]
 
   // Server SID for compound ACEs
-  else if AceType = ACCESS_ALLOWED_COMPOUND_ACE_TYPE then
+  else if Ace.AceType = ACCESS_ALLOWED_COMPOUND_ACE_TYPE then
     Tree.Header.Columns[colServerSid].Options :=
       Tree.Header.Columns[colServerSid].Options + [coVisible];
+
+  // Flags
+  if HasAny(Ace.AceFlags) then
+    Tree.Header.Columns[colAceFlags].Options :=
+      Tree.Header.Columns[colAceFlags].Options + [coVisible];
 end;
 
 function UiLibChooseAceIndex(
@@ -285,7 +290,7 @@ begin
     Tree.AddChildEx(nil, NewNode);
 
   // Update column visibility
-  UiLibUnhideAceSpecificColumns(Tree, Ace.AceType);
+  UiLibUnhideAceSpecificColumns(Tree, Ace);
 end;
 
 procedure UiLibAddAclNodes;
@@ -310,7 +315,7 @@ begin
   for i := 0 to High(Aces) do
   begin
     Tree.AddChildEx(nil, UiLibMakeAceNode(Aces[i], AccessMaskType));
-    UiLibUnhideAceSpecificColumns(Tree, Aces[i].AceType);
+    UiLibUnhideAceSpecificColumns(Tree, Aces[i]);
   end;
 end;
 

@@ -45,8 +45,6 @@ type
   private
     FMaskType: Pointer;
     FGenericMapping: TGenericMapping;
-    Backend: TTreeNodeInterfaceProvider;
-    BackendRef: IUnknown;
     procedure AclChanged;
     procedure btnUpIconChanged(ImageList: TImageList; ImageIndex: Integer);
     procedure btnAddIconChanged(ImageList: TImageList; ImageIndex: Integer);
@@ -54,10 +52,10 @@ type
     procedure btnDeleteIconChanged(ImageList: TImageList; ImageIndex: Integer);
     procedure btnDownIconChanged(ImageList: TImageList; ImageIndex: Integer);
     property SearchImpl: TSearchFrame read Search implements IHasSearch, ICanConsumeEscape;
-    property BackendImpl: TTreeNodeInterfaceProvider read Backend implements ICanShowStatus;
   protected
     procedure LoadedOnce; override;
   public
+    procedure SetStatus(const Status: TNtxStatus);
     procedure LoadAcl(
       [opt] const Acl: IAcl;
       MaskType: Pointer;
@@ -69,7 +67,7 @@ implementation
 
 uses
   NtUiBackend.Acl, UI.Helper, Resources.Icon.Add, Resources.Icon.Delete,
-  Resources.Icon.Down, Resources.Icon.Up, Resources.Icon.Verify,
+  Resources.Icon.Down, Resources.Icon.Up, Resources.Icon.Verify, NtUiLib.Errors,
   NtUiCommon.Prototypes;
 
 {$R *.dfm}
@@ -157,7 +155,7 @@ begin
 
   // Invoke the editor dialog and save the result
   Node.Ace := NtUiLibEditAce(Self, FMaskType, FGenericMapping, Node.Ace);
-  UiLibUnhideAceSpecificColumns(Tree, Node.Ace.AceType);
+  UiLibUnhideAceSpecificColumns(Tree, Node.Ace);
   AclChanged;
 end;
 
@@ -177,9 +175,6 @@ begin
   RegisterResourceIcon(RESOURSES_ICON_DELETE, btnDeleteIconChanged);
   RegisterResourceIcon(RESOURSES_ICON_DOWN, btnDownIconChanged);
   btnAdd.Enabled := Assigned(NtUiLibCreateAce);
-
-  Backend := TTreeNodeInterfaceProvider.Create(Tree);
-  BackendRef := Backend; // Make an owning reference
   Search.AttachToTree(Tree);
 end;
 
@@ -190,9 +185,16 @@ begin
   btnDown.Enabled := Tree.SelectedCount > 0;
 end;
 
+procedure TAclFrame.SetStatus;
+begin
+  if Status.IsSuccess then
+    Tree.NoItemsText := 'No items to display'
+  else
+    Tree.NoItemsText := 'Unable to query:'#$D#$A + Status.ToString;
+end;
+
 procedure TAclFrame.TreeGetPopupMenu;
 begin
-  inherited;
   cmEdit.Visible := Assigned(NtUiLibEditAce) and (Tree.SelectedCount = 1);
 end;
 
