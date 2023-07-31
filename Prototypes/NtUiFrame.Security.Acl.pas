@@ -118,7 +118,7 @@ begin
     Exit;
 
   // Open the handle
-  Result := FContext.HandleProvider(hxObject, SecurityReadAccess(
+  Result := FContext.HandleProvider(hxObject, SecurityWriteAccess(
     SECURITY_INFORMATION[FAclType]));
 
   if not Result.IsSuccess then
