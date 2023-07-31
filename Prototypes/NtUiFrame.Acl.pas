@@ -14,7 +14,8 @@ uses
   NtUiFrame.Search, NtUiCommon.Interfaces;
 
 type
-  TAclFrame = class(TBaseFrame, ICanConsumeEscape, ICanShowStatus)
+  TAclFrame = class(TBaseFrame, ICanConsumeEscape, ICanShowStatus,
+    IObservesActivation)
     Tree: TDevirtualizedTree;
     btnUp: TButton;
     btnDown: TButton;
@@ -53,7 +54,7 @@ type
     procedure btnDeleteIconChanged(ImageList: TImageList; ImageIndex: Integer);
     procedure btnDownIconChanged(ImageList: TImageList; ImageIndex: Integer);
     function GetAceCount: Integer;
-    property SearchImpl: TSearchFrame read Search implements ICanConsumeEscape;
+    property SearchImpl: TSearchFrame read Search implements ICanConsumeEscape, IObservesActivation;
   protected
     procedure LoadedOnce; override;
   public

@@ -13,7 +13,7 @@ uses
   NtUiCommon.Interfaces, System.Actions, Vcl.ActnList;
 
 type
-  TSearchFrame = class(TBaseFrame, ICanConsumeEscape)
+  TSearchFrame = class(TBaseFrame, ICanConsumeEscape, IObservesActivation)
     tbxSearchBox: TButtonedEdit;
     cbxColumn: TComboBox;
     Splitter: TSplitter;
@@ -37,6 +37,7 @@ type
     procedure ColumnVisibilityChanged(const Sender: TBaseVirtualTree; const Column: TColumnIndex; Visible: Boolean);
     procedure LeftButtonIconChanged(ImageList: TImageList; ImageIndex: Integer);
     procedure RightButtonIconChanged(ImageList: TImageList; ImageIndex: Integer);
+    procedure SetActive(Active: Boolean);
   protected
     procedure LoadedOnce; override;
   public
@@ -151,6 +152,14 @@ procedure TSearchFrame.RightButtonIconChanged;
 begin
   tbxSearchBox.Images := ImageList;
   tbxSearchBox.RightButton.ImageIndex := ImageIndex;
+end;
+
+procedure TSearchFrame.SetActive;
+begin
+  if Active then
+    ActionList.State := asNormal
+  else
+    ActionList.State := asSuspended;
 end;
 
 procedure TSearchFrame.tbxSearchBoxChange;

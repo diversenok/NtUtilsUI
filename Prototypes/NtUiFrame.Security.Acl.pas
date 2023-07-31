@@ -10,12 +10,12 @@ uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes,
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, NtUiFrame,
   NtUiFrame.Acl, Ntapi.WinNt, NtUtils, NtUiCommon.Prototypes, System.Actions,
-  Vcl.ActnList;
+  Vcl.ActnList, NtUiCommon.Interfaces;
 
 type
   TAclType = (aiDacl, aiLabel, aiTrust, aiSacl, aiAttribute, aiScope, aiFilter);
 
-  TAclSecurityFrame = class(TFrame)
+  TAclSecurityFrame = class(TFrame, IHasDefaultCaption, ICanConsumeEscape, IObservesActivation)
     AclFrame: TAclFrame;
     btnRefresh: TButton;
     btnApply: TButton;
@@ -36,12 +36,22 @@ type
     procedure SetControlFlags(const Value: TSecurityDescriptorControl);
     function Refresh: TNtxStatus;
     function Apply: TNtxStatus;
+    function GetDefaultCaption: String;
+    procedure SetActive(Active: Boolean);
+    function GetCanConsumeEscapeImpl: ICanConsumeEscape;
+    property CanConsumeEscapeImpl: ICanConsumeEscape read GetCanConsumeEscapeImpl implements ICanConsumeEscape;
   public
     procedure LoadFor(
       AclType: TAclType;
       const Context: TNtUiLibSecurityContext
     );
   end;
+
+// Construct a frame initilizer for an ACL security editor
+function NtUiLibAclSecurityFrameInitializer(
+  AclType: TAclType;
+  const Context: TNtUiLibSecurityContext
+): TFrameInitializer;
 
 implementation
 
@@ -71,6 +81,11 @@ const
     PROCESS_TRUST_LABEL_SECURITY_INFORMATION, SACL_SECURITY_INFORMATION,
     ATTRIBUTE_SECURITY_INFORMATION, SCOPE_SECURITY_INFORMATION,
     ACCESS_FILTER_SECURITY_INFORMATION
+  );
+
+  ACL_CAPTIONS: array [TAclType] of String = (
+    'DACL', 'Mandatory Label', 'Trust Label', 'SACL', 'Resource Attributes',
+    'Scoped Policy', 'Access Filter'
   );
 
 { TAclSecurityFrame }
@@ -129,6 +144,11 @@ begin
   Refresh.RaiseOnError;
 end;
 
+function TAclSecurityFrame.GetCanConsumeEscapeImpl;
+begin
+  Result := AclFrame;
+end;
+
 function TAclSecurityFrame.GetControlFlags;
 begin
   Result := 0;
@@ -147,6 +167,11 @@ begin
 
   if cbxProtected.Checked then
     Result := Result or FLAG_PROTECTED[FAclType = aiDacl];
+end;
+
+function TAclSecurityFrame.GetDefaultCaption;
+begin
+  Result := ACL_CAPTIONS[FAclType];
 end;
 
 procedure TAclSecurityFrame.LoadFor;
@@ -212,6 +237,16 @@ begin
     AclFrame.LoadAcl(SD.Sacl, FContext.AccessMaskType, FContext.GenericMapping);
 end;
 
+procedure TAclSecurityFrame.SetActive;
+begin
+  if Active then
+    ActionList.State := asNormal
+  else
+    ActionList.State := asSuspended;
+
+  (AclFrame as IObservesActivation).SetActive(Active);
+end;
+
 procedure TAclSecurityFrame.SetControlFlags;
 begin
   cbxPresent.Checked := BitTest(Value and FLAG_PRESENT[FAclType = aiDacl]);
@@ -219,6 +254,24 @@ begin
   cbxInheritReq.Checked := BitTest(Value and FLAG_INHERIT_REQ[FAclType = aiDacl]);
   cbxInherited.Checked := BitTest(Value and FLAG_INHERITED[FAclType = aiDacl]);
   cbxProtected.Checked := BitTest(Value and FLAG_PROTECTED[FAclType = aiDacl]);
+end;
+
+{ Integration }
+
+function NtUiLibAclSecurityFrameInitializer;
+begin
+  Result := function (AOwner: TComponent): TFrame
+    var
+      Frame: TAclSecurityFrame absolute Result;
+    begin
+      Frame := TAclSecurityFrame.Create(AOwner);
+      try
+        Frame.LoadFor(AclType, Context)
+      except
+        Frame.Free;
+        raise;
+      end;
+    end;
 end;
 
 end.

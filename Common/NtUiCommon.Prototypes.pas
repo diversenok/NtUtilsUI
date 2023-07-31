@@ -92,6 +92,8 @@ var
     const Ace: TAceData
   ): TAceData;
 
+  { Security }
+
 type
   TNtUiLibHandleProvider = reference to function (
     out Handle: IHandle;
