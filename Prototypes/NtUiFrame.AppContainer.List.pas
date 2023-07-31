@@ -12,7 +12,7 @@ uses
   NtUiBackend.AppContainers, Vcl.Menus, NtUiFrame;
 
 type
-  TAppContainerListFrame = class (TFrame, IHasSearch, ICanConsumeEscape,
+  TAppContainerListFrame = class (TFrame, ICanConsumeEscape,
     IHasDefaultCaption, IAllowsDefaultNodeAction, IHasModalResult,
     IHasModalResultObservation)
     PopupMenu: TPopupMenu;
@@ -28,7 +28,7 @@ type
     Backend: TTreeNodeInterfaceProvider;
     BackendRef: IUnknown;
     property BackendImpl: TTreeNodeInterfaceProvider read Backend implements IHasModalResult, IHasModalResultObservation, IAllowsDefaultNodeAction;
-    property SearchImpl: TSearchFrame read SearchBox implements IHasSearch, ICanConsumeEscape;
+    property SearchImpl: TSearchFrame read SearchBox implements ICanConsumeEscape;
     function DefaultCaption: String;
   protected
     procedure Loaded; override;

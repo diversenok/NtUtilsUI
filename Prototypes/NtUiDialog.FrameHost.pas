@@ -152,15 +152,9 @@ end;
 
 procedure TFrameHostDialog.FormKeyDown;
 var
-  Search: IHasSearch;
   Consumer: ICanConsumeEscape;
 begin
-  if (Shift = [ssCtrl]) and (Key = Ord('F')) and
-    Assigned(FFrameRef) and FFrameRef.QueryInterface(IHasSearch,
-    Search).IsSuccess then
-    Search.SetSearchFocus
-
-  else if (Key = VK_ESCAPE) and (not Assigned(FFrameRef) or not
+  if (Key = VK_ESCAPE) and (not Assigned(FFrameRef) or not
     FFrameRef.QueryInterface(ICanConsumeEscape, Consumer).IsSuccess or
     not Consumer.ConsumesEscape) then
   begin

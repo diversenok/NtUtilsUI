@@ -12,7 +12,7 @@ uses
   NtUiFrame.Search, NtUiCommon.Interfaces, NtUiBackend.UserProfiles, NtUiFrame;
 
 type
-  TUserProfilesFrame = class(TFrame, IHasSearch, ICanConsumeEscape,
+  TUserProfilesFrame = class(TFrame, ICanConsumeEscape,
     IHasDefaultCaption, IAllowsDefaultNodeAction, IHasModalResult,
     IHasModalResultObservation)
   published
@@ -22,7 +22,7 @@ type
     Backend: TTreeNodeInterfaceProvider;
     BackendRef: IUnknown;
     property BackendImpl: TTreeNodeInterfaceProvider read Backend implements IHasModalResult, IHasModalResultObservation, IAllowsDefaultNodeAction;
-    property SearchImpl: TSearchFrame read SearchBox implements IHasSearch, ICanConsumeEscape;
+    property SearchImpl: TSearchFrame read SearchBox implements ICanConsumeEscape;
     function DefaultCaption: String;
   protected
     procedure Loaded; override;

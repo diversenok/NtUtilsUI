@@ -45,4 +45,11 @@ inherited SearchFrame: TSearchFrame
     Items.Strings = (
       'All visible columns')
   end
+  object ActionList: TActionList
+    Left = 168
+    object ActionSetFocus: TAction
+      ShortCut = 16454
+      OnExecute = ActionSetFocusExecute
+    end
+  end
 end

@@ -12,7 +12,7 @@ uses
   NtUiCommon.Interfaces;
 
 type
-  TAppContainerListAllUsersFrame = class (TFrame, IHasSearch, ICanConsumeEscape,
+  TAppContainerListAllUsersFrame = class (TFrame, ICanConsumeEscape,
     IHasDefaultCaption, IAllowsDefaultNodeAction, IHasModalResult,
     IHasModalResultObservation)
   published
@@ -23,11 +23,9 @@ type
     procedure btnSelectUserClick(Sender: TObject);
   private
     FUser: ISid;
-    function GetHasSearchImpl: IHasSearch;
     function GetCanConsumeEscapeImpl: ICanConsumeEscape;
     function GetNodeDefaultActionImpl: IAllowsDefaultNodeAction;
     function GetModalResultObservation: IHasModalResultObservation;
-    property HasSearchImpl: IHasSearch read GetHasSearchImpl implements IHasSearch;
     property CanConsumeEscapeImpl: ICanConsumeEscape read GetCanConsumeEscapeImpl implements ICanConsumeEscape;
     property NodeDefaultActionImpl: IAllowsDefaultNodeAction read GetNodeDefaultActionImpl implements IAllowsDefaultNodeAction;
     property ModalResultObservationImpl: IHasModalResultObservation read GetModalResultObservation implements IHasModalResult, IHasModalResultObservation;
@@ -54,11 +52,6 @@ begin
 end;
 
 function TAppContainerListAllUsersFrame.GetCanConsumeEscapeImpl;
-begin
-  Result := AppContainersFrame;
-end;
-
-function TAppContainerListAllUsersFrame.GetHasSearchImpl;
 begin
   Result := AppContainersFrame;
 end;

@@ -10,19 +10,22 @@ uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes,
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls,
   Vcl.ExtCtrls, VirtualTrees, DevirtualizedTree, NtUiFrame,
-  NtUiCommon.Interfaces;
+  NtUiCommon.Interfaces, System.Actions, Vcl.ActnList;
 
 type
-  TSearchFrame = class(TBaseFrame, IHasSearch, ICanConsumeEscape)
+  TSearchFrame = class(TBaseFrame, ICanConsumeEscape)
     tbxSearchBox: TButtonedEdit;
     cbxColumn: TComboBox;
     Splitter: TSplitter;
+    ActionList: TActionList;
+    ActionSetFocus: TAction;
     procedure tbxSearchBoxChange(Sender: TObject);
     procedure tbxSearchBoxRightButtonClick(Sender: TObject);
     procedure tbxSearchBoxKeyPress(Sender: TObject; var Key: Char);
     procedure cbxColumnChange(Sender: TObject);
     procedure tbxSearchBoxKeyDown(Sender: TObject; var Key: Word;
       Shift: TShiftState);
+    procedure ActionSetFocusExecute(Sender: TObject);
   private
     FTree: TDevirtualizedTree;
     FColumnIndexes: TArray<TColumnIndex>;
@@ -44,7 +47,6 @@ type
     property OnQueryChange: TNotifyEvent read FOnQueryChange write FOnQueryChange;
     procedure AttachToTree(Tree: TDevirtualizedTree);
     procedure ApplySearch;
-    procedure SetSearchFocus;
     function ConsumesEscape: Boolean;
   end;
 
@@ -57,6 +59,11 @@ uses
 {$R '..\Icons\SearchBox.res'}
 
 { TSearchFrame }
+
+procedure TSearchFrame.ActionSetFocusExecute;
+begin
+  tbxSearchBox.SetFocus;
+end;
 
 procedure TSearchFrame.ApplySearch;
 var
@@ -144,11 +151,6 @@ procedure TSearchFrame.RightButtonIconChanged;
 begin
   tbxSearchBox.Images := ImageList;
   tbxSearchBox.RightButton.ImageIndex := ImageIndex;
-end;
-
-procedure TSearchFrame.SetSearchFocus;
-begin
-  tbxSearchBox.SetFocus;
 end;
 
 procedure TSearchFrame.tbxSearchBoxChange;
