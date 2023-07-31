@@ -50,9 +50,16 @@ function UiLibIsCanonicalAcl(
   Tree: TDevirtualizedTree
 ): Boolean;
 
+// Reorder ACEs in an ACL control
 procedure UiLibCanonicalizeAcl(
   Tree: TDevirtualizedTree
 );
+
+// Construct an ACL from ACEs in a control
+function UiLibCollectAcl(
+  Tree: TDevirtualizedTree;
+  out Acl: IAcl
+): TNtxStatus;
 
 implementation
 
@@ -371,6 +378,32 @@ begin
   for Category := Low(TAceCategory) to High(TAceCategory) do
     for AceNode in Aces[Category] do
       Tree.MoveTo(AceNode.Node, Tree.RootNode, amAddChildLast, False);
+end;
+
+function UiLibCollectAcl;
+var
+  Count: Integer;
+  Aces: TArray<TAceData>;
+  Node: PVirtualNode;
+  AceNode: IAceNode;
+begin
+  Count := 0;
+
+  for Node in Tree.Nodes do
+    if Node.HasProvider(IAceNode) then
+      Inc(Count);
+
+  SetLength(Aces, Count);
+  Count := 0;
+
+  for Node in Tree.Nodes do
+    if Node.TryGetProvider(IAceNode, AceNode) then
+    begin
+      Aces[Count] := AceNode.Ace;
+      Inc(Count);
+    end;
+
+  Result := RtlxBuildAcl(Acl, Aces);
 end;
 
 end.

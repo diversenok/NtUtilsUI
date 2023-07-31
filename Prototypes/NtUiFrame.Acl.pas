@@ -45,12 +45,14 @@ type
   private
     FMaskType: Pointer;
     FGenericMapping: TGenericMapping;
+    FOnAclChange: TNotifyEvent;
     procedure AclChanged;
     procedure btnUpIconChanged(ImageList: TImageList; ImageIndex: Integer);
     procedure btnAddIconChanged(ImageList: TImageList; ImageIndex: Integer);
     procedure btnCanonicalizeIconChanged(ImageList: TImageList; ImageIndex: Integer);
     procedure btnDeleteIconChanged(ImageList: TImageList; ImageIndex: Integer);
     procedure btnDownIconChanged(ImageList: TImageList; ImageIndex: Integer);
+    function GetAceCount: Integer;
     property SearchImpl: TSearchFrame read Search implements IHasSearch, ICanConsumeEscape;
   protected
     procedure LoadedOnce; override;
@@ -61,6 +63,9 @@ type
       MaskType: Pointer;
       const GenericMapping: TGenericMapping
     );
+    property AceCount: Integer read GetAceCount;
+    function GetAcl(out Acl: IAcl): TNtxStatus;
+    property OnAclChange: TNotifyEvent read FOnAclChange write FOnAclChange;
   end;
 
 implementation
@@ -78,6 +83,9 @@ procedure TAclFrame.AclChanged;
 begin
   btnCanonicalize.Enabled := not UiLibIsCanonicalAcl(Tree);
   SelectionChanged(Tree, nil);
+
+  if Assigned(FOnAclChange) then
+    FOnAclChange(Self);
 end;
 
 procedure TAclFrame.btnAddClick;
@@ -157,6 +165,22 @@ begin
   Node.Ace := NtUiLibEditAce(Self, FMaskType, FGenericMapping, Node.Ace);
   UiLibUnhideAceSpecificColumns(Tree, Node.Ace);
   AclChanged;
+end;
+
+function TAclFrame.GetAceCount;
+var
+  Node: PVirtualNode;
+begin
+  Result := 0;
+
+  for Node in Tree.Nodes do
+    if Node.HasProvider(IAceNode) then
+      Inc(Result);
+end;
+
+function TAclFrame.GetAcl;
+begin
+  Result := UiLibCollectAcl(Tree, Acl);
 end;
 
 procedure TAclFrame.LoadAcl;

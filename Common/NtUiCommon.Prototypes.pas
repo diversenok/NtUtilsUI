@@ -8,7 +8,8 @@ interface
 
 uses
   Ntapi.WinNt, NtUtils, NtUtils.Profiles, NtUtils.Security.AppContainer,
-  NtUtils.Security.Acl, DevirtualizedTree, NtUiDialog.FrameHost, System.Classes;
+  NtUtils.Security, NtUtils.Security.Acl,
+  DevirtualizedTree, NtUiDialog.FrameHost, System.Classes;
 
 type
   TFrameInitializer = NtUiDialog.FrameHost.TFrameInitializer;
@@ -84,6 +85,20 @@ var
     const GenericMapping: TGenericMapping;
     const Ace: TAceData
   ): TAceData;
+
+type
+  TNtUiLibHandleProvider = reference to function (
+    out Handle: IHandle;
+    DesiredAccess: TAccessMask
+  ): TNtxStatus;
+
+  TNtUiLibSecurityContext = record
+    HandleProvider: TNtUiLibHandleProvider;
+    AccessMaskType: Pointer; // TypeInfo(...)
+    GenericMapping: TGenericMapping;
+    QueryFunction: TSecurityQueryFunction;
+    SetFunction: TSecuritySetFunction;
+  end;
 
 implementation
 
