@@ -232,7 +232,7 @@ begin
     raise ENotSupportedException.Create('Frame host not available');
 
   NtUiLibHostFrameShow(
-    function (AOwner: TForm): TFrame
+    function (AOwner: TComponent): TFrame
     var
       Frame: TBitsFrame absolute Result;
     begin
@@ -259,7 +259,7 @@ begin
     raise ENotSupportedException.Create('Frame host not available');
 
   NtUiLibHostFrameShow(
-    function (AOwner: TForm): TFrame
+    function (AOwner: TComponent): TFrame
     var
       Frame: TBitsFrame absolute Result;
     begin

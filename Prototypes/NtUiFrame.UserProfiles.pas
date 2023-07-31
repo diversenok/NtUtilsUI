@@ -74,7 +74,7 @@ end;
 
 { Integration }
 
-function Initializer(AOwner: TForm): TFrame;
+function Initializer(AOwner: TComponent): TFrame;
 var
   Frame: TUserProfilesFrame absolute Result;
 begin

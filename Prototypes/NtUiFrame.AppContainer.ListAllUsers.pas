@@ -85,7 +85,7 @@ end;
 
 function Initializer([opt] const DefaultUser: ISid): TFrameInitializer;
 begin
-  Result := function (AOwner: TForm): TFrame
+  Result := function (AOwner: TComponent): TFrame
     var
       Frame: TAppContainerListAllUsersFrame absolute Result;
     begin

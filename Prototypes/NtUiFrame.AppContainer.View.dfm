@@ -42,7 +42,7 @@ object AppContainerViewFrame: TAppContainerViewFrame
         Options = [coAllowClick, coDraggable, coEnabled, coParentBidiMode, coParentColor, coResizable, coVisible, coAutoSpring, coSmartResize, coAllowFocus, coDisableAnimatedResize, coEditable, coStyleColor]
         Position = 1
         Text = 'Value'
-        Width = 496
+        Width = 500
       end>
   end
 end

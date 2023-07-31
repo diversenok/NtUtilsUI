@@ -60,7 +60,7 @@ end;
 
 function Initializer(const Info: TAppContainerInfo): TFrameInitializer;
 begin
-  Result := function (AOwner: TForm): TFrame
+  Result := function (AOwner: TComponent): TFrame
     var
       Frame: TAppContainerViewFrame absolute Result;
     begin

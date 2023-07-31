@@ -11,7 +11,7 @@ uses
   Vcl.Dialogs, Vcl.StdCtrls, DevirtualizedTree, UI.Prototypes.Forms;
 
 type
-  TFrameInitializer = reference to function (AOwner: TForm): TFrame;
+  TFrameInitializer = reference to function (AOwner: TComponent): TFrame;
 
   TFrameHostDialog = class(TChildForm)
     btnClose: TButton;

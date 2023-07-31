@@ -288,7 +288,7 @@ function Initializer(
   const GenericMapping: TGenericMapping
 ): TFrameInitializer;
 begin
-  Result := function (AOwner: TForm): TFrame
+  Result := function (AOwner: TComponent): TFrame
     var
       Frame: TAceFrame absolute Result;
     begin
@@ -308,7 +308,7 @@ function InitializerEx(
   const Ace: TAceData
 ): TFrameInitializer;
 begin
-  Result := function (AOwner: TForm): TFrame
+  Result := function (AOwner: TComponent): TFrame
     var
       Frame: TAceFrame absolute Result;
     begin
