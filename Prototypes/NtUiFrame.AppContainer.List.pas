@@ -29,7 +29,7 @@ type
     BackendRef: IUnknown;
     property BackendImpl: TTreeNodeInterfaceProvider read Backend implements IHasModalResult, IHasModalResultObservation, IAllowsDefaultNodeAction;
     property SearchImpl: TSearchFrame read SearchBox implements ICanConsumeEscape;
-    function DefaultCaption: String;
+    function GetDefaultCaption: String;
   protected
     procedure Loaded; override;
   public
@@ -64,17 +64,17 @@ begin
     NtUiLibShowAppContainer(AppContainerNode.Info);
 end;
 
-function TAppContainerListFrame.DefaultCaption;
-begin
-  Result := 'AppContainer Profiles'
-end;
-
 procedure TAppContainerListFrame.FrameMainActionSet;
 begin
   // Demote the inspect menu from the default Enter to Ctrl+Enter
   cmInspect.ShortCut := scCtrl or VK_RETURN;
   cmInspect.Default := False;
   Tree.RefreshPopupMenuShortcuts;
+end;
+
+function TAppContainerListFrame.GetDefaultCaption;
+begin
+  Result := 'AppContainer Profiles'
 end;
 
 procedure TAppContainerListFrame.Loaded;

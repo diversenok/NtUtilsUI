@@ -23,7 +23,7 @@ type
     BackendRef: IUnknown;
     property BackendImpl: TTreeNodeInterfaceProvider read Backend implements IHasModalResult, IHasModalResultObservation, IAllowsDefaultNodeAction;
     property SearchImpl: TSearchFrame read SearchBox implements ICanConsumeEscape;
-    function DefaultCaption: String;
+    function GetDefaultCaption: String;
   protected
     procedure Loaded; override;
   public
@@ -39,7 +39,7 @@ uses
 
 { TUserProfilesFrame }
 
-function TUserProfilesFrame.DefaultCaption;
+function TUserProfilesFrame.GetDefaultCaption;
 begin
   Result := 'User Profiles';
 end;

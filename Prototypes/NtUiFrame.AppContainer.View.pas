@@ -20,7 +20,7 @@ type
   protected
     procedure Loaded; override;
   public
-    function DefaultCaption: String;
+    function GetDefaultCaption: String;
     procedure LoadFor(const Info: TAppContainerInfo);
   end;
 
@@ -33,7 +33,7 @@ uses
 
 { TAppContainerViewFrame }
 
-function TAppContainerViewFrame.DefaultCaption;
+function TAppContainerViewFrame.GetDefaultCaption;
 begin
   Result := 'AppContainer Information';
 end;

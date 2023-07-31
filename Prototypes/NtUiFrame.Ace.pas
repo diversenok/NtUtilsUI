@@ -51,7 +51,7 @@ type
   protected
     procedure Loaded; override;
     function ConsumesEscape: Boolean;
-    function DefaultCaption: String;
+    function GetDefaultCaption: String;
     function GetConfirmationCaption: String;
     function GetCancellationCaption: String;
     function GetModalResult: IInterface;
@@ -112,11 +112,6 @@ begin
   Result := cbxType.DroppedDown;
 end;
 
-function TAceFrame.DefaultCaption;
-begin
-  Result := 'ACE Editor';
-end;
-
 function TAceFrame.GetAce;
 begin
   Result := Default(TAceData);
@@ -175,6 +170,11 @@ end;
 function TAceFrame.GetConfirmationCaption;
 begin
   Result := 'OK';
+end;
+
+function TAceFrame.GetDefaultCaption;
+begin
+  Result := 'ACE Editor';
 end;
 
 function TAceFrame.GetModalResult;

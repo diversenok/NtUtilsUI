@@ -34,7 +34,7 @@ type
     procedure SetValue(const NewValue: UInt64);
     procedure SetTreeReadOnly(const Value: Boolean);
     procedure SetReadOnly(const Value: Boolean);
-    function DefaultCaption: String;
+    function GetDefaultCaption: String;
   public
     procedure LoadType(ATypeInfo: Pointer);
     procedure LoadAccessMaskType(
@@ -67,7 +67,7 @@ begin
   Value := 0;
 end;
 
-function TBitsFrame.DefaultCaption;
+function TBitsFrame.GetDefaultCaption;
 begin
   if FIsReadOnly then
     Result := 'Bit Mask Viewer'

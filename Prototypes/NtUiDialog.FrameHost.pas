@@ -78,7 +78,7 @@ begin
   btnSelect.Visible := AllowModal;
 
   if FFrameRef.QueryInterface(IHasDefaultCaption, DefaultCaption).IsSuccess then
-    Caption := DefaultCaption.DefaultCaption
+    Caption := DefaultCaption.GetDefaultCaption
   else
     Caption := FFrame.ClassName;
 

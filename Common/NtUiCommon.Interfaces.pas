@@ -28,7 +28,8 @@ type
   // Indicates a component that suggest a modal dialog caption
   IHasDefaultCaption = interface
     ['{C6238589-5504-461B-8539-F391A4DCC52B}']
-    function DefaultCaption: String;
+    function GetDefaultCaption: String;
+  end;
   end;
 
   { Tree interfaces }
