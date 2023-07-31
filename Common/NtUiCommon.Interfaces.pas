@@ -30,6 +30,12 @@ type
     ['{C6238589-5504-461B-8539-F391A4DCC52B}']
     function GetDefaultCaption: String;
   end;
+
+  // Indicates a control that can be activates/disactivated (such as disabling
+  // shortcuts when hidden)
+  IObservesActivation = interface
+    ['{1BE74A0E-C934-4315-A9F0-A7E3C281487E}']
+    procedure SetActive(Active: Boolean);
   end;
 
   { Tree interfaces }
@@ -97,6 +103,8 @@ type
     property OnMainAction: TNodeProviderEvent read GetOnMainAction write SetOnMainAction;
     property MainActionCaption: String read GetMainActionCaption write SetMainActionCaption;
   end;
+
+  { Modal dialog support }
 
   // Indicates a component that controls button caption for the modal dialog host
   IHasModalCaptions = interface

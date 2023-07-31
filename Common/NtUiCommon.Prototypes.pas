@@ -8,14 +8,14 @@ interface
 
 uses
   Ntapi.WinNt, NtUtils, NtUtils.Profiles, NtUtils.Security.AppContainer,
-  NtUtils.Security, NtUtils.Security.Acl,
-  DevirtualizedTree, NtUiDialog.FrameHost, System.Classes;
+  NtUtils.Security, NtUtils.Security.Acl, DevirtualizedTree,
+  NtUiDialog.FrameHost, System.Classes, Vcl.Forms;
 
 type
   TFrameInitializer = NtUiDialog.FrameHost.TFrameInitializer;
 
 var
-  { Common: Frame Host }
+  { Common: Frame Hosting }
 
   NtUiLibHostFrameShow: procedure (
     Initializer: TFrameInitializer
@@ -25,6 +25,12 @@ var
     AOwner: TComponent;
     Initializer: TFrameInitializer
   ): IInterface;
+
+  NtUiLibHostPages: function (
+    AOwner: TComponent;
+    Pages: TArray<TFrameInitializer>;
+    const DefaultCaption: String
+  ): TFrame;
 
   { Bit Masks }
 
