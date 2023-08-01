@@ -43,11 +43,13 @@ uses
 function TFramePages.ConsumesEscape;
 var
   ForwardedImpl: ICanConsumeEscape;
+  i: Integer;
 begin
+  i := PageControl.ActivePageIndex;
+
   // Forward the request to the frame from the active page
-  Result := (PageControl.TabIndex > 0) and
-    (PageControl.TabIndex <= High(FFrames)) and
-    IUnknown(FFrames[PageControl.TabIndex]).QueryInterface(ICanConsumeEscape,
+  Result := (i >= 0) and (i <= High(FFrames)) and
+    IUnknown(FFrames[i]).QueryInterface(ICanConsumeEscape,
     ForwardedImpl).IsSuccess and ForwardedImpl.ConsumesEscape;
 end;
 
@@ -92,7 +94,7 @@ begin
 
     if i = 0 then
     begin
-      // Resize the frame to the biggest default size
+      // Resize to the dimensions of the biggest page
       Width := RequiredWidth + Width - FTabs[i].Width;
       Height := RequiredHeight + Height - FTabs[i].Height;
     end;
