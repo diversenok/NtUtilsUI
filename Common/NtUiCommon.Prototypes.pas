@@ -108,6 +108,11 @@ type
     SetFunction: TSecuritySetFunction;
   end;
 
+var
+  NtUiLibShowSecurity: procedure (
+    const Context: TNtUiLibSecurityContext
+  );
+
 implementation
 
 end.
