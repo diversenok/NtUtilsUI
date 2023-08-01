@@ -74,7 +74,7 @@ object AceFrame: TAceFrame
     Top = 538
     Width = 600
     Height = 13
-    Anchors = [akLeft, akTop, akRight]
+    Anchors = [akLeft, akRight, akBottom]
     AutoSize = False
     Caption = 'Extra Data:'
   end
