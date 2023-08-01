@@ -58,7 +58,8 @@ type
   public
     procedure LoadType(
       AccessMaskType: Pointer;
-      const GenericMapping: TGenericMapping
+      const GenericMapping: TGenericMapping;
+      DefaultAceType: TAceType
     );
     property Ace: TAceData read GetAce write SetAce;
   end;
@@ -198,6 +199,13 @@ begin
     FMaskType := TypeInfo(TAccessMask);
 
   FGenericMapping := GenericMapping;
+
+  if DefaultAceType <= High(TAceType) then
+  begin
+    cbxType.ItemIndex := Integer(DefaultAceType);
+    cbxTypeChange(Self);
+  end;
+
   UpdateMaskType;
 end;
 
@@ -285,7 +293,8 @@ end;
 
 function Initializer(
   AccessMaskType: Pointer;
-  const GenericMapping: TGenericMapping
+  const GenericMapping: TGenericMapping;
+  DefaultAceType: TAceType
 ): TFrameInitializer;
 begin
   Result := function (AOwner: TComponent): TFrame
@@ -294,7 +303,7 @@ begin
     begin
       Frame := TAceFrame.Create(AOwner);
       try
-        Frame.LoadType(AccessMaskType, GenericMapping);
+        Frame.LoadType(AccessMaskType, GenericMapping, DefaultAceType);
       except
         Frame.Free;
         raise;
@@ -314,7 +323,7 @@ begin
     begin
       Frame := TAceFrame.Create(AOwner);
       try
-        Frame.LoadType(AccessMaskType, GenericMapping);
+        Frame.LoadType(AccessMaskType, GenericMapping, Ace.AceType);
         Frame.Ace := Ace;
       except
         Frame.Free;
@@ -326,7 +335,8 @@ end;
 function NtUiLibCreateAce(
   Owner: TComponent;
   AccessMaskType: Pointer;
-  const GenericMapping: TGenericMapping
+  const GenericMapping: TGenericMapping;
+  DefaultAceType: TAceType
 ): TAceData;
 var
   ModalResult: IInterface;
@@ -335,7 +345,7 @@ begin
     raise ENotSupportedException.Create('Frame host not available');
 
   ModalResult := NtUiLibHostFramePick(Owner, Initializer(AccessMaskType,
-    GenericMapping));
+    GenericMapping, DefaultAceType));
 
   Result := TAceData((ModalResult as IMemory).Data^);
 end;

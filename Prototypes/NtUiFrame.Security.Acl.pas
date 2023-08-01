@@ -88,6 +88,13 @@ const
     'Scoped Policy', 'Access Filter'
   );
 
+  DEFAULT_ACE_TYPE: array [TAclType] of TAceType = (
+    ACCESS_ALLOWED_ACE_TYPE, SYSTEM_MANDATORY_LABEL_ACE_TYPE,
+    SYSTEM_PROCESS_TRUST_LABEL_ACE_TYPE, SYSTEM_AUDIT_ACE_TYPE,
+    SYSTEM_RESOURCE_ATTRIBUTE_ACE_TYPE, SYSTEM_SCOPED_POLICY_ID_ACE_TYPE,
+    SYSTEM_ACCESS_FILTER_ACE_TYPE
+  );
+
 { TAclSecurityFrame }
 
 function TAclSecurityFrame.Apply;
@@ -196,7 +203,8 @@ begin
 
   // Reset UI state
   SetControlFlags(0);
-  AclFrame.LoadAcl(nil, FContext.AccessMaskType, FContext.GenericMapping);
+  AclFrame.LoadAcl(nil, FContext.AccessMaskType, FContext.GenericMapping,
+    DEFAULT_ACE_TYPE[FAclType]);
 
   // Open the handle
   Result := FContext.HandleProvider(hxObject, SecurityReadAccess(
@@ -232,9 +240,11 @@ begin
   AclFrame.SetStatus(Result);
 
   if FAclType = aiDacl then
-    AclFrame.LoadAcl(SD.Dacl, FContext.AccessMaskType, FContext.GenericMapping)
+    AclFrame.LoadAcl(SD.Dacl, FContext.AccessMaskType, FContext.GenericMapping,
+      DEFAULT_ACE_TYPE[FAclType])
   else
-    AclFrame.LoadAcl(SD.Sacl, FContext.AccessMaskType, FContext.GenericMapping);
+    AclFrame.LoadAcl(SD.Sacl, FContext.AccessMaskType, FContext.GenericMapping,
+      DEFAULT_ACE_TYPE[FAclType]);
 end;
 
 procedure TAclSecurityFrame.SetActive;

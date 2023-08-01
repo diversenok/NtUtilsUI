@@ -47,6 +47,7 @@ type
     FMaskType: Pointer;
     FGenericMapping: TGenericMapping;
     FOnAclChange: TNotifyEvent;
+    FDefaultAceType: TAceType;
     procedure AclChanged;
     procedure btnUpIconChanged(ImageList: TImageList; ImageIndex: Integer);
     procedure btnAddIconChanged(ImageList: TImageList; ImageIndex: Integer);
@@ -54,7 +55,8 @@ type
     procedure btnDeleteIconChanged(ImageList: TImageList; ImageIndex: Integer);
     procedure btnDownIconChanged(ImageList: TImageList; ImageIndex: Integer);
     function GetAceCount: Integer;
-    property SearchImpl: TSearchFrame read Search implements ICanConsumeEscape, IObservesActivation;
+    procedure SetActive(Active: Boolean);
+    property SearchImpl: TSearchFrame read Search implements ICanConsumeEscape;
   protected
     procedure LoadedOnce; override;
   public
@@ -62,7 +64,8 @@ type
     procedure LoadAcl(
       [opt] const Acl: IAcl;
       MaskType: Pointer;
-      const GenericMapping: TGenericMapping
+      const GenericMapping: TGenericMapping;
+      DefaultAceType: TAceType
     );
     property AceCount: Integer read GetAceCount;
     function GetAcl(out Acl: IAcl): TNtxStatus;
@@ -94,8 +97,8 @@ begin
   if not Assigned(NtUiLibCreateAce) then
     Exit;
 
-  UiLibAddAceNode(Tree, NtUiLibCreateAce(Self, FMaskType, FGenericMapping),
-    FMaskType);
+  UiLibAddAceNode(Tree, NtUiLibCreateAce(Self, FMaskType, FGenericMapping,
+    FDefaultAceType), FMaskType);
   AclChanged;
 end;
 
@@ -189,6 +192,7 @@ begin
   UiLibAddAclNodes(Tree, Acl, MaskType);
   FMaskType := MaskType;
   FGenericMapping := GenericMapping;
+  FDefaultAceType := DefaultAceType;
 end;
 
 procedure TAclFrame.LoadedOnce;
@@ -208,6 +212,16 @@ begin
   btnUp.Enabled := Tree.SelectedCount > 0;
   btnDelete.Enabled := Tree.SelectedCount > 0;
   btnDown.Enabled := Tree.SelectedCount > 0;
+end;
+
+procedure TAclFrame.SetActive;
+begin
+  if Active then
+    ActionList.State := asNormal
+  else
+    ActionList.State := asSuspended;
+
+  (Search as IObservesActivation).SetActive(Active);
 end;
 
 procedure TAclFrame.SetStatus;

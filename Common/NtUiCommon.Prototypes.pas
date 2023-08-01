@@ -82,7 +82,8 @@ var
   NtUiLibCreateAce: function (
     Owner: TComponent;
     AccessMaskType: Pointer;
-    const GenericMapping: TGenericMapping
+    const GenericMapping: TGenericMapping;
+    DefaultAceType: TAceType
   ): TAceData;
 
   NtUiLibEditAce: function (
