@@ -20,10 +20,12 @@ type
     FTabs: TArray<TTabSheet>;
     FFrames: TArray<TFrame>;
     FActions: TArray<TAction>;
+    FDelayLoaded: TArray<Boolean>;
     FDefaultCaption: String;
     function ConsumesEscape: Boolean;
     procedure SwitchToTab(Sender: TObject);
     function GetDefaultCaption: String;
+    procedure NotifyDelayedLoading(Index: Integer);
   public
     procedure LoadPages(
       const Frames: TArray<TFrameInitializer>;
@@ -85,6 +87,7 @@ begin
 
   SetLength(FTabs, Length(Frames));
   SetLength(FActions, Length(Frames));
+  SetLength(FDelayLoaded, Length(Frames));
 
   for i := 0 to High(Frames) do
   begin
@@ -109,6 +112,7 @@ begin
     // Attach the frame
     FFrames[i].Parent := FTabs[i];
     FFrames[i].Align := alClient;
+    FDelayLoaded[i] := False;
 
     if i < 9 then
     begin
@@ -122,6 +126,21 @@ begin
   end;
 
   FDefaultCaption := DefaultCaption;
+  NotifyDelayedLoading(0);
+end;
+
+procedure TFramePages.NotifyDelayedLoading;
+var
+  DelayedLoader: IDelayedLoad;
+begin
+  // Invoke the delayed loading callback on the frame
+  if (Index >= 0) and (Index <= High(FFrames)) and not FDelayLoaded[Index] and
+    IUnknown(FFrames[Index]).QueryInterface(IDelayedLoad,
+    DelayedLoader).IsSuccess then
+  begin
+    DelayedLoader.DelayedLoad;
+    FDelayLoaded[Index] := True;
+  end;
 end;
 
 procedure TFramePages.PageControlChange;
@@ -129,12 +148,14 @@ var
   Observer: IObservesActivation;
   i: Integer;
 begin
-  // Adjust active state for all frames to handle conflicting shorcuts
-  // correctly
+  // Adjust active state for all frames to allow handling conflicting shorcuts
   for i := 0 to High(FFrames) do
     if IUnknown(FFrames[i]).QueryInterface(IObservesActivation,
       Observer).IsSuccess then
-      Observer.SetActive(i = PageControl.TabIndex);
+      Observer.SetActive(i = PageControl.ActivePageIndex);
+
+  // Initiate delayed loading of the newly visible frame
+  NotifyDelayedLoading(PageControl.ActivePageIndex);
 end;
 
 procedure TFramePages.SwitchToTab;

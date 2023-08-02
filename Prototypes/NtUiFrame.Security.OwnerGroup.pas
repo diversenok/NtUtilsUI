@@ -16,7 +16,8 @@ uses
 type
   TDescriptorSidType = (dsOwner, dsPrimaryGroup);
 
-  TOwnerGroupSecurityFrame = class(TFrame, IHasDefaultCaption, IObservesActivation)
+  TOwnerGroupSecurityFrame = class(TFrame, IHasDefaultCaption,
+    IObservesActivation, IDelayedLoad)
     SidEditor: TSidEditor;
     GroupBox: TGroupBox;
     cbxDefaulted: TCheckBox;
@@ -33,6 +34,7 @@ type
     function Apply: TNtxStatus;
     function GetDefaultCaption: String;
     procedure SetActive(Active: Boolean);
+    procedure DelayedLoad;
   public
     procedure LoadFor(
       SidType: TDescriptorSidType;
@@ -120,6 +122,11 @@ begin
   Refresh.RaiseOnError;
 end;
 
+procedure TOwnerGroupSecurityFrame.DelayedLoad;
+begin
+  Refresh;
+end;
+
 function TOwnerGroupSecurityFrame.GetDefaultCaption;
 begin
   Result := SID_CAPTIONS[FSidType];
@@ -132,7 +139,6 @@ begin
 
   FSidType := SidType;
   FContext := Context;
-  Refresh;
 end;
 
 function TOwnerGroupSecurityFrame.Refresh;

@@ -38,6 +38,12 @@ type
     procedure SetActive(Active: Boolean);
   end;
 
+  // Indicates a control that can delay initialization until unhidden
+  IDelayedLoad = interface
+    ['{B095F57F-79C5-4205-B9F8-5EE3618AD8CA}']
+    procedure DelayedLoad;
+  end;
+
   { Tree interfaces }
 
   // Indicates a component that allows enumerating all devirtualized nodes
