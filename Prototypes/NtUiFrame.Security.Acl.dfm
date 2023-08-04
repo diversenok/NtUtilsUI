@@ -88,6 +88,7 @@ object AclSecurityFrame: TAclSecurityFrame
       Height = 17
       Caption = 'Present'
       TabOrder = 1
+      OnClick = cbxPresentClick
     end
   end
   object ActionList: TActionList

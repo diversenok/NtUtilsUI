@@ -11,10 +11,10 @@ uses
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, VirtualTrees,
   VirtualTreesEx, DevirtualizedTree, NtUtils, Vcl.StdCtrls, NtUiFrame,
   Ntapi.WinNt, Vcl.Menus, System.Actions, Vcl.ActnList, Vcl.ExtCtrls,
-  NtUiFrame.Search, NtUiCommon.Interfaces;
+  NtUiFrame.Search, NtUiCommon.Interfaces, NtUtils.Security.Acl;
 
 type
-  TAclFrame = class(TBaseFrame, ICanConsumeEscape, ICanShowStatus,
+  TAclFrame = class(TBaseFrame, ICanConsumeEscape, ICanShowEmptyMessage,
     IObservesActivation)
     Tree: TDevirtualizedTree;
     btnUp: TButton;
@@ -46,7 +46,7 @@ type
   private
     FMaskType: Pointer;
     FGenericMapping: TGenericMapping;
-    FOnAclChange: TNotifyEvent;
+    FOnAceChange: TNotifyEvent;
     FDefaultAceType: TAceType;
     procedure AclChanged;
     procedure btnUpIconChanged(ImageList: TImageList; ImageIndex: Integer);
@@ -54,29 +54,28 @@ type
     procedure btnCanonicalizeIconChanged(ImageList: TImageList; ImageIndex: Integer);
     procedure btnDeleteIconChanged(ImageList: TImageList; ImageIndex: Integer);
     procedure btnDownIconChanged(ImageList: TImageList; ImageIndex: Integer);
-    function GetAceCount: Integer;
     procedure SetActive(Active: Boolean);
+    function GetAces: TArray<TAceData>;
     property SearchImpl: TSearchFrame read Search implements ICanConsumeEscape;
   protected
     procedure LoadedOnce; override;
   public
-    procedure SetStatus(const Status: TNtxStatus);
-    procedure LoadAcl(
-      [opt] const Acl: IAcl;
+    procedure SetEmptyMessage(const Value: String);
+    procedure LoadAces(
+      const Aces: TArray<TAceData>;
       MaskType: Pointer;
       const GenericMapping: TGenericMapping;
       DefaultAceType: TAceType
     );
-    property AceCount: Integer read GetAceCount;
-    function GetAcl(out Acl: IAcl): TNtxStatus;
-    property OnAclChange: TNotifyEvent read FOnAclChange write FOnAclChange;
+    property Aces: TArray<TAceData> read GetAces;
+    property OnAceChange: TNotifyEvent read FOnAceChange write FOnAceChange;
   end;
 
 implementation
 
 uses
   NtUiBackend.Acl, UI.Helper, Resources.Icon.Add, Resources.Icon.Delete,
-  Resources.Icon.Down, Resources.Icon.Up, Resources.Icon.Verify, NtUiLib.Errors,
+  Resources.Icon.Down, Resources.Icon.Up, Resources.Icon.Verify,
   NtUiCommon.Prototypes;
 
 {$R *.dfm}
@@ -88,8 +87,8 @@ begin
   btnCanonicalize.Enabled := not UiLibIsCanonicalAcl(Tree);
   SelectionChanged(Tree, nil);
 
-  if Assigned(FOnAclChange) then
-    FOnAclChange(Self);
+  if Assigned(FOnAceChange) then
+    FOnAceChange(Self);
 end;
 
 procedure TAclFrame.btnAddClick;
@@ -97,7 +96,7 @@ begin
   if not Assigned(NtUiLibCreateAce) then
     Exit;
 
-  UiLibAddAceNode(Tree, NtUiLibCreateAce(Self, FMaskType, FGenericMapping,
+  UiLibInsertAceNode(Tree, NtUiLibCreateAce(Self, FMaskType, FGenericMapping,
     FDefaultAceType), FMaskType);
   AclChanged;
 end;
@@ -171,25 +170,14 @@ begin
   AclChanged;
 end;
 
-function TAclFrame.GetAceCount;
-var
-  Node: PVirtualNode;
+function TAclFrame.GetAces;
 begin
-  Result := 0;
-
-  for Node in Tree.Nodes do
-    if Node.HasProvider(IAceNode) then
-      Inc(Result);
+  Result := UiLibCollectAces(Tree);
 end;
 
-function TAclFrame.GetAcl;
+procedure TAclFrame.LoadAces;
 begin
-  Result := UiLibCollectAcl(Tree, Acl);
-end;
-
-procedure TAclFrame.LoadAcl;
-begin
-  UiLibAddAclNodes(Tree, Acl, MaskType);
+  UiLibLoadAceNodes(Tree, Aces, MaskType);
   FMaskType := MaskType;
   FGenericMapping := GenericMapping;
   FDefaultAceType := DefaultAceType;
@@ -224,12 +212,9 @@ begin
   (Search as IObservesActivation).SetActive(Active);
 end;
 
-procedure TAclFrame.SetStatus;
+procedure TAclFrame.SetEmptyMessage;
 begin
-  if Status.IsSuccess then
-    Tree.NoItemsText := 'No items to display'
-  else
-    Tree.NoItemsText := 'Unable to query:'#$D#$A + Status.ToString;
+  Tree.NoItemsText := Value;
 end;
 
 procedure TAclFrame.TreeGetPopupMenu;

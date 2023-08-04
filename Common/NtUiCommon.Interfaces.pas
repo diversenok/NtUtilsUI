@@ -19,10 +19,10 @@ type
     function ConsumesEscape: Boolean;
   end;
 
-  // Indicates a component that can show a status of an operation
-  ICanShowStatus = interface
-    ['{C16901FB-80A0-4430-96AB-CD823BC370CB}']
-    procedure SetStatus(const Status: TNtxStatus);
+  // Indicates a component that can show a message when no data is available
+  ICanShowEmptyMessage = interface
+    ['{A56C56BB-9839-4B48-B727-03610765C488}']
+    procedure SetEmptyMessage(const Value: String);
   end;
 
   // Indicates a component that suggest a modal dialog caption
@@ -156,7 +156,7 @@ type
     constructor Create(Tree: TDevirtualizedTree);
   end;
 
-  TTreeNodeInterfaceProvider = class (TBaseTreeExtension, ICanShowStatus,
+  TTreeNodeInterfaceProvider = class (TBaseTreeExtension, ICanShowEmptyMessage,
     IHasNodes, IHasSelectedNodes, IHasSelectedNodesObservation,
     IHasCheckedNodes, IHasCheckedNodesObservation, IHasFocusedNode, IAllowsEditingNodes,
     IAllowsDefaultNodeAction, IHasModalResult, IHasModalResultObservation)
@@ -174,6 +174,7 @@ type
     procedure SetOnMainActionSet(const Value: TNotifyEvent);
   public
     procedure SetStatus(const Status: TNtxStatus);
+    procedure SetEmptyMessage(const Value: String);
     function NodeCount(const ProviderId: TGuid): Cardinal;
     function Nodes(const ProviderId: TGuid): TArray<INodeProvider>;
     function SelectedNodeCount(const ProviderId: TGuid): Cardinal;
@@ -447,6 +448,12 @@ begin
     end;
 end;
 
+procedure TTreeNodeInterfaceProvider.SetEmptyMessage;
+begin
+  if Attached then
+    Tree.NoItemsText := Value;
+end;
+
 procedure TTreeNodeInterfaceProvider.SetMainActionCaption;
 begin
   if Attached then
@@ -495,9 +502,9 @@ begin
     Exit;
 
   if Status.IsSuccess then
-    Tree.NoItemsText := 'No items to display'
+    SetEmptyMessage('No items to display')
   else
-    Tree.NoItemsText := 'Unable to query:'#$D#$A + Status.ToString;
+    SetEmptyMessage('Unable to query:'#$D#$A + Status.ToString);
 end;
 
 procedure TTreeNodeInterfaceProvider.TreeCheckedChanged;

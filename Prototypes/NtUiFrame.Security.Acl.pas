@@ -10,7 +10,7 @@ uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes,
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, NtUiFrame,
   NtUiFrame.Acl, Ntapi.WinNt, NtUtils, NtUiCommon.Prototypes, System.Actions,
-  Vcl.ActnList, NtUiCommon.Interfaces;
+  Vcl.ActnList, NtUiCommon.Interfaces, NtUtils.Security.Acl;
 
 type
   TAclType = (aiDacl, aiLabel, aiTrust, aiSacl, aiAttribute, aiScope, aiFilter);
@@ -30,11 +30,13 @@ type
     ActionRefresh: TAction;
     procedure btnRefreshClick(Sender: TObject);
     procedure btnApplyClick(Sender: TObject);
+    procedure cbxPresentClick(Sender: TObject);
   private
     FAclType: TAclType;
     FContext: TNtUiLibSecurityContext;
     function GetControlFlags: TSecurityDescriptorControl;
     procedure SetControlFlags(const Value: TSecurityDescriptorControl);
+    function QueryAcl(out Control: TSecurityDescriptorControl; out Aces: TArray<TAceData>): TNtxStatus;
     function Refresh: TNtxStatus;
     function Apply: TNtxStatus;
     function GetDefaultCaption: String;
@@ -58,7 +60,7 @@ function NtUiLibAclSecurityFrameInitializer(
 implementation
 
 uses
-  NtUtils.Security;
+  NtUtils.Security, NtUiLib.Errors;
 
 {$R *.dfm}
 
@@ -109,26 +111,27 @@ begin
     not Assigned(FContext.QueryFunction) then
     raise Exception.Create('ACL Security frame not initialized');
 
-  // Start building a security descriptor
-  SD := Default(TSecurityDescriptorData);
-  SD.Control := GetControlFlags;
-
-  if FAclType = aiDacl then
-    Result := AclFrame.GetAcl(SD.Dacl)
-  else
-    Result := AclFrame.GetAcl(SD.Sacl);
-
-  if not Result.IsSuccess then
-    Exit;
-
-  Result := RtlxAllocateSecurityDescriptor(SD, SecDesc);
-
-  if not Result.IsSuccess then
-    Exit;
-
   // Open the handle
   Result := FContext.HandleProvider(hxObject, SecurityWriteAccess(
     SECURITY_INFORMATION[FAclType]));
+
+  if not Result.IsSuccess then
+    Exit;
+
+  SD := Default(TSecurityDescriptorData);
+  SD.Control := GetControlFlags;
+
+  // Make an ACL
+  if FAclType = aiDacl then
+    Result := RtlxBuildAcl(SD.Dacl, AclFrame.Aces)
+  else
+    Result := RtlxBuildAcl(SD.Sacl, AclFrame.Aces);
+
+  if not Result.IsSuccess then
+    Exit;
+
+  // Make a security descriptor
+  Result := RtlxAllocateSecurityDescriptor(SD, SecDesc);
 
   if not Result.IsSuccess then
     Exit;
@@ -151,6 +154,14 @@ end;
 procedure TAclSecurityFrame.btnRefreshClick;
 begin
   Refresh.RaiseOnError;
+end;
+
+procedure TAclSecurityFrame.cbxPresentClick;
+begin
+  if cbxPresent.Checked then
+    AclFrame.SetEmptyMessage('Empty ACL')
+  else
+    AclFrame.SetEmptyMessage('NULL ACL');
 end;
 
 procedure TAclSecurityFrame.DelayedLoad;
@@ -197,60 +208,75 @@ begin
   FContext := Context;
 end;
 
-function TAclSecurityFrame.Refresh;
+function TAclSecurityFrame.QueryAcl;
 var
   hxObject: IHandle;
   SecDesc: ISecurityDescriptor;
   SD: TSecurityDescriptorData;
 begin
-  if not Assigned(FContext.HandleProvider) or
-    not Assigned(FContext.QueryFunction) then
-    raise Exception.Create('ACL Security frame not initialized');
-
-  // Reset UI state
-  SetControlFlags(0);
-  AclFrame.LoadAcl(nil, FContext.AccessMaskType, FContext.GenericMapping,
-    DEFAULT_ACE_TYPE[FAclType]);
-
   // Open the handle
   Result := FContext.HandleProvider(hxObject, SecurityReadAccess(
     SECURITY_INFORMATION[FAclType]));
 
   if not Result.IsSuccess then
-  begin
-    AclFrame.SetStatus(Result);
     Exit;
-  end;
 
   // Query the security descriptor
   Result := FContext.QueryFunction(hxObject.Handle,
     SECURITY_INFORMATION[FAclType], SecDesc);
 
   if not Result.IsSuccess then
-  begin
-    AclFrame.SetStatus(Result);
     Exit;
-  end;
 
-  // Parse the data
+  // Parse the security descriptor
   Result := RtlxCaptureSecurityDescriptor(SecDesc.Data, SD);
 
   if not Result.IsSuccess then
-  begin
-    AclFrame.SetStatus(Result);
     Exit;
+
+  // Parse the ACL
+  if FAclType = aiDacl then
+    Result := RtlxDumpAcl(SD.Dacl, Aces)
+  else
+    Result := RtlxDumpAcl(SD.Sacl, Aces);
+
+  if not Result.IsSuccess then
+    Exit;
+
+  Control := SD.Control;
+
+  // Allow distinguishing between NULL and empty ACLs
+  if (FAclType = aiDacl) and not Assigned(SD.Dacl) then
+    Control := Control and not SE_DACL_PRESENT
+  else if (FAclType <> aiDacl) and not Assigned(SD.Sacl) then
+    Control := Control and not SE_SACL_PRESENT;
+end;
+
+function TAclSecurityFrame.Refresh;
+var
+  Control: TSecurityDescriptorControl;
+  Aces: TArray<TAceData>;
+begin
+  if not Assigned(FContext.HandleProvider) or
+    not Assigned(FContext.QueryFunction) then
+    raise Exception.Create('ACL Security frame not initialized');
+
+  // Query the ACL
+  Result := QueryAcl(Control, Aces);
+
+  if not Result.IsSuccess then
+  begin
+    Control := 0;
+    Aces := nil;
   end;
 
-  // Update the controls
-  SetControlFlags(SD.Control);
-  AclFrame.SetStatus(Result);
+  // Update the UI state
+  SetControlFlags(Control);
+  AclFrame.LoadAces(Aces, FContext.AccessMaskType, FContext.GenericMapping,
+    DEFAULT_ACE_TYPE[FAclType]);
 
-  if FAclType = aiDacl then
-    AclFrame.LoadAcl(SD.Dacl, FContext.AccessMaskType, FContext.GenericMapping,
-      DEFAULT_ACE_TYPE[FAclType])
-  else
-    AclFrame.LoadAcl(SD.Sacl, FContext.AccessMaskType, FContext.GenericMapping,
-      DEFAULT_ACE_TYPE[FAclType]);
+  if not Result.IsSuccess then
+    AclFrame.SetEmptyMessage('Unable to query:'#$D#$A + Result.ToString);
 end;
 
 procedure TAclSecurityFrame.SetActive;
@@ -270,6 +296,7 @@ begin
   cbxInheritReq.Checked := BitTest(Value and FLAG_INHERIT_REQ[FAclType = aiDacl]);
   cbxInherited.Checked := BitTest(Value and FLAG_INHERITED[FAclType = aiDacl]);
   cbxProtected.Checked := BitTest(Value and FLAG_PROTECTED[FAclType = aiDacl]);
+  cbxPresentClick(Self);
 end;
 
 { Integration }

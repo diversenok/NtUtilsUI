@@ -32,16 +32,16 @@ procedure UiLibUnhideAceSpecificColumns(
 );
 
 // Add a new ACE node to the ACL tree control preserving canonical order
-procedure UiLibAddAceNode(
+procedure UiLibInsertAceNode(
   Tree: TDevirtualizedTree;
-  [opt] const Ace: TAceData;
+  const Ace: TAceData;
   AccessMaskType: Pointer
 );
 
-// Add ACE nodes to the ACL tree control
-procedure UiLibAddAclNodes(
+// Add a collection of ACE nodes to the ACL tree control
+procedure UiLibLoadAceNodes(
   Tree: TDevirtualizedTree;
-  [opt] const Acl: IAcl;
+  const Aces: TArray<TAceData>;
   AccessMaskType: Pointer
 );
 
@@ -55,11 +55,10 @@ procedure UiLibCanonicalizeAcl(
   Tree: TDevirtualizedTree
 );
 
-// Construct an ACL from ACEs in a control
-function UiLibCollectAcl(
-  Tree: TDevirtualizedTree;
-  out Acl: IAcl
-): TNtxStatus;
+// Collect all ACEs from an ACL control
+function UiLibCollectAces(
+  Tree: TDevirtualizedTree
+): TArray<TAceData>;
 
 implementation
 
@@ -276,7 +275,7 @@ begin
     end;
 end;
 
-procedure UiLibAddAceNode;
+procedure UiLibInsertAceNode;
 var
   NewNode: IAceNode;
   InsertBefore: PVirtualNode;
@@ -300,24 +299,12 @@ begin
   UiLibUnhideAceSpecificColumns(Tree, Ace);
 end;
 
-procedure UiLibAddAclNodes;
+procedure UiLibLoadAceNodes;
 var
   i: Integer;
-  Status: TNtxStatus;
-  Aces: TArray<TAceData>;
 begin
   Tree.BeginUpdateAuto;
   Tree.Clear;
-
-  Status := RtlxDumpAcl(Acl, Aces);
-  
-  if Status.IsSuccess then
-    Tree.NoItemsText := 'No items to display'
-  else
-  begin
-    Tree.NoItemsText := Status.ToString;
-    Exit;
-  end;
 
   for i := 0 to High(Aces) do
   begin
@@ -380,10 +367,9 @@ begin
       Tree.MoveTo(AceNode.Node, Tree.RootNode, amAddChildLast, False);
 end;
 
-function UiLibCollectAcl;
+function UiLibCollectAces;
 var
   Count: Integer;
-  Aces: TArray<TAceData>;
   Node: PVirtualNode;
   AceNode: IAceNode;
 begin
@@ -393,17 +379,15 @@ begin
     if Node.HasProvider(IAceNode) then
       Inc(Count);
 
-  SetLength(Aces, Count);
+  SetLength(Result, Count);
   Count := 0;
 
   for Node in Tree.Nodes do
     if Node.TryGetProvider(IAceNode, AceNode) then
     begin
-      Aces[Count] := AceNode.Ace;
+      Result[Count] := AceNode.Ace;
       Inc(Count);
     end;
-
-  Result := RtlxBuildAcl(Acl, Aces);
 end;
 
 end.
