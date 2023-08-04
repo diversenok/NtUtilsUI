@@ -33,10 +33,10 @@ begin
         NtUiLibSidSecurityFrameInitializer(dsOwner, Context),
         NtUiLibAclSecurityFrameInitializer(aiLabel, Context),
         NtUiLibAclSecurityFrameInitializer(aiTrust, Context),
-        NtUiLibAclSecurityFrameInitializer(aiSacl, Context),
+        NtUiLibAclSecurityFrameInitializer(aiFilter, Context),
         NtUiLibAclSecurityFrameInitializer(aiAttribute, Context),
         NtUiLibAclSecurityFrameInitializer(aiScope, Context),
-        NtUiLibAclSecurityFrameInitializer(aiFilter, Context),
+        NtUiLibAclSecurityFrameInitializer(aiSacl, Context),
         NtUiLibSidSecurityFrameInitializer(dsPrimaryGroup, Context)
       ], 'Object Security');
     end;
