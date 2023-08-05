@@ -8,7 +8,7 @@ interface
 
 uses
   Ntapi.WinNt, NtUtils, NtUtils.Profiles, NtUtils.Security.AppContainer,
-  NtUtils.Security, NtUtils.Security.Acl, DevirtualizedTree,
+  NtUtils.Security, NtUtils.Security.Acl, NtUtils.Objects, DevirtualizedTree,
   NtUiDialog.FrameHost, System.Classes, Vcl.Forms;
 
 type
@@ -96,13 +96,8 @@ var
   { Security }
 
 type
-  TNtUiLibHandleProvider = reference to function (
-    out Handle: IHandle;
-    DesiredAccess: TAccessMask
-  ): TNtxStatus;
-
   TNtUiLibSecurityContext = record
-    HandleProvider: TNtUiLibHandleProvider;
+    HandleProvider: TObjectOpener;
     AccessMaskType: Pointer; // TypeInfo(...)
     GenericMapping: TGenericMapping;
     QueryFunction: TSecurityQueryFunction;
