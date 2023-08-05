@@ -32,6 +32,7 @@ type
     procedure btnApplyClick(Sender: TObject);
     procedure cbxPresentClick(Sender: TObject);
   private
+    FFrameLoaded: Boolean;
     FAclType: TAclType;
     FContext: TNtUiLibSecurityContext;
     function GetControlFlags: TSecurityDescriptorControl;
@@ -42,8 +43,11 @@ type
     function GetDefaultCaption: String;
     procedure SetActive(Active: Boolean);
     procedure DelayedLoad;
+    procedure AclChanged(Sender: TObject);
     function GetCanConsumeEscapeImpl: ICanConsumeEscape;
     property CanConsumeEscapeImpl: ICanConsumeEscape read GetCanConsumeEscapeImpl implements ICanConsumeEscape;
+  protected
+    procedure Loaded; override;
   public
     procedure LoadFor(
       AclType: TAclType;
@@ -100,6 +104,16 @@ const
   );
 
 { TAclSecurityFrame }
+
+procedure TAclSecurityFrame.AclChanged;
+begin
+  if Length(AclFrame.Aces) > 0 then
+  begin
+    // Automatically enable ACL when adding items
+    cbxPresent.Checked := True;
+    cbxPresentClick(Sender);
+  end;
+end;
 
 function TAclSecurityFrame.Apply;
 var
@@ -197,6 +211,17 @@ end;
 function TAclSecurityFrame.GetDefaultCaption;
 begin
   Result := ACL_CAPTIONS[FAclType];
+end;
+
+procedure TAclSecurityFrame.Loaded;
+begin
+  inherited;
+
+  if FFrameLoaded then
+    Exit;
+
+  FFrameLoaded := True;
+  AclFrame.OnAceChange := AclChanged;
 end;
 
 procedure TAclSecurityFrame.LoadFor;

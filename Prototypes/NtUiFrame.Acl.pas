@@ -181,6 +181,7 @@ begin
   FMaskType := MaskType;
   FGenericMapping := GenericMapping;
   FDefaultAceType := DefaultAceType;
+  AclChanged;
 end;
 
 procedure TAclFrame.LoadedOnce;
