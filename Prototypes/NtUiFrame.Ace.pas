@@ -43,7 +43,6 @@ type
     FObjectFlags: TObjectAceFlags;
     FMaskType: Pointer;
     FGenericMapping: TGenericMapping;
-    FPreviousAceType: TAceType;
     procedure SetAce(const Value: TAceData);
     function GetAce: TAceData;
     function GetAceType: TAceType;
@@ -100,12 +99,7 @@ begin
     cbxInheritedObjectType.Checked;
   lblExtraData.Enabled := not (AceType in CallbackAces);
   fmxExtraData.Enabled := not (AceType in CallbackAces);
-
-  if (AceType = SYSTEM_MANDATORY_LABEL_ACE_TYPE) xor
-    (FPreviousAceType = SYSTEM_MANDATORY_LABEL_ACE_TYPE) then
-    UpdateMaskType;
-
-  FPreviousAceType := AceType;
+  UpdateMaskType;
 end;
 
 function TAceFrame.ConsumesEscape;
@@ -283,10 +277,22 @@ end;
 
 procedure TAceFrame.UpdateMaskType;
 begin
-  if GetAceType = SYSTEM_MANDATORY_LABEL_ACE_TYPE then
-    fmxAccessMask.LoadType(TypeInfo(TMandatoryLabelMask))
+  case GetAceType of
+    SYSTEM_MANDATORY_LABEL_ACE_TYPE:
+    begin
+      fmxSid.SidChoice := scIntegrity;
+      fmxAccessMask.LoadType(TypeInfo(TMandatoryLabelMask))
+    end;
+
+    SYSTEM_PROCESS_TRUST_LABEL_ACE_TYPE:
+    begin
+      fmxSid.SidChoice := scTrust;
+      fmxAccessMask.LoadAccessMaskType(FMaskType, FGenericMapping, True, False);
+    end
   else
+    fmxSid.SidChoice := scNone;
     fmxAccessMask.LoadAccessMaskType(FMaskType, FGenericMapping, True, False);
+  end;
 end;
 
 { Integration }

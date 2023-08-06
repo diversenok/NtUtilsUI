@@ -8,7 +8,7 @@ inherited SidEditor: TSidEditor
     AlignWithMargins = True
     Left = 0
     Top = 2
-    Width = 542
+    Width = 513
     Height = 21
     Hint = 'Enter SID or press DOWN to show suggestions'
     Margins.Left = 0
@@ -35,7 +35,7 @@ inherited SidEditor: TSidEditor
     Align = alRight
     ImageAlignment = iaCenter
     ImageMargins.Left = 2
-    TabOrder = 2
+    TabOrder = 3
     OnClick = btnDsPickerClick
   end
   object btnCheatsheet: TButton
@@ -51,7 +51,23 @@ inherited SidEditor: TSidEditor
     Margins.Bottom = 0
     Align = alRight
     ImageAlignment = iaCenter
-    TabOrder = 1
+    TabOrder = 2
     OnClick = btnCheatsheetClick
+  end
+  object btnChoice: TButton
+    AlignWithMargins = True
+    Left = 517
+    Top = 0
+    Width = 25
+    Height = 25
+    Margins.Left = 4
+    Margins.Top = 0
+    Margins.Right = 0
+    Margins.Bottom = 0
+    Align = alRight
+    ImageAlignment = iaCenter
+    TabOrder = 1
+    Visible = False
+    OnClick = btnChoiceClick
   end
 end

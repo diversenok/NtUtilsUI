@@ -8,22 +8,33 @@ uses
   NtUtils, NtUiFrame;
 
 type
+  TSidChoice = (
+    scNone,
+    scIntegrity,
+    scTrust
+  );
+
   TSidEditor = class(TBaseFrame)
     tbxSid: TEdit;
     btnDsPicker: TButton;
     btnCheatsheet: TButton;
+    btnChoice: TButton;
     procedure btnCheatsheetClick(Sender: TObject);
     procedure btnDsPickerClick(Sender: TObject);
     procedure tbxSidChange(Sender: TObject);
     procedure tbxSidEnter(Sender: TObject);
+    procedure btnChoiceClick(Sender: TObject);
   private
     FSuggestionsInitialized: Boolean;
     FOnSidChanged: TNotifyEvent;
     SidCache: ISid;
+    FSidChoice: TSidChoice;
     function GetSid: ISid;
     procedure SetSid(const Sid: ISid);
     procedure DsPickerIconChanged(ImageList: TImageList; ImageIndex: Integer);
     procedure CheatsheetIconChanged(ImageList: TImageList; ImageIndex: Integer);
+    procedure ChoiceIconChanged(ImageList: TImageList; ImageIndex: Integer);
+    procedure SetSidChoice(const Value: TSidChoice);
   protected
     procedure LoadedOnce; override;
     procedure FrameEnabledChanged(var Message: TMessage); message CM_ENABLEDCHANGED;
@@ -32,14 +43,16 @@ type
     property Sid: ISid read GetSid write SetSid;
   published
     property OnSidChanged: TNotifyEvent read FOnSidChanged write FOnSidChanged;
+    property SidChoice: TSidChoice read FSidChoice write SetSidChoice;
   end;
 
 implementation
 
 uses
-  Ntapi.ntstatus, NtUtils.Lsa.Sid, NtUiLib.AutoCompletion.Sid,
-  UI.Prototypes.Sid.Cheatsheet, UI.Prototypes.Forms, Resources.Icon.Catalogue,
-  Resources.Icon.UserPicker, NtUiCommon.Prototypes;
+  Ntapi.ntstatus, Ntapi.WinNt, NtUtils.Lsa.Sid, NtUiLib.AutoCompletion.Sid,
+  NtUtils.Security.Sid, UI.Prototypes.Sid.Cheatsheet, UI.Prototypes.Forms,
+  Resources.Icon.Catalogue, Resources.Icon.UserPicker, Resources.Icon.Choose,
+  NtUiCommon.Prototypes;
 
 {$R *.dfm}
 
@@ -49,6 +62,24 @@ procedure TSidEditor.btnCheatsheetClick;
 begin
   tbxSid.SetFocus;
   TSidCheatsheet.CreateChild(Application, cfmDesktop).Show;
+end;
+
+procedure TSidEditor.btnChoiceClick;
+var
+  Current: ISid;
+begin
+  if not TryGetSid(Current).IsSuccess then
+    Current := nil;
+
+  case FSidChoice of
+    scIntegrity:
+      if Assigned(NtUiLibSelectIntegrity) then
+        Sid := NtUiLibSelectIntegrity(Self, Current);
+
+    scTrust:
+      if Assigned(NtUiLibSelectTrust) then
+        Sid := NtUiLibSelectTrust(Self, Current);
+  end;
 end;
 
 procedure TSidEditor.btnDsPickerClick;
@@ -61,6 +92,12 @@ procedure TSidEditor.CheatsheetIconChanged;
 begin
   btnCheatsheet.Images := ImageList;
   btnCheatsheet.ImageIndex := ImageIndex;
+end;
+
+procedure TSidEditor.ChoiceIconChanged;
+begin
+  btnChoice.Images := ImageList;
+  btnChoice.ImageIndex := ImageIndex;
 end;
 
 procedure TSidEditor.DsPickerIconChanged;
@@ -87,6 +124,7 @@ begin
   inherited;
   RegisterResourceIcon(RESOURSES_ICON_USER_PICKER, DsPickerIconChanged);
   RegisterResourceIcon(RESOURSES_ICON_CATALOGUE, CheatsheetIconChanged);
+  RegisterResourceIcon(RESOURSES_ICON_CHOOSE, ChoiceIconChanged);
   btnDsPicker.Visible := Assigned(NtUiLibSelectDsObject);
 end;
 
@@ -109,6 +147,28 @@ begin
 
   if Assigned(FOnSidChanged) then
     FOnSidChanged(Self);
+end;
+
+procedure TSidEditor.SetSidChoice;
+begin
+  FSidChoice := Value;
+
+  case Value of
+    scIntegrity:
+    begin
+      btnChoice.Visible := Assigned(NtUiLibSelectIntegrity);
+      btnChoice.Hint := 'Choose Integrity Level';
+    end;
+
+    scTrust:
+    begin
+      btnChoice.Visible := Assigned(NtUiLibSelectTrust);
+      btnChoice.Hint := 'Choose Trust Level';
+    end;
+  else
+    btnChoice.Visible := False;
+    btnChoice.Hint := '';
+  end;
 end;
 
 procedure TSidEditor.tbxSidChange;

@@ -137,7 +137,7 @@ begin
   UpdateTypeComboBox;
   UpdateTypeTrackBar;
   UpdateLevelComboBox;
-  UpdateTypeTrackBar;
+  UpdateLevelTrackBar;
 end;
 
 procedure TFrameTrustSid.TrackBarLevelChange;

@@ -9,7 +9,7 @@ interface
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes,
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.ComCtrls,
-  Vcl.StdCtrls, NtUiCommon.Interfaces, Ntapi.WinNt, Ntapi.ntseapi;
+  Vcl.StdCtrls, NtUiCommon.Interfaces, Ntapi.WinNt, Ntapi.ntseapi, NtUtils;
 
 type
   TFrameIntegrity = class(TFrame, ICanConsumeEscape, IHasDefaultCaption,
@@ -28,18 +28,22 @@ type
     procedure UpdateComboBoxValue;
     procedure UpdateTrackBarValue;
     procedure SetValue(const Value: TIntegrityRid);
+    function GetSid: ISid;
+    procedure SetSid(const Value: ISid);
   protected
+    procedure Loaded; override;
     function ConsumesEscape: Boolean;
     function GetDefaultCaption: String;
     function GetModalResult: IInterface;
   public
     property Value: TIntegrityRid read FValue write SetValue;
+    property Sid: ISid read GetSid write SetSid;
   end;
 
 implementation
 
 uses
-  NtUtils.SysUtils, NtUtils, NtUiCommon.Prototypes;
+  NtUtils.SysUtils, NtUtils.Security.Sid, NtUiCommon.Prototypes;
 
 {$R *.dfm}
 
@@ -73,7 +77,25 @@ end;
 
 function TFrameIntegrity.GetModalResult;
 begin
-  Result := Auto.Copy(FValue);
+  Result := GetSid;
+end;
+
+function TFrameIntegrity.GetSid;
+begin
+  Result := RtlxMakeSid(SECURITY_MANDATORY_LABEL_AUTHORITY, [FValue]);
+end;
+
+procedure TFrameIntegrity.Loaded;
+begin
+  inherited;
+  FValue := SECURITY_MANDATORY_MEDIUM_RID;
+end;
+
+procedure TFrameIntegrity.SetSid;
+begin
+  if Assigned(Value) and (RtlxIdentifierAuthoritySid(Value) =
+    SECURITY_MANDATORY_LABEL_AUTHORITY) then
+    SetValue(RtlxRidSid(Value));
 end;
 
 procedure TFrameIntegrity.SetValue;
@@ -136,8 +158,8 @@ end;
 
 function NtUiLibSelectIntegrity(
   Owner: TComponent;
-  DefaultValue: TIntegrityRid = SECURITY_MANDATORY_MEDIUM_RID
-): TIntegrityRid;
+  [opt] const DefaultSid: ISid = nil
+): ISid;
 var
   Selection: IInterface;
 begin
@@ -151,7 +173,7 @@ begin
     begin
       Frame := TFrameIntegrity.Create(AOwner);
       try
-        Frame.Value := DefaultValue;
+        Frame.Sid := DefaultSid;
       except
         Frame.Free;
         raise;
@@ -159,7 +181,7 @@ begin
     end
   );
 
-  Result := TIntegrityRid((Selection as IMemory).Data^);
+  Result := Selection as ISid;
 end;
 
 initialization
