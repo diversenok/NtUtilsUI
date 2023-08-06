@@ -116,6 +116,11 @@ var
     DefaultValue: TIntegrityRid = SECURITY_MANDATORY_MEDIUM_RID
   ): TIntegrityRid;
 
+  NtUiLibSelectTrust: function (
+    Owner: TComponent;
+    [opt] const DefaultSid: ISid = nil
+  ): ISid;
+
 implementation
 
 end.
