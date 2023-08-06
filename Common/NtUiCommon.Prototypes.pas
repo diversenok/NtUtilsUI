@@ -7,9 +7,9 @@ unit NtUiCommon.Prototypes;
 interface
 
 uses
-  Ntapi.WinNt, NtUtils, NtUtils.Profiles, NtUtils.Security.AppContainer,
-  NtUtils.Security, NtUtils.Security.Acl, NtUtils.Objects, DevirtualizedTree,
-  NtUiDialog.FrameHost, System.Classes, Vcl.Forms;
+  Ntapi.WinNt, Ntapi.ntseapi, NtUtils, NtUtils.Profiles, NtUtils.Objects,
+  NtUtils.Security.AppContainer, NtUtils.Security, NtUtils.Security.Acl,
+  DevirtualizedTree, NtUiDialog.FrameHost, System.Classes, Vcl.Forms;
 
 type
   TFrameInitializer = NtUiDialog.FrameHost.TFrameInitializer;
@@ -108,6 +108,13 @@ var
   NtUiLibShowSecurity: procedure (
     const Context: TNtUiLibSecurityContext
   );
+
+  { SIDs }
+
+  NtUiLibSelectIntegrity: function (
+    Owner: TComponent;
+    DefaultValue: TIntegrityRid = SECURITY_MANDATORY_MEDIUM_RID
+  ): TIntegrityRid;
 
 implementation
 
