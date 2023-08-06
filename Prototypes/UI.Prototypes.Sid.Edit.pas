@@ -17,8 +17,7 @@ type
     procedure tbxSidChange(Sender: TObject);
     procedure tbxSidEnter(Sender: TObject);
   private
-    FInitialized: Boolean;
-    FOnDsObjectPicked: TNotifyEvent;
+    FSuggestionsInitialized: Boolean;
     FOnSidChanged: TNotifyEvent;
     SidCache: ISid;
     function GetSid: ISid;
@@ -32,7 +31,6 @@ type
     function TryGetSid(out Sid: ISid): TNtxStatus;
     property Sid: ISid read GetSid write SetSid;
   published
-    property OnDsObjectPicked: TNotifyEvent read FOnDsObjectPicked write FOnDsObjectPicked;
     property OnSidChanged: TNotifyEvent read FOnSidChanged write FOnSidChanged;
   end;
 
@@ -40,10 +38,10 @@ implementation
 
 uses
   Ntapi.ntstatus, NtUtils.Lsa.Sid, NtUiLib.AutoCompletion.Sid,
-  UI.Builtin.DsObjectPicker, UI.Prototypes.Sid.Cheatsheet, UI.Prototypes.Forms;
+  UI.Prototypes.Sid.Cheatsheet, UI.Prototypes.Forms, Resources.Icon.Catalogue,
+  Resources.Icon.UserPicker, NtUiCommon.Prototypes;
 
 {$R *.dfm}
-{$R '..\Icons\SidEditor.res'}
 
 { TSidFrame }
 
@@ -54,21 +52,9 @@ begin
 end;
 
 procedure TSidEditor.btnDsPickerClick;
-var
-  AccountName: String;
 begin
   tbxSid.SetFocus;
-
-  with ComxCallDsObjectPicker(Handle, AccountName) do
-    if IsHResult and (HResult = S_FALSE) then
-      Abort
-    else
-      RaiseOnError;
-
-  tbxSid.Text := AccountName;
-
-  if Assigned(FOnDsObjectPicked) then
-    FOnDsObjectPicked(Self);
+  tbxSid.Text := NtUiLibSelectDsObject(Handle);
 end;
 
 procedure TSidEditor.CheatsheetIconChanged;
@@ -99,26 +85,30 @@ end;
 procedure TSidEditor.LoadedOnce;
 begin
   inherited;
-  RegisterResourceIcon('SidEditor.DsObjectPicker', DsPickerIconChanged);
-  RegisterResourceIcon('SidEditor.Cheatsheet', CheatsheetIconChanged);
+  RegisterResourceIcon(RESOURSES_ICON_USER_PICKER, DsPickerIconChanged);
+  RegisterResourceIcon(RESOURSES_ICON_CATALOGUE, CheatsheetIconChanged);
+  btnDsPicker.Visible := Assigned(NtUiLibSelectDsObject);
 end;
 
 procedure TSidEditor.SetSid;
 begin
   tbxSid.OnChange := nil;
-  try
-    SidCache := Sid;
+  Auto.Delay(
+    procedure
+    begin
+      tbxSid.OnChange := tbxSidChange;
+    end
+  );
 
-    if Assigned(Sid) then
-      tbxSid.Text := LsaxSidToString(Sid)
-    else
-      tbxSid.Text := '';
+  SidCache := Sid;
 
-    if Assigned(FOnSidChanged) then
-      FOnSidChanged(Self);
-  finally
-    tbxSid.OnChange := tbxSidChange;
-  end;
+  if Assigned(Sid) then
+    tbxSid.Text := LsaxSidToString(Sid)
+  else
+    tbxSid.Text := '';
+
+  if Assigned(FOnSidChanged) then
+    FOnSidChanged(Self);
 end;
 
 procedure TSidEditor.tbxSidChange;
@@ -131,10 +121,10 @@ end;
 
 procedure TSidEditor.tbxSidEnter;
 begin
-  if FInitialized then
+  if FSuggestionsInitialized then
     Exit;
 
-  FInitialized := True;
+  FSuggestionsInitialized := True;
   ShlxEnableSidSuggestions(tbxSid.Handle);
 end;
 

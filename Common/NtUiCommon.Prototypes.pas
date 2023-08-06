@@ -7,9 +7,10 @@ unit NtUiCommon.Prototypes;
 interface
 
 uses
-  Ntapi.WinNt, Ntapi.ntseapi, NtUtils, NtUtils.Profiles, NtUtils.Objects,
-  NtUtils.Security.AppContainer, NtUtils.Security, NtUtils.Security.Acl,
-  DevirtualizedTree, NtUiDialog.FrameHost, System.Classes, Vcl.Forms;
+  Ntapi.WinNt, Ntapi.ntseapi, Ntapi.WinUser, NtUtils, NtUtils.Profiles,
+  NtUtils.Objects, NtUtils.Security.AppContainer, NtUtils.Security,
+  NtUtils.Security.Acl, DevirtualizedTree, NtUiDialog.FrameHost,
+  System.Classes, Vcl.Forms;
 
 type
   TFrameInitializer = NtUiDialog.FrameHost.TFrameInitializer;
@@ -120,6 +121,10 @@ var
     Owner: TComponent;
     [opt] const DefaultSid: ISid = nil
   ): ISid;
+
+  NtUiLibSelectDsObject: function (
+    ParentWindow: THwnd
+  ): String;
 
 implementation
 

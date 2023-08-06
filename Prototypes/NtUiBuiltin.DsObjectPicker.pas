@@ -1,4 +1,4 @@
-unit UI.Builtin.DsObjectPicker;
+unit NtUiBuiltin.DsObjectPicker;
 
 {
   This module adds support for Directory Services Object Picker - the built-in
@@ -22,24 +22,24 @@ function ComxCallDsObjectPicker(
 implementation
 
 uses
-  Ntapi.WinNt, Ntapi.ntstatus, NtUtils.Com,
-  DelphiUtils.AutoObjects;
+  Ntapi.WinNt, Ntapi.ntstatus, NtUtils.Com, DelphiUtils.AutoObjects,
+  NtUiCommon.Prototypes, System.SysUtils;
 
 const
   // SDK::wtypes.h
   DVASPECT_CONTENT = 1;
   DVASPECT_THUMBNAIL = 2;
-  DVASPECT_ICON	= 4;
-  DVASPECT_DOCPRINT	= 8;
+  DVASPECT_ICON = 4;
+  DVASPECT_DOCPRINT = 8;
 
   // SDK::objidl.h
-  TYMED_HGLOBAL	= 1;
+  TYMED_HGLOBAL = 1;
   TYMED_FILE = 2;
-  TYMED_ISTREAM	= 4;
-  TYMED_ISTORAGE= 8;
-  TYMED_GDI	= 16;
+  TYMED_ISTREAM = 4;
+  TYMED_ISTORAGE = 8;
+  TYMED_GDI = 16;
   TYMED_MFPICT = 32;
-  TYMED_ENHMF	= 64;
+  TYMED_ENHMF = 64;
   TYMED_NULL = 0;
 
   // SDK::ObjSel.h, type of the scope
@@ -400,4 +400,19 @@ begin
   AccountName := String(SelList.DsSelection[0].Name);
 end;
 
+{ Integration }
+
+function NtUiLibSelectDsObject(
+  ParentWindow: THwnd
+): String;
+begin
+  with ComxCallDsObjectPicker(ParentWindow, Result) do
+    if IsHResult and (HResult = S_FALSE) then
+      Abort
+    else
+      RaiseOnError;
+end;
+
+initialization
+  NtUiCommon.Prototypes.NtUiLibSelectDsObject := NtUiLibSelectDsObject;
 end.
