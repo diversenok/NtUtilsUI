@@ -65,7 +65,7 @@ type
       const Aces: TArray<TAceData>;
       MaskType: Pointer;
       const GenericMapping: TGenericMapping;
-      DefaultAceType: TAceType
+      DefaultAceType: TAceType = ACCESS_ALLOWED_ACE_TYPE
     );
     property Aces: TArray<TAceData> read GetAces;
     property OnAceChange: TNotifyEvent read FOnAceChange write FOnAceChange;
