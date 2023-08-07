@@ -1,7 +1,7 @@
 unit NtUiBackend.Acl;
 
 {
-  This unit provides the logic for viewing and esiting Access Control Lists.
+  This unit provides the logic for viewing and editing Access Control Lists.
 }
 
 interface

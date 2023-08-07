@@ -86,6 +86,7 @@ object AceFrame: TAceFrame
     Style = csOwnerDrawFixed
     Anchors = [akLeft, akTop, akRight]
     DropDownCount = 22
+    ExtendedUI = True
     ItemIndex = 0
     TabOrder = 0
     Text = '0: Access Allowed ACE'
