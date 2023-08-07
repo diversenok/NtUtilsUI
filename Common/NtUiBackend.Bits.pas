@@ -286,35 +286,41 @@ function UiLibCollectAllFlagNodes(
 ): TArray<TNodeGroup>;
 var
   GroupAttributes: TArray<FlagGroupAttribute>;
+  UngrouppedBits: UInt64;
   i: Integer;
 begin
   // Infer flag groups from the type information
   RttixFilterAttributes(Attributes, FlagGroupAttribute,
     TCustomAttributeArray(GroupAttributes));
 
-  if Length(GroupAttributes) > 0 then
-  begin
-    // Convert them into node groups
-    SetLength(Result, Length(GroupAttributes));
+  UngrouppedBits := SizeToMask(TypeSize);
+  SetLength(Result, Length(GroupAttributes));
 
-    for i := 0 to High(GroupAttributes) do
-    begin
-      Result[i].Name := GroupAttributes[i].Flag.Name;
-      Result[i].Mask := GroupAttributes[i].Flag.Value;
-      Result[i].UseMaskHint := True;
-      Result[i].IsDefault := False;
-      Result[i].CheckBoxType := ctCheckBox;
-    end;
-  end
-  else
+  // Convert them into node groups
+  for i := 0 to High(GroupAttributes) do
+  begin
+    Result[i].Name := GroupAttributes[i].Flag.Name;
+    Result[i].Mask := GroupAttributes[i].Flag.Value;
+    Result[i].UseMaskHint := True;
+    Result[i].IsDefault := False;
+    Result[i].CheckBoxType := ctCheckBox;
+    UngrouppedBits := UngrouppedBits and not Result[i].Mask;
+  end;
+
+  if UngrouppedBits <> 0 then
   begin
     // Construct a default groups
-    SetLength(Result, 1);
-    Result[0].Name := 'Flags';
-    Result[0].Mask := SizeToMask(TypeSize);
-    Result[0].UseMaskHint := False;
-    Result[0].IsDefault := True;
-    Result[0].CheckBoxType := ctCheckBox;
+    SetLength(Result, Length(Result) + 1);
+
+    if Length(GroupAttributes) > 0 then
+      Result[High(Result)].Name := 'Other'
+    else
+      Result[High(Result)].Name := 'Flags';
+
+    Result[High(Result)].Mask := UngrouppedBits;
+    Result[High(Result)].UseMaskHint := False;
+    Result[High(Result)].IsDefault := True;
+    Result[High(Result)].CheckBoxType := ctCheckBox;
   end;
 
   // Collect nodes for each group
@@ -423,6 +429,9 @@ begin
     Attributes := RttixEnumerateAttributes(RttiContext, RttiType);
     Groups := UiLibCollectAllFlagNodes(Attributes, RttiType.TypeSize);
     Groups := Groups + UiLibCollectSubEnumNodes(Attributes, RttiType.TypeSize);
+
+    // Allow attributes override the full mask
+    UiLibUpdateFullMask(Attributes, FullMask);
   end
   else
     raise EArgumentException.Create('Ordinal type expected');
@@ -487,9 +496,8 @@ begin
   Groups[2] := Group;
 
   Group.Name := 'Other';
-  Group.Mask := (FullMask and SPECIFIC_RIGHTS_ALL)
-    and not GenericMapping.GenericRead and not GenericMapping.GenericWrite
-    and not GenericMapping.GenericExecute;
+  Group.Mask := SPECIFIC_RIGHTS_ALL and not GenericMapping.GenericRead
+    and not GenericMapping.GenericWrite and not GenericMapping.GenericExecute;
   Group.Nodes := UiLibCollectFlagNodes(Attributes, RttiType.TypeSize,
     Group.Mask);
   Groups[3] := Group;
