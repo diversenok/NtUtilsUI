@@ -198,9 +198,9 @@ end;
 
 procedure TAclFrame.SelectionChanged;
 begin
-  btnUp.Enabled := Tree.SelectedCount > 0;
+  btnUp.Enabled := Tree.CanMoveSelectedNodesUp;
   btnDelete.Enabled := Tree.SelectedCount > 0;
-  btnDown.Enabled := Tree.SelectedCount > 0;
+  btnDown.Enabled := Tree.CanMoveSelectedNodesDown;
 end;
 
 procedure TAclFrame.SetActive;

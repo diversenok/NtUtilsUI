@@ -47,8 +47,10 @@ type
     procedure RefreshPopupMenuShortcuts;
     property MainActionMenuText: String read GetMainActionMenuText write SetMainActionMenuText;
     destructor Destroy; override;
-    procedure MoveSelectedNodesUp;
-    procedure MoveSelectedNodesDown;
+    function CanMoveSelectedNodesUp: Boolean;
+    function CanMoveSelectedNodesDown: Boolean;
+    function MoveSelectedNodesUp: Boolean;
+    function MoveSelectedNodesDown: Boolean;
   published
     property DrawSelectionMode default smBlendedRectangle;
     property HintMode default hmHint;
@@ -94,6 +96,46 @@ begin
 end;
 
 { TVirtualStringTreeEx }
+
+function TVirtualStringTreeEx.CanMoveSelectedNodesDown;
+var
+  Nodes: TArray<PVirtualNode>;
+  Next: PVirtualNode;
+  i: Integer;
+begin
+  Result := False;
+  Nodes := SelectedNodes.ToArray;
+
+  for i := High(Nodes) downto 0 do
+  begin
+    Next := GetNext(Nodes[i]);
+
+    // Check if we can move each node after its next without passing previously
+    // moved
+    if Assigned(Next) and ((i = High(Nodes)) or (Next <> Nodes[i + 1])) then
+      Exit(True);
+  end;
+end;
+
+function TVirtualStringTreeEx.CanMoveSelectedNodesUp;
+var
+  Nodes: TArray<PVirtualNode>;
+  Previous: PVirtualNode;
+  i: Integer;
+begin
+  Result := False;
+  Nodes := SelectedNodes.ToArray;
+
+  for i := 0 to High(Nodes) do
+  begin
+    Previous := GetPrevious(Nodes[i]);
+
+    // Check if we can move each node before its previous without passing
+    // previously moved
+    if Assigned(Previous) and ((i = 0) or (Previous <> Nodes[i - 1])) then
+      Exit(True);
+  end;
+end;
 
 constructor TVirtualStringTreeEx.Create;
 begin
@@ -282,7 +324,7 @@ begin
   FDefaultMenus.InvokeShortcuts(Key, Shift);
 end;
 
-procedure TVirtualStringTreeEx.MoveSelectedNodesDown;
+function TVirtualStringTreeEx.MoveSelectedNodesDown;
 var
   Nodes: TArray<PVirtualNode>;
   Next: PVirtualNode;
@@ -290,22 +332,26 @@ var
 begin
   try
     BeginUpdate;
+    Result := False;
     Nodes := SelectedNodes.ToArray;
 
     for i := High(Nodes) downto 0 do
     begin
       Next := GetNext(Nodes[i]);
 
-      // Move each node after next but without passing previously moved
+      // Move each node after its next without passing previously moved
       if Assigned(Next) and ((i = High(Nodes)) or (Next <> Nodes[i + 1])) then
+      begin
         MoveTo(Nodes[i], Next, amInsertAfter, False);
+        Result := True;
+      end;
     end;
   finally
     EndUpdate;
   end;
 end;
 
-procedure TVirtualStringTreeEx.MoveSelectedNodesUp;
+function TVirtualStringTreeEx.MoveSelectedNodesUp;
 var
   Nodes: TArray<PVirtualNode>;
   Previous: PVirtualNode;
@@ -313,15 +359,19 @@ var
 begin
   try
     BeginUpdate;
+    Result := False;
     Nodes := SelectedNodes.ToArray;
 
     for i := 0 to High(Nodes) do
     begin
       Previous := GetPrevious(Nodes[i]);
 
-      // Move each node before previous but without passing previously moved
+      // Move each node before its previous without passing previously moved
       if Assigned(Previous) and ((i = 0) or (Previous <> Nodes[i - 1])) then
+      begin
         MoveTo(Nodes[i], Previous, amInsertBefore, False);
+        Result := True;
+      end;
     end;
   finally
     EndUpdate;
