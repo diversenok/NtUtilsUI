@@ -208,7 +208,8 @@ var
   a: TCustomAttribute;
   SubEnums: TArray<IFlagNode>;
   Groups: TArray<TArrayGroup<UInt64, IFlagNode>>;
-  Count, i: Integer;
+  GroupNames: TArray<FlagGroupAttribute>;
+  Count, i, j: Integer;
 begin
   // Count sub enums
   Count := 0;
@@ -236,12 +237,25 @@ begin
     end
   );
 
-  // Convert them into node groups
+  // Collect known names for groups
+  RttixFilterAttributes(Attributes, FlagGroupAttribute,
+    TCustomAttributeArray(GroupNames));
+
+  // Convert flag groups into node groups
   SetLength(Result, Length(Groups));
 
   for i := 0 to High(Result) do
   begin
     Result[i].Name := 'Options group';
+
+    // Allow attributes to override group names
+    for j := 0 to High(GroupNames) do
+      if GroupNames[j].Flag.Value = Groups[i].Key then
+      begin
+        Result[i].Name := GroupNames[j].Flag.Name;
+        Break;
+      end;
+
     Result[i].Mask := Groups[i].Key;
     Result[i].UseMaskHint := True;
     Result[i].IsDefault := True;

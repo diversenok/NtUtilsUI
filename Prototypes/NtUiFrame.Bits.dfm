@@ -4,7 +4,7 @@ object BitsFrame: TBitsFrame
   Width = 320
   Height = 317
   Constraints.MinHeight = 100
-  Constraints.MinWidth = 200
+  Constraints.MinWidth = 224
   ParentShowHint = False
   ShowHint = True
   TabOrder = 0
