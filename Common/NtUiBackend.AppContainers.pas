@@ -211,11 +211,11 @@ begin
   Node.ColumnText[0] := 'Type';
 
   if IsPackage then
-    Node.ColumnText[1] := 'Package'
+    Node.ColumnText[1] := 'Package AppContainer'
   else if Info.IsChild then
-    Node.ColumnText[1] := 'Child'
+    Node.ColumnText[1] := 'Child AppContainer'
   else
-    Node.ColumnText[1] := 'Parent';
+    Node.ColumnText[1] := 'Parent AppContainer';
 
   Tree.AddChildEx(nil, Node);
 
