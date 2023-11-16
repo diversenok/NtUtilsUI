@@ -13,7 +13,7 @@ uses
 // Show NtUiLib exception dialog
 procedure ReportException(E: Exception);
 
-// Set NtUiLib exception dialog as the hander for Application.OnException
+// Set NtUiLib exception dialog as the handler for Application.OnException
 procedure EnableNtUiLibExceptionHandling;
 
 type
@@ -40,7 +40,7 @@ implementation
 uses
   DelphiUtils.AutoObjects, NtUiLib.Exceptions.Dialog, Vcl.Forms;
 
-{ NtUiLib Exception Hanlder }
+{ NtUiLib Exception Handler }
 
 procedure ReportException;
 begin

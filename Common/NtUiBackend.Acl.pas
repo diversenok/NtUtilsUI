@@ -282,7 +282,7 @@ var
 begin
   Tree.BeginUpdateAuto;
 
-  // Deteremine where to insert the new ACE
+  // Determine where to insert the new ACE
   InsertBefore := UiLibChooseAceIndex(Tree, RtlxGetCategoryAce(Ace.AceType,
     Ace.AceFlags));
 
@@ -346,7 +346,7 @@ var
   Node: PVirtualNode;
   AceNode: IAceNode;
 begin
-  // Make rach category empty by default
+  // Make each category empty by default
   for Category := Low(TAceCategory) to High(TAceCategory) do
     Aces[Category] := nil;
 

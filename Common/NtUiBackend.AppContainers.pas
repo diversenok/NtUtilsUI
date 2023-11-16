@@ -81,7 +81,7 @@ function TAppContainerInfoHelper.Hint;
 begin
   Result := BuildHint([
     THintSection.New('Friendly Name', RtlxStringOrDefault(FriendlyName, '(Unknown)')),
-    THintSection.New('Full Monker', RtlxStringOrDefault(FullMoniker, '(Unknown)')),
+    THintSection.New('Full Moniker', RtlxStringOrDefault(FullMoniker, '(Unknown)')),
     THintSection.New('SID', RtlxSidToString(Sid))
   ]);
 end;
@@ -279,7 +279,7 @@ begin
   Node := TEditableNodeProvider.Create(2);
   Node.EnabledMainActionMenu := False;
   Node.ColumnText[0] := 'Registry Path';
-  Node.ColumnText[1] := RtlxQueryStoragePathAppContaier(Info);
+  Node.ColumnText[1] := RtlxQueryStoragePathAppContainer(Info);
   Tree.AddChildEx(nil, Node);
 
   // File path

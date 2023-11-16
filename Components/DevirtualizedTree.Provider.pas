@@ -1,7 +1,7 @@
 unit DevirtualizedTree.Provider;
 
 {
-  This module defined the base class for creting node state providers for the
+  This module defined the base class for creating node state providers for the
   devirtualized tree view.
 }
 

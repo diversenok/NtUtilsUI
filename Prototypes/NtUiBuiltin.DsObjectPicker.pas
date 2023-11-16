@@ -12,7 +12,7 @@ interface
 uses
   Ntapi.WinUser, Ntapi.ObjBase, DelphiApi.Reflection, NtUtils;
 
-// Show the dialog and retieve the selected account name
+// Show the dialog and retrieve the selected account name
 [RequiresCOM]
 function ComxCallDsObjectPicker(
   ParentWindow: THwnd;

@@ -42,7 +42,7 @@ type
     );
   end;
 
-// Construct a frame initilizer for an ACL security editor
+// Construct a frame initializer for an ACL security editor
 function NtUiLibSidSecurityFrameInitializer(
   SidType: TDescriptorSidType;
   const Context: TNtUiLibSecurityContext

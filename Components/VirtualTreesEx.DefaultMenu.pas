@@ -214,7 +214,7 @@ end;
 
 procedure TDefaultTreeMenu.NotifyPopup;
 begin
-  // Allow themainaction only single node
+  // Allow the main action only a single node
   FMenuMainAction.Visible := Assigned(FOnMainAction) and (FTree.SelectedCount = 1);
 
   // Allow the node selected to explicitly disable the default menu
@@ -222,7 +222,7 @@ begin
     not TVirtualStringTreeEx(FTree).OverrideMainActionMenuEnabled(Node) then
     FMenuMainAction.Visible := False;
 
-  // Enable regular copiying when there are things to copy
+  // Enable regular copying when there are things to copy
   FMenuCopy.Visible := FTree.SelectedCount > 0;
 
   // Enable column-specific copying

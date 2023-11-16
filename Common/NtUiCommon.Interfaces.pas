@@ -226,7 +226,7 @@ end;
 
 constructor TBaseTreeExtension.Create;
 begin
-  // We store a non-owning typed refernce and a weak interface reference to
+  // We store a non-owning typed reference and a weak interface reference to
   // correctly track object lifetime
   FTree := Tree;
   FTreeWeakRef := Tree;

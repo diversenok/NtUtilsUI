@@ -122,9 +122,9 @@ end;
 procedure TSidEditor.LoadedOnce;
 begin
   inherited;
-  RegisterResourceIcon(RESOURSES_ICON_USER_PICKER, DsPickerIconChanged);
-  RegisterResourceIcon(RESOURSES_ICON_CATALOGUE, CheatsheetIconChanged);
-  RegisterResourceIcon(RESOURSES_ICON_CHOOSE, ChoiceIconChanged);
+  RegisterResourceIcon(RESOURCES_ICON_USER_PICKER, DsPickerIconChanged);
+  RegisterResourceIcon(RESOURCES_ICON_CATALOGUE, CheatsheetIconChanged);
+  RegisterResourceIcon(RESOURCES_ICON_CHOOSE, ChoiceIconChanged);
   btnDsPicker.Visible := Assigned(NtUiLibSelectDsObject);
 end;
 

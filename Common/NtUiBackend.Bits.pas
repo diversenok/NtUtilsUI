@@ -300,14 +300,14 @@ function UiLibCollectAllFlagNodes(
 ): TArray<TNodeGroup>;
 var
   GroupAttributes: TArray<FlagGroupAttribute>;
-  UngrouppedBits: UInt64;
+  UngroupedBits: UInt64;
   i: Integer;
 begin
   // Infer flag groups from the type information
   RttixFilterAttributes(Attributes, FlagGroupAttribute,
     TCustomAttributeArray(GroupAttributes));
 
-  UngrouppedBits := SizeToMask(TypeSize);
+  UngroupedBits := SizeToMask(TypeSize);
   SetLength(Result, Length(GroupAttributes));
 
   // Convert them into node groups
@@ -318,10 +318,10 @@ begin
     Result[i].UseMaskHint := True;
     Result[i].IsDefault := False;
     Result[i].CheckBoxType := ctCheckBox;
-    UngrouppedBits := UngrouppedBits and not Result[i].Mask;
+    UngroupedBits := UngroupedBits and not Result[i].Mask;
   end;
 
-  if UngrouppedBits <> 0 then
+  if UngroupedBits <> 0 then
   begin
     // Construct a default groups
     SetLength(Result, Length(Result) + 1);
@@ -331,7 +331,7 @@ begin
     else
       Result[High(Result)].Name := 'Flags';
 
-    Result[High(Result)].Mask := UngrouppedBits;
+    Result[High(Result)].Mask := UngroupedBits;
     Result[High(Result)].UseMaskHint := False;
     Result[High(Result)].IsDefault := True;
     Result[High(Result)].CheckBoxType := ctCheckBox;
@@ -393,7 +393,7 @@ begin
   else
     Tree.TreeOptions.PaintOptions := Tree.TreeOptions.PaintOptions + [toShowRoot];
 
-  // Add all groups and nodex
+  // Add all groups and nodes
   for i := 0 to High(Groups) do
   begin
     if not HideRoot then
@@ -439,7 +439,7 @@ begin
     Groups := [UiLibCollectEnumNodes(RttiContext, TRttiEnumerationType(RttiType))]
   else if (RttiType is TRttiOrdinalType) or (RttiType is TRttiInt64Type) then
   begin
-    // Collect flags and sub-enums from all (explicit + inherited) attribtues
+    // Collect flags and sub-enums from all (explicit + inherited) attributes
     Attributes := RttixEnumerateAttributes(RttiContext, RttiType);
     Groups := UiLibCollectAllFlagNodes(Attributes, RttiType.TypeSize);
     Groups := Groups + UiLibCollectSubEnumNodes(Attributes, RttiType.TypeSize);

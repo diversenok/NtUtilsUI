@@ -187,11 +187,11 @@ end;
 procedure TAclFrame.LoadedOnce;
 begin
   inherited;
-  RegisterResourceIcon(RESOURSES_ICON_UP, btnUpIconChanged);
-  RegisterResourceIcon(RESOURSES_ICON_ADD, btnAddIconChanged);
-  RegisterResourceIcon(RESOURSES_ICON_VERIFY, btnCanonicalizeIconChanged);
-  RegisterResourceIcon(RESOURSES_ICON_DELETE, btnDeleteIconChanged);
-  RegisterResourceIcon(RESOURSES_ICON_DOWN, btnDownIconChanged);
+  RegisterResourceIcon(RESOURCES_ICON_UP, btnUpIconChanged);
+  RegisterResourceIcon(RESOURCES_ICON_ADD, btnAddIconChanged);
+  RegisterResourceIcon(RESOURCES_ICON_VERIFY, btnCanonicalizeIconChanged);
+  RegisterResourceIcon(RESOURCES_ICON_DELETE, btnDeleteIconChanged);
+  RegisterResourceIcon(RESOURCES_ICON_DOWN, btnDownIconChanged);
   btnAdd.Enabled := Assigned(NtUiLibCreateAce);
   Search.AttachToTree(Tree);
 end;

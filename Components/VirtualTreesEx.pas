@@ -1,7 +1,7 @@
 unit VirtualTreesEx;
 
 {
-  This module provides a sligtly improved virtual tree view.
+  This module provides a slightly improved virtual tree view.
 }
 
 interface
@@ -43,7 +43,7 @@ type
     function OverrideMainActionMenuEnabled(Node: PVirtualNode): Boolean; virtual;
     constructor Create(AOwner: TComponent); override;
     procedure DeleteSelectedNodesEx(SelectSomethingAfter: Boolean = True);
-    procedure SelectSometing;
+    procedure SelectSomething;
     procedure RefreshPopupMenuShortcuts;
     property MainActionMenuText: String read GetMainActionMenuText write SetMainActionMenuText;
     destructor Destroy; override;
@@ -388,7 +388,7 @@ begin
   FDefaultMenus.RefreshShortcuts;
 end;
 
-procedure TVirtualStringTreeEx.SelectSometing;
+procedure TVirtualStringTreeEx.SelectSomething;
 var
   Node: PVirtualNode;
 begin

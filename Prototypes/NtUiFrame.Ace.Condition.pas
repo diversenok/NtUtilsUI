@@ -61,7 +61,7 @@ end;
 procedure TAceConditionFrame.LoadedOnce;
 begin
   inherited;
-  RegisterResourceIcon(RESOURSES_ICON_VERIFY, NormalizeIconChanged);
+  RegisterResourceIcon(RESOURCES_ICON_VERIFY, NormalizeIconChanged);
 end;
 
 procedure TAceConditionFrame.NormalizeIconChanged;
@@ -137,7 +137,7 @@ begin
     end
   );
 
-  // Updathe the text
+  // Update the text
   tbxCondition.Text := SDDL;
   tbxCondition.Color := clWindow;
 end;

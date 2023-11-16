@@ -53,7 +53,7 @@ end;
 
 procedure THexEditFrame.SetData;
 begin
-  // Prevant recursive calls
+  // Prevent recursive calls
   tbxHexString.OnChange := nil;
   Auto.Delay(
     procedure

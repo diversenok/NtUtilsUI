@@ -27,7 +27,7 @@ inherited SidEditor: TSidEditor
     Top = 0
     Width = 25
     Height = 25
-    Hint = 'Use the built-in dialog for slecting accounts'
+    Hint = 'Use the built-in dialog for selecting accounts'
     Margins.Left = 4
     Margins.Top = 0
     Margins.Right = 0

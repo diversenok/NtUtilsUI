@@ -335,7 +335,7 @@ begin
 
   // Note: InsertNode doesn't have an overload that takes an interface as a
   // parameter like AddNode does. Reproduce AddNode's behavior by adding the
-  // provider as a pointer and then adjutsing its lifetime.
+  // provider as a pointer and then adjusting its lifetime.
   NewNode := inherited InsertNode(Node, Mode, Pointer(Provider));
   Include(NewNode.States, vsReleaseCallOnUserDataRequired);
   Provider._AddRef;

@@ -148,7 +148,7 @@ var
   Observer: IObservesActivation;
   i: Integer;
 begin
-  // Adjust active state for all frames to allow handling conflicting shorcuts
+  // Adjust active state for all frames to allow handling conflicting shortcuts
   for i := 0 to High(FFrames) do
     if IUnknown(FFrames[i]).QueryInterface(IObservesActivation,
       Observer).IsSuccess then

@@ -15,7 +15,7 @@ type
   TChildFormMode = (
     cfmNormal,      // A child of the owner form
     cfmApplication, // A child of the Application form
-    cfmDesktop      // A child of the desktop that appers on the taskbar
+    cfmDesktop      // A child of the desktop that appears on the taskbar
   );
 
   TChildForm = class abstract (TFormEx)

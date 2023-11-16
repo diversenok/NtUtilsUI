@@ -55,7 +55,7 @@ type
     );
   end;
 
-// Construct a frame initilizer for an ACL security editor
+// Construct a frame initializer for an ACL security editor
 function NtUiLibAclSecurityFrameInitializer(
   AclType: TAclType;
   const Context: TNtUiLibSecurityContext
