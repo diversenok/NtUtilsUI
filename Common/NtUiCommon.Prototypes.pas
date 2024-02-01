@@ -15,6 +15,10 @@ uses
 type
   TFrameInitializer = NtUiDialog.FrameHost.TFrameInitializer;
 
+  TSecurityAccessMaskLookup = reference to function (
+    Info: TSecurityInformation
+  ): TAccessMask;
+
 var
   { Common: Frame Hosting }
 
@@ -103,6 +107,8 @@ type
     GenericMapping: TGenericMapping;
     QueryFunction: TSecurityQueryFunction;
     SetFunction: TSecuritySetFunction;
+    [opt] CustomQueryAccessLookup: TSecurityAccessMaskLookup;
+    [opt] CustomSetAccessLookup: TSecurityAccessMaskLookup;
   end;
 
 var

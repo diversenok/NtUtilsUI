@@ -72,10 +72,18 @@ var
   hxObject: IHandle;
   SD: TSecurityDescriptorData;
   SecDesc: ISecurityDescriptor;
+  DesiredAccess: TAccessMask;
 begin
   if not Assigned(FContext.HandleProvider) or
-    not Assigned(FContext.QueryFunction) then
-    raise Exception.Create('SID Security frame not initialized');
+    not Assigned(FContext.SetFunction) then
+    raise Exception.Create('No callback for setting security is available');
+
+  // Check for custom access mask lookup
+  if Assigned(FContext.CustomSetAccessLookup) then
+    DesiredAccess := FContext.CustomSetAccessLookup(
+      SECURITY_INFORMATION[FSidType])
+  else
+    DesiredAccess := SecurityWriteAccess(SECURITY_INFORMATION[FSidType]);
 
   // Start building a security descriptor
   SD := Default(TSecurityDescriptorData);
@@ -97,7 +105,7 @@ begin
     Exit;
 
   // Open the handle
-  Result := FContext.HandleProvider(hxObject, WRITE_OWNER);
+  Result := FContext.HandleProvider(hxObject, DesiredAccess);
 
   if not Result.IsSuccess then
     Exit;
@@ -146,17 +154,25 @@ var
   hxObject: IHandle;
   SecDesc: ISecurityDescriptor;
   SD: TSecurityDescriptorData;
+  DesiredAccess: TAccessMask;
 begin
   if not Assigned(FContext.HandleProvider) or
     not Assigned(FContext.QueryFunction) then
-    raise Exception.Create('SID Security frame not initialized');
+    raise Exception.Create('No callback for querying security is available');
+
+  // Check for custom access mask lookup
+  if Assigned(FContext.CustomQueryAccessLookup) then
+    DesiredAccess := FContext.CustomQueryAccessLookup(
+      SECURITY_INFORMATION[FSidType])
+  else
+    DesiredAccess := SecurityReadAccess(SECURITY_INFORMATION[FSidType]);
 
   // Reset UI state
   cbxDefaulted.Checked := False;
   SidEditor.Sid := nil;
 
   // Open the handle
-  Result := FContext.HandleProvider(hxObject, READ_CONTROL);
+  Result := FContext.HandleProvider(hxObject, DesiredAccess);
 
   if not Result.IsSuccess then
     Exit;

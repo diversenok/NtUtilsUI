@@ -120,14 +120,21 @@ var
   hxObject: IHandle;
   SD: TSecurityDescriptorData;
   SecDesc: ISecurityDescriptor;
+  DesiredAccess: TAccessMask;
 begin
   if not Assigned(FContext.HandleProvider) or
-    not Assigned(FContext.QueryFunction) then
-    raise Exception.Create('ACL Security frame not initialized');
+    not Assigned(FContext.SetFunction) then
+    raise Exception.Create('No callback for setting security is available');
+
+  // Check for custom access mask lookup
+  if Assigned(FContext.CustomSetAccessLookup) then
+    DesiredAccess := FContext.CustomSetAccessLookup(
+      SECURITY_INFORMATION[FAclType])
+  else
+    DesiredAccess := SecurityWriteAccess(SECURITY_INFORMATION[FAclType]);
 
   // Open the handle
-  Result := FContext.HandleProvider(hxObject, SecurityWriteAccess(
-    SECURITY_INFORMATION[FAclType]));
+  Result := FContext.HandleProvider(hxObject, DesiredAccess);
 
   if not Result.IsSuccess then
     Exit;
@@ -238,10 +245,21 @@ var
   hxObject: IHandle;
   SecDesc: ISecurityDescriptor;
   SD: TSecurityDescriptorData;
+  DesiredAccess: TAccessMask;
 begin
+  if not Assigned(FContext.HandleProvider) or
+    not Assigned(FContext.QueryFunction) then
+    raise Exception.Create('No callback for querying security is available');
+
+  // Check for custom access mask lookup
+  if Assigned(FContext.CustomQueryAccessLookup) then
+    DesiredAccess := FContext.CustomQueryAccessLookup(
+      SECURITY_INFORMATION[FAclType])
+  else
+    DesiredAccess := SecurityReadAccess(SECURITY_INFORMATION[FAclType]);
+
   // Open the handle
-  Result := FContext.HandleProvider(hxObject, SecurityReadAccess(
-    SECURITY_INFORMATION[FAclType]));
+  Result := FContext.HandleProvider(hxObject, DesiredAccess);
 
   if not Result.IsSuccess then
     Exit;
@@ -282,10 +300,6 @@ var
   Control: TSecurityDescriptorControl;
   Aces: TArray<TAceData>;
 begin
-  if not Assigned(FContext.HandleProvider) or
-    not Assigned(FContext.QueryFunction) then
-    raise Exception.Create('ACL Security frame not initialized');
-
   // Query the ACL
   Result := QueryAcl(Control, Aces);
 
