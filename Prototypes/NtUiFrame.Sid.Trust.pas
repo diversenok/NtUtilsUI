@@ -183,7 +183,7 @@ begin
     SECURITY_PROCESS_PROTECTION_LEVEL_WINDOWS_RID:      cbxLevel.ItemIndex := 4;
     SECURITY_PROCESS_PROTECTION_LEVEL_WINTCB_RID:       cbxLevel.ItemIndex := 5;
   else
-    cbxLevel.Text := RtlxUIntToStr(FLevel, 16, 4);
+    cbxLevel.Text := RtlxUIntToStr(FLevel, nsHexadecimal, 4);
   end;
 end;
 
@@ -216,7 +216,7 @@ begin
     SECURITY_PROCESS_PROTECTION_TYPE_LITE_RID: cbxType.ItemIndex := 1;
     SECURITY_PROCESS_PROTECTION_TYPE_FULL_RID: cbxType.ItemIndex := 2;
   else
-    cbxType.Text := RtlxUIntToStr(FType, 16, 3);
+    cbxType.Text := RtlxUIntToStr(FType, nsHexadecimal, 3);
   end;
 end;
 

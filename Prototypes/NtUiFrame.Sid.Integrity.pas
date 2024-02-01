@@ -137,7 +137,7 @@ begin
     SECURITY_MANDATORY_SYSTEM_RID:            ComboBox.ItemIndex := 5;
     SECURITY_MANDATORY_PROTECTED_PROCESS_RID: ComboBox.ItemIndex := 6;
   else
-    ComboBox.Text := RtlxUIntToStr(FValue, 16, 4);
+    ComboBox.Text := RtlxUIntToStr(FValue, nsHexadecimal, 4);
   end;
 end;
 
