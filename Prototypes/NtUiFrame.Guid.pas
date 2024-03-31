@@ -90,7 +90,10 @@ begin
   FGuidValid := Result.IsSuccess;
 
   if FGuidValid then
-    tbxGuid.Color := clWindow
+  begin
+    Value := FGuid;
+    tbxGuid.Color := clWindow;
+  end
   else
     tbxGuid.Color := ColorSettings.clDisabledModified;
 end;
