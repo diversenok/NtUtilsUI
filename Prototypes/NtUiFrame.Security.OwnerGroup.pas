@@ -111,8 +111,8 @@ begin
     Exit;
 
   // Apply the security descriptor
-  Result := FContext.SetFunction(hxObject.Handle,
-    SECURITY_INFORMATION[FSidType], SecDesc.Data);
+  Result := FContext.SetFunction(hxObject, SECURITY_INFORMATION[FSidType],
+    SecDesc.Data);
 
   if not Result.IsSuccess then
     Exit;
@@ -178,8 +178,8 @@ begin
     Exit;
 
   // Query the security descriptor
-  Result := FContext.QueryFunction(hxObject.Handle,
-    SECURITY_INFORMATION[FSidType], SecDesc);
+  Result := FContext.QueryFunction(hxObject, SECURITY_INFORMATION[FSidType],
+    SecDesc);
 
   if not Result.IsSuccess then
     Exit;

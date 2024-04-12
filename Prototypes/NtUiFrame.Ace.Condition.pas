@@ -90,9 +90,8 @@ begin
   // Use the cache when available
   if Assigned(FCondition) then
   begin
-    Result.Status := STATUS_SUCCESS;
     Value := FCondition;
-    Exit;
+    Exit(NtxSuccess);
   end;
 
   // Parse the condition and cache the result
@@ -126,7 +125,7 @@ begin
       FCondition := Value;
   end
   else
-    Result.Status := STATUS_SUCCESS;
+    Result := NtxSuccess;
 
   // Suppress recursive invocation
   tbxCondition.OnChange := nil;

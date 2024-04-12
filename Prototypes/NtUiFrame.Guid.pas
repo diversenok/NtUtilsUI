@@ -80,9 +80,8 @@ function TGuidFrame.TryGetGuid;
 begin
   if FGuidValid then
   begin
-    Result.Status := STATUS_SUCCESS;
     Value := FGuid;
-    Exit;
+    Exit(NtxSuccess);
   end;
 
   Result.Location := 'RtlGUIDFromString';
