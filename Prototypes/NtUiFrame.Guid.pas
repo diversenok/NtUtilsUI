@@ -30,7 +30,7 @@ type
 implementation
 
 uses
-  Ntapi.ntdef, Ntapi.ntrtl, NtUtils.SysUtils, UI.Colors;
+  NtUtils.SysUtils, UI.Colors;
 
 {$R *.dfm}
 
@@ -84,8 +84,7 @@ begin
     Exit(NtxSuccess);
   end;
 
-  Result.Location := 'RtlGUIDFromString';
-  Result.Status := RtlGUIDFromString(TNtUnicodeString.From(tbxGuid.Text), FGuid);
+  Result := RtlxStringToGuid(tbxGuid.Text, FGuid);
   FGuidValid := Result.IsSuccess;
 
   if FGuidValid then
