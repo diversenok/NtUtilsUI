@@ -68,17 +68,35 @@ end;
 
 procedure TSearchFrame.ApplySearch;
 var
-  Node: PVirtualNode;
+  Node, Parent: PVirtualNode;
+  PerformSearch: Boolean;
 begin
   if not Assigned(FTree) then
     Exit;
 
+  PerformSearch := HasQueryText;
   FTree.BeginUpdateAuto;
 
-  // Adjust node visibility
-  for Node in FTree.Nodes.ToArray do
-    FTree.IsVisible[Node] := not HasQueryText or (Node.HasProvider and
-      Node.Provider.MatchesSearch(QueryText, QueryColumn));
+  // Reset visibility
+  for Node in FTree.Nodes do
+    FTree.IsVisible[Node] := not PerformSearch;
+
+  if not PerformSearch then
+    Exit;
+
+  // Traverse nodes
+  for Node in FTree.Nodes do
+    if not FTree.IsVisible[Node] and Node.HasProvider and
+      Node.Provider.MatchesSearch(QueryText, QueryColumn) then
+    begin
+      Parent := Node;
+
+      repeat
+        // Unhide the matching node and all of its parents
+        FTree.IsVisible[Parent] := True;
+        Parent := FTree.NodeParent[Parent];
+      until not Assigned(Parent);
+    end;
 end;
 
 procedure TSearchFrame.AttachToTree;
