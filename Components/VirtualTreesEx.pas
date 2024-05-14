@@ -67,7 +67,7 @@ procedure Register;
 implementation
 
 uses
-  System.SysUtils;
+  System.SysUtils, Winapi.ShLwApi;
 
 procedure Register;
 begin
@@ -272,9 +272,10 @@ function TVirtualStringTreeEx.DoCompare;
 begin
   Result := inherited;
 
-  // Fallback to text comparison by default
+  // Fallback to logical text comparison by default
   if not Assigned(OnCompareNodes) then
-    Result := String.Compare(Text[Node1, Column], Text[Node2, Column]);
+    Result := StrCmpLogicalW(PWideChar(Text[Node1, Column]),
+      PWideChar(Text[Node2, Column]));
 end;
 
 function TVirtualStringTreeEx.DoGetPopupMenu;
