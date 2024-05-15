@@ -13,8 +13,8 @@ uses
 
 type
   TAppContainerListFrame = class (TFrame, ICanConsumeEscape,
-    IHasDefaultCaption, IAllowsDefaultNodeAction, IHasModalResult,
-    IHasModalResultObservation)
+    IObservesActivation, IHasDefaultCaption, IAllowsDefaultNodeAction,
+    IHasModalResult, IHasModalResultObservation)
     PopupMenu: TPopupMenu;
     cmInspect: TMenuItem;
     procedure cmInspectClick(Sender: TObject);
@@ -28,7 +28,7 @@ type
     Backend: TTreeNodeInterfaceProvider;
     BackendRef: IUnknown;
     property BackendImpl: TTreeNodeInterfaceProvider read Backend implements IHasModalResult, IHasModalResultObservation, IAllowsDefaultNodeAction;
-    property SearchImpl: TSearchFrame read SearchBox implements ICanConsumeEscape;
+    property SearchImpl: TSearchFrame read SearchBox implements ICanConsumeEscape, IObservesActivation;
     function GetDefaultCaption: String;
   protected
     procedure Loaded; override;
