@@ -50,9 +50,9 @@ implementation
 
 uses
   Ntapi.ntstatus, Ntapi.WinNt, NtUtils.Lsa.Sid, NtUiLib.AutoCompletion.Sid,
-  NtUtils.Security.Sid, UI.Prototypes.Sid.Cheatsheet, UI.Prototypes.Forms,
-  Resources.Icon.Catalogue, Resources.Icon.UserPicker, Resources.Icon.Choose,
-  NtUiCommon.Prototypes;
+  NtUtils.Security.Sid, UI.Prototypes.Forms, Resources.Icon.Catalogue,
+  Resources.Icon.UserPicker, Resources.Icon.Choose, NtUiCommon.Prototypes,
+  NtUiFrame.Sids.Abbreviations;
 
 {$R *.dfm}
 
@@ -61,7 +61,12 @@ uses
 procedure TSidEditor.btnCheatsheetClick;
 begin
   tbxSid.SetFocus;
-  TSidCheatsheet.CreateChild(Application, cfmDesktop).Show;
+  NtUiLibHostFrameShow(
+    function (AOwner: TComponent): TFrame
+    begin
+      Result := TSidAbbreviationFrame.Create(AOwner);
+    end
+  );
 end;
 
 procedure TSidEditor.btnChoiceClick;
