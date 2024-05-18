@@ -65,6 +65,23 @@ type
     function GetHasCursor: Boolean; virtual;
     function GetCursor: TCursor; virtual;
     function GetEnabledMainActionMenu: Boolean; virtual;
+
+    procedure SetColumnText(Column: TColumnIndex; const Value: String); virtual;
+    procedure SetHint(const Value: String); virtual;
+    procedure SetColor(Value: TColor); virtual;
+    procedure SetFontColor(Value: TColor); virtual;
+    procedure SetFontColorForColumn(Column: TColumnIndex; Value: TColor); virtual;
+    procedure SetFontStyle(Value: TFontStyles); virtual;
+    procedure SetFontStyleForColumn(Column: TColumnIndex; Value: TFontStyles); virtual;
+    procedure SetEnabledMainActionMenu(Value: Boolean); virtual;
+    procedure SetCursor(Value: TCursor); virtual;
+
+    procedure ResetColor; virtual;
+    procedure ResetFontColor; virtual;
+    procedure ResetFontColorForColumn(Column: TColumnIndex); virtual;
+    procedure ResetFontStyle; virtual;
+    procedure ResetFontStyleForColumn(Column: TColumnIndex); virtual;
+    procedure ResetCursor; virtual;
   public
     constructor Create(InitialColumnCount: Integer = 1);
   end;
@@ -135,23 +152,6 @@ type
     FOnSelected: TDVTChangeEvent;
     FOnExpanding, FOnCollapsing: TDVTChangeEvent;
     FPreviouslySelected, FPreviouslySelectedValid: Boolean;
-
-    procedure SetColumnText(Column: TColumnIndex; const Value: String); virtual;
-    procedure SetHint(const Value: String); virtual;
-    procedure SetColor(Value: TColor); virtual;
-    procedure SetFontColor(Value: TColor); virtual;
-    procedure SetFontColorForColumn(Column: TColumnIndex; Value: TColor); virtual;
-    procedure SetFontStyle(Value: TFontStyles); virtual;
-    procedure SetFontStyleForColumn(Column: TColumnIndex; Value: TFontStyles); virtual;
-    procedure SetEnabledMainActionMenu(Value: Boolean); virtual;
-    procedure SetCursor(Value: TCursor); virtual;
-
-    procedure ResetColor; virtual;
-    procedure ResetFontColor; virtual;
-    procedure ResetFontColorForColumn(Column: TColumnIndex); virtual;
-    procedure ResetFontStyle; virtual;
-    procedure ResetFontStyleForColumn(Column: TColumnIndex); virtual;
-    procedure ResetCursor; virtual;
 
     function GetOnAttach: TDVTChangeEvent; virtual;
     function GetOnDetach: TDVTChangeEvent; virtual;
@@ -361,6 +361,174 @@ procedure TNodeProvider.NotifySelected;
 begin
 end;
 
+procedure TNodeProvider.ResetColor;
+begin
+  if not FHasColor then
+    Exit;
+
+  FHasColor := False;
+  Invalidate;
+end;
+
+procedure TNodeProvider.ResetCursor;
+begin
+  if not FHasCursor then
+    Exit;
+
+  FHasCursor := False;
+  Invalidate;
+end;
+
+procedure TNodeProvider.ResetFontColor;
+begin
+  if not FHasFontColor then
+    Exit;
+
+  FHasFontColor := False;
+  Invalidate;
+end;
+
+procedure TNodeProvider.ResetFontColorForColumn;
+begin
+  if (Column < Low(FHasFontColorForColumn)) or
+    not GetHasFontColorForColumn(Column) then
+    Exit;
+
+  if Column > High(FHasFontColorForColumn) then
+    SetLength(FHasFontColorForColumn, Column + 1);
+
+  FHasFontColorForColumn[Column] := False;
+  Invalidate;
+end;
+
+procedure TNodeProvider.ResetFontStyle;
+begin
+  if not FHasFontStyle then
+    Exit;
+
+  FHasFontStyle := False;
+  Invalidate;
+end;
+
+procedure TNodeProvider.ResetFontStyleForColumn;
+begin
+  if (Column < Low(FHasFontStyleForColumn)) or
+    not GetHasFontColorForColumn(Column) then
+    Exit;
+
+  if Column > High(FHasFontStyleForColumn) then
+    SetLength(FHasFontStyleForColumn, Column + 1);
+
+  FHasFontStyleForColumn[Column] := False;
+  Invalidate;
+end;
+
+procedure TNodeProvider.SetColor;
+begin
+  if FHasColor and (FColor = Value) then
+    Exit;
+
+  FHasColor := True;
+  FColor := Value;
+  Invalidate;
+end;
+
+procedure TNodeProvider.SetColumnText;
+begin
+  if (Column < Low(FColumnText)) or (GetColumnText(Column) = Value) then
+    Exit;
+
+  if Column > High(FColumnText) then
+    SetLength(FColumnText, Column + 1);
+
+  FColumnText[Column] := Value;
+  Invalidate;
+end;
+
+procedure TNodeProvider.SetCursor;
+begin
+  if FHasCursor and (FCursor = Value) then
+    Exit;
+
+  FHasCursor := True;
+  FCursor := Value;
+  Invalidate;
+end;
+
+procedure TNodeProvider.SetEnabledMainActionMenu;
+begin
+  FEnabledMainActionMenu := Value;
+end;
+
+procedure TNodeProvider.SetFontColor;
+begin
+  if FHasFontColor and (FFontColor = Value) then
+    Exit;
+
+  FHasFontColor := True;
+  FFontColor := Value;
+  Invalidate;
+end;
+
+procedure TNodeProvider.SetFontColorForColumn;
+begin
+  if Column < Low(FFontColorForColumn) then
+    Exit;
+
+  if GetHasFontColorForColumn(Column) and
+    (GetFontColorForColumn(Column) = Value) then
+    Exit;
+
+  if Column > High(FHasFontColorForColumn) then
+    SetLength(FHasFontColorForColumn, Column + 1);
+
+  if Column > High(FFontColorForColumn) then
+    SetLength(FFontColorForColumn, Column + 1);
+
+  FHasFontColorForColumn[Column] := True;
+  FFontColorForColumn[Column] := Value;
+  Invalidate;
+end;
+
+procedure TNodeProvider.SetFontStyle;
+begin
+  if FHasFontStyle and (FFontStyle = Value) then
+    Exit;
+
+  FHasFontStyle := True;
+  FFontStyle := Value;
+  Invalidate;
+end;
+
+procedure TNodeProvider.SetFontStyleForColumn;
+begin
+    if Column < Low(FFontStyleForColumn) then
+    Exit;
+
+  if GetHasFontStyleForColumn(Column) and
+    (GetFontStyleForColumn(Column) = Value) then
+    Exit;
+
+  if Column > High(FHasFontStyleForColumn) then
+    SetLength(FHasFontStyleForColumn, Column + 1);
+
+  if Column > High(FFontStyleForColumn) then
+    SetLength(FFontStyleForColumn, Column + 1);
+
+  FHasFontStyleForColumn[Column] := True;
+  FFontStyleForColumn[Column] := Value;
+  Invalidate;
+end;
+
+procedure TNodeProvider.SetHint;
+begin
+  if FHint = Value then
+    Exit;
+
+  FHint := Value;
+  Invalidate;
+end;
+
 { TEditableNodeProvider }
 
 procedure TEditableNodeProvider.Attach;
@@ -450,174 +618,6 @@ begin
 
   if Assigned(FOnSelected) then
     FOnSelected(FTree, FNode);
-end;
-
-procedure TEditableNodeProvider.ResetColor;
-begin
-  if not FHasColor then
-    Exit;
-
-  FHasColor := False;
-  Invalidate;
-end;
-
-procedure TEditableNodeProvider.ResetCursor;
-begin
-  if not FHasCursor then
-    Exit;
-
-  FHasCursor := False;
-  Invalidate;
-end;
-
-procedure TEditableNodeProvider.ResetFontColor;
-begin
-  if not FHasFontColor then
-    Exit;
-
-  FHasFontColor := False;
-  Invalidate;
-end;
-
-procedure TEditableNodeProvider.ResetFontColorForColumn;
-begin
-  if (Column < Low(FHasFontColorForColumn)) or
-    not GetHasFontColorForColumn(Column) then
-    Exit;
-
-  if Column > High(FHasFontColorForColumn) then
-    SetLength(FHasFontColorForColumn, Column + 1);
-
-  FHasFontColorForColumn[Column] := False;
-  Invalidate;
-end;
-
-procedure TEditableNodeProvider.ResetFontStyle;
-begin
-  if not FHasFontStyle then
-    Exit;
-
-  FHasFontStyle := False;
-  Invalidate;
-end;
-
-procedure TEditableNodeProvider.ResetFontStyleForColumn;
-begin
-  if (Column < Low(FHasFontStyleForColumn)) or
-    not GetHasFontColorForColumn(Column) then
-    Exit;
-
-  if Column > High(FHasFontStyleForColumn) then
-    SetLength(FHasFontStyleForColumn, Column + 1);
-
-  FHasFontStyleForColumn[Column] := False;
-  Invalidate;
-end;
-
-procedure TEditableNodeProvider.SetColor;
-begin
-  if FHasColor and (FColor = Value) then
-    Exit;
-
-  FHasColor := True;
-  FColor := Value;
-  Invalidate;
-end;
-
-procedure TEditableNodeProvider.SetColumnText;
-begin
-  if (Column < Low(FColumnText)) or (GetColumnText(Column) = Value) then
-    Exit;
-
-  if Column > High(FColumnText) then
-    SetLength(FColumnText, Column + 1);
-
-  FColumnText[Column] := Value;
-  Invalidate;
-end;
-
-procedure TEditableNodeProvider.SetCursor;
-begin
-  if FHasCursor and (FCursor = Value) then
-    Exit;
-
-  FHasCursor := True;
-  FCursor := Value;
-  Invalidate;
-end;
-
-procedure TEditableNodeProvider.SetEnabledMainActionMenu;
-begin
-  FEnabledMainActionMenu := Value;
-end;
-
-procedure TEditableNodeProvider.SetFontColor;
-begin
-  if FHasFontColor and (FFontColor = Value) then
-    Exit;
-
-  FHasFontColor := True;
-  FFontColor := Value;
-  Invalidate;
-end;
-
-procedure TEditableNodeProvider.SetFontColorForColumn;
-begin
-  if Column < Low(FFontColorForColumn) then
-    Exit;
-
-  if GetHasFontColorForColumn(Column) and
-    (GetFontColorForColumn(Column) = Value) then
-    Exit;
-
-  if Column > High(FHasFontColorForColumn) then
-    SetLength(FHasFontColorForColumn, Column + 1);
-
-  if Column > High(FFontColorForColumn) then
-    SetLength(FFontColorForColumn, Column + 1);
-
-  FHasFontColorForColumn[Column] := True;
-  FFontColorForColumn[Column] := Value;
-  Invalidate;
-end;
-
-procedure TEditableNodeProvider.SetFontStyle;
-begin
-  if FHasFontStyle and (FFontStyle = Value) then
-    Exit;
-
-  FHasFontStyle := True;
-  FFontStyle := Value;
-  Invalidate;
-end;
-
-procedure TEditableNodeProvider.SetFontStyleForColumn;
-begin
-    if Column < Low(FFontStyleForColumn) then
-    Exit;
-
-  if GetHasFontStyleForColumn(Column) and
-    (GetFontStyleForColumn(Column) = Value) then
-    Exit;
-
-  if Column > High(FHasFontStyleForColumn) then
-    SetLength(FHasFontStyleForColumn, Column + 1);
-
-  if Column > High(FFontStyleForColumn) then
-    SetLength(FFontStyleForColumn, Column + 1);
-
-  FHasFontStyleForColumn[Column] := True;
-  FFontStyleForColumn[Column] := Value;
-  Invalidate;
-end;
-
-procedure TEditableNodeProvider.SetHint;
-begin
-  if FHint = Value then
-    Exit;
-
-  FHint := Value;
-  Invalidate;
 end;
 
 procedure TEditableNodeProvider.SetOnAttach;
