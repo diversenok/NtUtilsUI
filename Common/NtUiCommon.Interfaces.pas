@@ -138,6 +138,13 @@ type
       write SetOnModalResultChanged;
   end;
 
+  // Allows a tree node to opt-out of being returned as a modal result
+  IOptionalModalResultNode = interface
+    ['{0B51C7F3-0E9A-4691-A1B0-6EF1769E05F2}']
+    function GetAllowsModalReturn: Boolean;
+    property AllowsModalReturn: Boolean read GetAllowsModalReturn;
+  end;
+
 { Delegatable implementation }
 
 type
@@ -204,7 +211,7 @@ type
 implementation
 
 uses
-  VirtualTrees.Types, NtUiLib.Errors;
+  VirtualTrees.Types, NtUtils.Errors, NtUiLib.Errors;
 
 {$BOOLEVAL OFF}
 {$IFOPT R+}{$DEFINE R+}{$ENDIF}
@@ -353,10 +360,18 @@ begin
 end;
 
 function TTreeNodeInterfaceProvider.GetModalResult;
+var
+  ModalChecker: IOptionalModalResultNode;
 begin
+  // Rertieve the focused node and test it against the modal return filter
   if not Attached or (FTree.SelectedCount <> 1) or not
     FTree.FocusedNode.TryGetProvider(FModalResultFilter, Result) then
-    Result := nil;
+    Exit(nil);
+
+  // Ask the node if it's okay with being returned as a modal result
+  if Result.QueryInterface(IOptionalModalResultNode, ModalChecker).IsSuccess and
+    not ModalChecker.AllowsModalReturn then
+    Exit(nil);
 end;
 
 function TTreeNodeInterfaceProvider.GetOnCheckedChange;
