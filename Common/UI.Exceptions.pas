@@ -8,37 +8,19 @@ unit UI.Exceptions;
 interface
 
 uses
-  System.SysUtils, DelphiUtils.AutoEvents;
+  System.SysUtils;
 
 // Show NtUiLib exception dialog
-procedure ReportException(E: Exception);
+procedure ReportException(E: TObject);
 
 // Set NtUiLib exception dialog as the handler for Application.OnException
 procedure EnableNtUiLibExceptionHandling;
 
-type
-  // Custom exception-safe invokers for automatic events
-  TExceptionSafeInvoker = record
-    class procedure NoParameters(
-      Callback: TEventCallback
-    ); static;
-
-    class procedure OneParameter<T>(
-      Callback: TEventCallback<T>;
-      const Parameter: T
-    ); static;
-
-    class procedure TwoParameters<T1, T2>(
-      Callback: TEventCallback<T1, T2>;
-      const Parameter1: T1;
-      const Parameter2: T2
-    ); static;
-  end;
-
 implementation
 
 uses
-  DelphiUtils.AutoObjects, NtUiLib.Exceptions.Dialog, Vcl.Forms;
+  DelphiUtils.AutoObjects, DelphiUtils.AutoEvents, NtUiLib.Exceptions.Dialog,
+  Vcl.Forms;
 
 { NtUiLib Exception Handler }
 
@@ -67,37 +49,16 @@ begin
   ReportException(E);
 end;
 
-{ Safe Event Invoker }
-
-class procedure TExceptionSafeInvoker.NoParameters;
+function ReportAutoEventsException(
+  E: TObject
+): Boolean;
 begin
-  try
-    Callback;
-  except
-    on E: Exception do
-      ReportException(E);
-  end;
+  ReportException(E);
+  Result := True;
 end;
 
-class procedure TExceptionSafeInvoker.OneParameter<T>;
-begin
-  try
-    Callback(Parameter);
-  except
-    on E: Exception do
-      ReportException(E);
-  end;
-end;
-
-class procedure TExceptionSafeInvoker.TwoParameters<T1, T2>;
-begin
-  try
-    Callback(Parameter1, Parameter2);
-  except
-    on E: Exception do
-      ReportException(E);
-  end;
-end;
-
+initialization
+  // Enable exception handling for DelphiUtils.AutoEvents
+  AutoEventsExceptionHanlder := ReportAutoEventsException;
 end.
 

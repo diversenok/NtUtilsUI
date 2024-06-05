@@ -9,7 +9,6 @@ uses
 type
   TFormEvents = class abstract
     class var OnMainFormClose: TAutoEvent;
-    class constructor Create;
   end;
 
   TChildFormMode = (
@@ -60,14 +59,6 @@ procedure TChildForm.DoCreate;
 begin
   inherited;
   FMainFormCloseSubscription := TFormEvents.OnMainFormClose.Subscribe(Close);
-end;
-
-{ TFormEvents }
-
-class constructor TFormEvents.Create;
-begin
-  // Make sure exceptions cannot prevent the program from closing
-  OnMainFormClose.SetCustomInvoker(TExceptionSafeInvoker.NoParameters);
 end;
 
 end.
