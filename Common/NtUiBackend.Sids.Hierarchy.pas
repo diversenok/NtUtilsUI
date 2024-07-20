@@ -12,8 +12,8 @@ uses
 type
   TSidHierarchyPlaceholder = (
     spNone,
-    spLogonSessions,
-    spDomains,
+    spLogons,
+    spDomainAccounts,
     spGroupCapabilities,
     spServices,
     spTasks,
@@ -44,7 +44,7 @@ implementation
 uses
   Ntapi.WinNt, Ntapi.ntpebteb, NtUtils.Security.Sid, DelphiUiLib.Reflection,
   DelphiUiLib.Reflection.Strings, VirtualTrees, DevirtualizedTree.Provider,
-  UI.Helper, System.UITypes, Vcl.Graphics;
+  UI.Helper, System.UITypes, UI.Colors, NtUiCommon.Interfaces;
 
 type
   TSidHierarchySpecialHandling = (
@@ -82,7 +82,7 @@ const
     (Authorities: [SECURITY_NT_AUTHORITY, SECURITY_BATCH_RID]; Definition: '{SECURITY_NT_AUTHORITY, SECURITY_BATCH_RID}'),
     (Authorities: [SECURITY_NT_AUTHORITY, SECURITY_INTERACTIVE_RID]; Definition: '{SECURITY_NT_AUTHORITY, SECURITY_INTERACTIVE_RID}'),
     (Authorities: [SECURITY_NT_AUTHORITY, SECURITY_LOGON_IDS_RID]; Definition: '{SECURITY_NT_AUTHORITY, SECURITY_LOGON_IDS_RID}'),
-    (Authorities: [SECURITY_NT_AUTHORITY, SECURITY_LOGON_IDS_RID]; Definition: '{SECURITY_NT_AUTHORITY, SECURITY_LOGON_IDS_RID, *, *}'; Placeholder: spLogonSessions),
+    (Authorities: [SECURITY_NT_AUTHORITY, SECURITY_LOGON_IDS_RID]; Definition: '{SECURITY_NT_AUTHORITY, SECURITY_LOGON_IDS_RID, *, *}'; Placeholder: spLogons),
     (Authorities: [SECURITY_NT_AUTHORITY, SECURITY_SERVICE_RID]; Definition: '{SECURITY_NT_AUTHORITY, SECURITY_SERVICE_RID}'),
     (Authorities: [SECURITY_NT_AUTHORITY, SECURITY_ANONYMOUS_LOGON_RID]; Definition: '{SECURITY_NT_AUTHORITY, SECURITY_ANONYMOUS_LOGON_RID}'),
     (Authorities: [SECURITY_NT_AUTHORITY, SECURITY_PROXY_RID]; Definition: '{SECURITY_NT_AUTHORITY, SECURITY_PROXY_RID}'),
@@ -101,7 +101,7 @@ const
     (Authorities: [SECURITY_NT_AUTHORITY, SECURITY_NT_NON_UNIQUE, 0, 0, 0]; Definition: '{SECURITY_NT_AUTHORITY, SECURITY_NT_NON_UNIQUE, 0, 0, 0}'),
     (Authorities: [SECURITY_NT_AUTHORITY, SECURITY_NT_NON_UNIQUE, 0, 0, 0, DOMAIN_GROUP_RID_AUTHORIZATION_DATA_IS_COMPOUNDED]; Definition: '{SECURITY_NT_AUTHORITY, SECURITY_NT_NON_UNIQUE, 0, 0, 0, DOMAIN_GROUP_RID_AUTHORIZATION_DATA_IS_COMPOUNDED}'),
     (Authorities: [SECURITY_NT_AUTHORITY, SECURITY_NT_NON_UNIQUE, 0, 0, 0, DOMAIN_GROUP_RID_AUTHORIZATION_DATA_CONTAINS_CLAIMS]; Definition: '{SECURITY_NT_AUTHORITY, SECURITY_NT_NON_UNIQUE, 0, 0, 0, DOMAIN_GROUP_RID_AUTHORIZATION_DATA_CONTAINS_CLAIMS}'),
-    (Authorities: [SECURITY_NT_AUTHORITY, SECURITY_NT_NON_UNIQUE]; Definition: '{SECURITY_NT_AUTHORITY, SECURITY_NT_NON_UNIQUE, *, *, *}'; Placeholder: spDomains),
+    (Authorities: [SECURITY_NT_AUTHORITY, SECURITY_NT_NON_UNIQUE]; Definition: '{SECURITY_NT_AUTHORITY, SECURITY_NT_NON_UNIQUE, *, *, *}'; Placeholder: spDomainAccounts),
     (Authorities: [SECURITY_NT_AUTHORITY, SECURITY_ENTERPRISE_READONLY_CONTROLLERS_RID]; Definition: '{SECURITY_NT_AUTHORITY, SECURITY_ENTERPRISE_READONLY_CONTROLLERS_RID}'),
     (Authorities: [SECURITY_NT_AUTHORITY, SECURITY_BUILTIN_DOMAIN_RID]; Definition: '{SECURITY_NT_AUTHORITY, SECURITY_BUILTIN_DOMAIN_RID}'),
     (Authorities: [SECURITY_NT_AUTHORITY, SECURITY_BUILTIN_DOMAIN_RID, DOMAIN_ALIAS_RID_ADMINS]; Definition: '{SECURITY_NT_AUTHORITY, SECURITY_BUILTIN_DOMAIN_RID, DOMAIN_ALIAS_RID_ADMINS}'),
@@ -253,8 +253,8 @@ const
 
   PLACEHOLDER_TEXT: array [TSidHierarchyPlaceholder] of String = (
     '',
-    'Logon Session SIDs...',
-    'Domains...',
+    'Logon SIDs...',
+    'Domain Accounts...',
     'Group Capabilities...',
     'Service SIDs...',
     'Task SIDs...',
@@ -273,7 +273,8 @@ const
   colMax = 4;
 
 type
-  TSidHierarchyNode = class (TNodeProvider, ISidHierarchyNode)
+  TSidHierarchyNode = class (TNodeProvider, ISidHierarchyNode,
+    IOptionalModalResultNode)
   protected
     FDefinition: String;
     FSidName: TTranslatedName;
@@ -282,6 +283,7 @@ type
     function GetDefinition: String;
     function GetSidName: TTranslatedName;
     function GetPlaceholder: TSidHierarchyPlaceholder;
+    function GetAllowsModalReturn: Boolean;
     procedure Initialize; override;
     constructor Create(
       const SidName: TTranslatedName;
@@ -298,6 +300,12 @@ begin
   FDefinition := Definition;
   FSidName := SidName;
   FPlaceholder := Placeholder;
+end;
+
+function TSidHierarchyNode.GetAllowsModalReturn;
+begin
+  // Only real SID nodes count as modal returns
+  Result := (FPlaceholder = spNone);
 end;
 
 function TSidHierarchyNode.GetDefinition;
@@ -344,16 +352,10 @@ begin
     FColumnText[colFriendlyName] := PLACEHOLDER_TEXT[FPlaceholder];
 
     // Adjust styles
-    SetLength(FHasFontColorForColumn, Succ(colFriendlyName));
-    SetLength(FFontColorForColumn, Succ(colFriendlyName));
-    SetLength(FHasFontStyleForColumn, Succ(colFriendlyName));
-    SetLength(FFontStyleForColumn, Succ(colFriendlyName));
-    FHasFontColorForColumn[colFriendlyName] := True;
-    FFontColorForColumn[colFriendlyName] := clHighlight;
-    FHasFontStyleForColumn[colFriendlyName] := True;
-    FFontStyleForColumn[colFriendlyName] := [TFontStyle.fsUnderline];
-    FHasCursor := True;
-    FCursor := crHandPoint;
+    SetFontColor(ColorSettings.clHidden);
+    SetFontColorForColumn(colFriendlyName, ColorSettings.clLink);
+    SetFontStyleForColumn(colFriendlyName, [TFontStyle.fsUnderline]);
+    SetCursor(crHandPoint);
   end;
 end;
 

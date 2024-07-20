@@ -22,6 +22,7 @@ type
     clUser: TColor;
     clProcess: TColor;
     clDebug: TColor;
+    clLink: TColor;
   end;
 
 var
@@ -41,6 +42,7 @@ var
     clUser: $AAFFFF;
     clProcess: $FFFFCC;
     clDebug: $FFBBCC;
+    clLink: $D77800;
   );
 
 implementation
