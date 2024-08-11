@@ -23,9 +23,11 @@ type
     FDelayLoaded: TArray<Boolean>;
     FDefaultCaption: String;
     function ConsumesEscape: Boolean;
-    procedure SwitchToTab(Sender: TObject);
+    procedure SwitchToTabAction(Sender: TObject);
     function GetDefaultCaption: String;
     procedure NotifyDelayedLoading(Index: Integer);
+  protected
+    procedure FrameEnabledChanged(var Message: TMessage); message CM_ENABLEDCHANGED;
   public
     procedure LoadPages(
       const Frames: TArray<TFrameInitializer>;
@@ -53,6 +55,13 @@ begin
   Result := (i >= 0) and (i <= High(FFrames)) and
     IUnknown(FFrames[i]).QueryInterface(ICanConsumeEscape,
     ForwardedImpl).IsSuccess and ForwardedImpl.ConsumesEscape;
+end;
+
+procedure TFramePages.FrameEnabledChanged;
+begin
+  inherited;
+  // Notify the visible page about activation/disactivation
+  PageControlChange(Self);
 end;
 
 function TFramePages.GetDefaultCaption;
@@ -120,7 +129,7 @@ begin
       FActions[i] := TAction.Create(ActionList);
       FActions[i].ShortCut := scCtrl or (Ord('1') + i);
       FActions[i].Tag := i;
-      FActions[i].OnExecute := SwitchToTab;
+      FActions[i].OnExecute := SwitchToTabAction;
       FActions[i].ActionList := ActionList;
     end;
   end;
@@ -134,11 +143,12 @@ var
   DelayedLoader: IDelayedLoad;
 begin
   // Invoke the delayed loading callback on the frame
-  if (Index >= 0) and (Index <= High(FFrames)) and not FDelayLoaded[Index] and
-    IUnknown(FFrames[Index]).QueryInterface(IDelayedLoad,
-    DelayedLoader).IsSuccess then
+  if (Index >= 0) and (Index <= High(FFrames)) and not FDelayLoaded[Index] then
   begin
-    DelayedLoader.DelayedLoad;
+    if IUnknown(FFrames[Index]).QueryInterface(IDelayedLoad,
+      DelayedLoader).IsSuccess then
+      DelayedLoader.DelayedLoad;
+
     FDelayLoaded[Index] := True;
   end;
 end;
@@ -152,13 +162,13 @@ begin
   for i := 0 to High(FFrames) do
     if IUnknown(FFrames[i]).QueryInterface(IObservesActivation,
       Observer).IsSuccess then
-      Observer.SetActive(i = PageControl.ActivePageIndex);
+      Observer.SetActive((i = PageControl.ActivePageIndex) and Enabled);
 
-  // Initiate delayed loading of the newly visible frame
+  // Initiate delayed loading for the newly visible frame
   NotifyDelayedLoading(PageControl.ActivePageIndex);
 end;
 
-procedure TFramePages.SwitchToTab;
+procedure TFramePages.SwitchToTabAction;
 begin
   if Sender is TAction then
   begin
