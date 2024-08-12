@@ -7,7 +7,7 @@ unit NtUiBackend.Sids.Hierarchy;
 interface
 
 uses
-  NtUtils, DevirtualizedTree, NtUtils.Lsa.Sid;
+  NtUtils, DevirtualizedTree, NtUiBackend.Sids, NtUiCommon.Interfaces;
 
 type
   TSidHierarchyPlaceholder = (
@@ -24,27 +24,25 @@ type
     spPackages
   );
 
-  ISidHierarchyNode = interface (INodeProvider)
-    ['{0D96BF2C-CF3D-4BFB-86D6-2240510387F2}']
+  ISidHierarchyNode = interface (ISidNode)
+    ['{3D739765-6462-4B9D-A696-33F42E57FEED}']
     function GetDefinition: String;
-    function GetSidName: TTranslatedName;
     function GetPlaceholder: TSidHierarchyPlaceholder;
     property Definition: String read GetDefinition;
-    property SidName: TTranslatedName read GetSidName;
     property Placeholder: TSidHierarchyPlaceholder read GetPlaceholder;
   end;
 
 // Add SID hierarchy nodes to a tree control
 procedure NtUiLibAddSidHierarchyNodes(
-  Tree: TDevirtualizedTree
+  Tree: TTreeNodeInterfaceProvider
 );
 
 implementation
 
 uses
-  Ntapi.WinNt, Ntapi.ntpebteb, NtUtils.Security.Sid, DelphiUiLib.Reflection,
-  DelphiUiLib.Reflection.Strings, VirtualTrees, DevirtualizedTree.Provider,
-  UI.Helper, System.UITypes, UI.Colors, NtUiCommon.Interfaces;
+  Ntapi.WinNt, Ntapi.ntpebteb, NtUtils.Security.Sid, NtUtils.Lsa.Sid,
+  DelphiUiLib.Reflection, DelphiUiLib.Reflection.Strings, VirtualTrees,
+  DevirtualizedTree.Provider, UI.Helper, System.UITypes, UI.Colors;
 
 type
   TSidHierarchySpecialHandling = (
@@ -463,7 +461,6 @@ procedure NtUiLibAddSidHierarchyNodes;
 var
   Nodes: TArray<ISidHierarchyNode>;
   Parents: TArray<ISidHierarchyNode>;
-  Parent, Node: PVirtualNode;
   i, j: Integer;
 begin
   // Collect sorted nodes
@@ -483,22 +480,12 @@ begin
 
   // Attache them to the tree
   Tree.BeginUpdateAuto;
-  Tree.Clear;
+  Tree.ClearItems;
 
+  // Note: since nodes are pre-ordered, if the parent exists, it has already
+  // been attached
   for i := 0 to High(Nodes) do
-  begin
-    // Note: since nodes are pre-ordered, if the parent exists, it has already
-    // been attached
-    if Assigned(Parents[i]) then
-      Parent := Parents[i].Node
-    else
-      Parent := nil;
-
-    Tree.AddChildEx(Parent, Nodes[i]);
-  end;
-
-  for Node in Tree.Nodes do
-    Tree.Expanded[Node] := True;
+    Tree.AddItem(Nodes[i], Parents[i]);
 end;
 
 end.

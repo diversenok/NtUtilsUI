@@ -7,15 +7,13 @@ unit NtUiBackend.Sids.WellKnown;
 interface
 
 uses
-  Ntapi.WinBase, NtUtils, NtUtils.Lsa.Sid, DevirtualizedTree;
+  Ntapi.WinBase, NtUtils, NtUiBackend.Sids;
 
 type
-  IWellKnownSidNode = interface (INodeProvider)
-    ['{05678C3A-28A0-452D-8DDD-077D330FE2EB}']
+  IWellKnownSidNode = interface (ISidNode)
+    ['{C2FAA457-A134-4671-AEF3-DCDDB523166D}']
     function GetEnumValue: TWellKnownSidType;
-    function GetSidName: TTranslatedName;
     property EnumValue: TWellKnownSidType read GetEnumValue;
-    property SidName: TTranslatedName read GetSidName;
   end;
 
 // Create node entries for all well-known SIDs
@@ -25,9 +23,9 @@ function NtUiLibMakeWellKnownSidNodes(
 implementation
 
 uses
-  DevirtualizedTree.Provider, NtUtils.Security.Sid, DelphiUiLib.Strings,
-  DelphiUiLib.Reflection.Strings, DelphiUiLib.Reflection, System.SysUtils,
-  System.TypInfo;
+  DevirtualizedTree.Provider, NtUtils.Security.Sid, NtUtils.Lsa.Sid,
+  DelphiUiLib.Strings, DelphiUiLib.Reflection.Strings, DelphiUiLib.Reflection,
+  System.SysUtils, System.TypInfo;
 
 const
   colIndex = 0;

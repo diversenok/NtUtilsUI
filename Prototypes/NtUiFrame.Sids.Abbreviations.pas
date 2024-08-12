@@ -13,8 +13,8 @@ uses
   NtUiCommon.Interfaces;
 
 type
-  TSidAbbreviationFrame = class(TFrame, ICanConsumeEscape, IObservesActivation,
-    IHasDefaultCaption)
+  TSidAbbreviationFrame = class(TBaseFrame, ICanConsumeEscape, IObservesActivation,
+    IHasDefaultCaption, IDelayedLoad)
     Tree: TDevirtualizedTree;
     SearchBox: TSearchFrame;
   private
@@ -23,7 +23,8 @@ type
     property SearchImpl: TSearchFrame read SearchBox implements ICanConsumeEscape, IObservesActivation;
     function GetDefaultCaption: String;
   protected
-    procedure Loaded; override;
+    procedure LoadedOnce; override;
+    procedure DelayedLoad;
   public
     { Public declarations }
   end;
@@ -37,24 +38,28 @@ uses
 
 { TSidAbbreviationFrame }
 
+procedure TSidAbbreviationFrame.DelayedLoad;
+var
+  Provider: ISidAbbreviationNode;
+begin
+  Backend.BeginUpdateAuto;
+  Backend.ClearItems;
+
+  for Provider in NtUiLibCollectSidAbbreviations do
+    Backend.AddItem(Provider);
+end;
+
 function TSidAbbreviationFrame.GetDefaultCaption;
 begin
   Result := 'SDDL Abbreviations';
 end;
 
-procedure TSidAbbreviationFrame.Loaded;
-var
-  Provider: ISidAbbreviationNode;
+procedure TSidAbbreviationFrame.LoadedOnce;
 begin
   inherited;
   SearchBox.AttachToTree(Tree);
   Backend := TTreeNodeInterfaceProvider.Create(Tree);
   BackendRef := Backend; // Make an owning reference
-
-  Backend.BeginUpdateAuto;
-
-  for Provider in NtUiLibCollectSidAbbreviations do
-    Backend.AddItem(Provider);
 end;
 
 end.

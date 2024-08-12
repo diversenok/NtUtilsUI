@@ -1,11 +1,8 @@
-object WellKnownSidsFrame: TWellKnownSidsFrame
-  Left = 0
-  Top = 0
+inherited WellKnownSidsFrame: TWellKnownSidsFrame
   Width = 640
   Height = 400
-  ParentShowHint = False
-  ShowHint = True
-  TabOrder = 0
+  Constraints.MinHeight = 120
+  Constraints.MinWidth = 300
   object Tree: TDevirtualizedTree
     AlignWithMargins = True
     Left = 0
@@ -74,6 +71,8 @@ object WellKnownSidsFrame: TWellKnownSidsFrame
     Align = alTop
     Constraints.MinHeight = 21
     Constraints.MinWidth = 240
+    ParentShowHint = False
+    ShowHint = True
     TabOrder = 1
     inherited Splitter: TSplitter
       Left = 474

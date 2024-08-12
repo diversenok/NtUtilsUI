@@ -7,15 +7,13 @@ unit NtUiBackend.Sids.Abbreviations;
 interface
 
 uses
-  NtUtils, NtUtils.Lsa.Sid, DevirtualizedTree;
+  NtUtils, NtUiBackend.Sids;
 
 type
-  ISidAbbreviationNode = interface (INodeProvider)
-    ['{33C79200-FE73-469A-9590-BA40FA80EF52}']
+  ISidAbbreviationNode = interface (ISidNode)
+    ['{0207E69D-423F-46DB-B67E-2F39F7D7033C}']
     function GetSDDL: String;
-    function GetSidName: TTranslatedName;
     property SDDL: String read GetSddl;
-    property SidName: TTranslatedName read GetSidName;
   end;
 
 // Enumerate known SDDL SID abbreviations and create node for them
@@ -25,8 +23,8 @@ function NtUiLibCollectSidAbbreviations(
 implementation
 
 uses
-  NtUtils.Security.Sid, DelphiUiLib.Reflection, DelphiUiLib.Reflection.Strings,
-  DevirtualizedTree.Provider;
+  NtUtils.Security.Sid, NtUtils.Lsa.Sid, DelphiUiLib.Reflection,
+  DelphiUiLib.Reflection.Strings, DevirtualizedTree.Provider, DevirtualizedTree;
 
 const
   colSddl = 0;

@@ -13,15 +13,18 @@ uses
   NtUiFrame.Search, NtUiCommon.Interfaces;
 
 type
-  TSidHierarchyFrame = class(TFrame, ICanConsumeEscape, IObservesActivation,
-    IHasDefaultCaption)
+  TSidHierarchyFrame = class(TBaseFrame, ICanConsumeEscape, IObservesActivation,
+    IHasDefaultCaption, IDelayedLoad)
     Tree: TDevirtualizedTree;
     SearchBox: TSearchFrame;
   private
+    Backend: TTreeNodeInterfaceProvider;
+    BackendRef: IUnknown;
     property SearchImpl: TSearchFrame read SearchBox implements ICanConsumeEscape, IObservesActivation;
     function GetDefaultCaption: String;
   protected
-    procedure Loaded; override;
+    procedure LoadedOnce; override;
+    procedure DelayedLoad;
   public
     { Public declarations }
   end;
@@ -32,16 +35,22 @@ implementation
 
 { TSidHierarchyFrame }
 
+procedure TSidHierarchyFrame.DelayedLoad;
+begin
+  NtUiLibAddSidHierarchyNodes(Backend);
+end;
+
 function TSidHierarchyFrame.GetDefaultCaption;
 begin
   Result := 'SID Hierarchy';
 end;
 
-procedure TSidHierarchyFrame.Loaded;
+procedure TSidHierarchyFrame.LoadedOnce;
 begin
   inherited;
-  NtUiLibAddSidHierarchyNodes(Tree);
   SearchBox.AttachToTree(Tree);
+  Backend := TTreeNodeInterfaceProvider.Create(Tree);
+  BackendRef := Backend; // Make an owning reference
 end;
 
 end.

@@ -1,17 +1,14 @@
-object SidHierarchyFrame: TSidHierarchyFrame
-  Left = 0
-  Top = 0
+inherited SidHierarchyFrame: TSidHierarchyFrame
   Width = 640
-  Height = 480
-  ParentShowHint = False
-  ShowHint = True
-  TabOrder = 0
+  Height = 400
+  Constraints.MinHeight = 120
+  Constraints.MinWidth = 300
   object Tree: TDevirtualizedTree
     AlignWithMargins = True
     Left = 0
     Top = 24
     Width = 640
-    Height = 456
+    Height = 376
     Margins.Left = 0
     Margins.Right = 0
     Margins.Bottom = 0
@@ -67,6 +64,8 @@ object SidHierarchyFrame: TSidHierarchyFrame
     Align = alTop
     Constraints.MinHeight = 21
     Constraints.MinWidth = 240
+    ParentShowHint = False
+    ShowHint = True
     TabOrder = 1
     inherited Splitter: TSplitter
       Left = 474
