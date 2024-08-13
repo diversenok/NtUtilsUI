@@ -42,14 +42,14 @@ var
 begin
   Status := NtUiLibCollectSamNodes(Nodes);
 
+  Backend.BeginUpdateAuto;
+  Backend.ClearItems;
+
   if not Status.IsSuccess then
   begin
     Backend.SetStatus(Status);
     Exit;
   end;
-
-  Backend.BeginUpdateAuto;
-  Backend.ClearItems;
 
   for i := 0 to High(Nodes) do
   begin
