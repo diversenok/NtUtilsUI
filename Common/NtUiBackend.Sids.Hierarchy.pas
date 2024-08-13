@@ -350,8 +350,8 @@ begin
     FColumnText[colFriendlyName] := PLACEHOLDER_TEXT[FPlaceholder];
 
     // Adjust styles
-    SetFontColor(ColorSettings.clHidden);
-    SetFontColorForColumn(colFriendlyName, ColorSettings.clLink);
+    SetFontColor(ColorSettings.clForegroundInactive);
+    SetFontColorForColumn(colFriendlyName, ColorSettings.clForegroundLink);
     SetFontStyleForColumn(colFriendlyName, [TFontStyle.fsUnderline]);
     SetCursor(crHandPoint);
   end;

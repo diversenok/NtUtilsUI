@@ -93,7 +93,7 @@ begin
     tbxGuid.Color := clWindow;
   end
   else
-    tbxGuid.Color := ColorSettings.clDisabledModified;
+    tbxGuid.Color := ColorSettings.clBackgroundError;
 end;
 
 end.

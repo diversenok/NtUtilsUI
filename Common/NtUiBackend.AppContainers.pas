@@ -129,12 +129,11 @@ begin
     FColumnText[colFriendlyName] := RtlxStringOrDefault(FInfo.FriendlyName, '(None)');
     FColumnText[colFriendlyName] := RtlxStringOrDefault(FColumnText[colFriendlyName], '(None)');
     FHint := FInfo.Hint;
-    FHasColor := True;
 
     if IsPackage then
-      FColor := ColorSettings.clSystem
+      SetColor(ColorSettings.clBackgroundSystem)
     else
-      FColor := ColorSettings.clUser;
+      SetColor(ColorSettings.clBackgroundUser);
   end
   else
   begin
@@ -239,7 +238,7 @@ begin
     begin
       Node.ColumnText[1] := RtlxSidToString(ParentSid);
       Node.FontStyleForColumn[1] := [TFontStyle.fsUnderline];
-      Node.FontColorForColumn[1] := clHotLight;
+      Node.FontColorForColumn[1] := ColorSettings.clForegroundLink;
       Node.Cursor := crHandPoint;
       Node.EnabledMainActionMenu := True;
     end

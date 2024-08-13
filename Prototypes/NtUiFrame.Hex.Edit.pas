@@ -98,7 +98,7 @@ begin
   if Result then
     tbxHexString.Color := clWindow
   else
-    tbxHexString.Color := ColorSettings.clDisabledModified;
+    tbxHexString.Color := ColorSettings.clBackgroundError;
 
   UpdateHint;
 end;

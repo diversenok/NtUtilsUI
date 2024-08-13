@@ -53,7 +53,7 @@ implementation
 uses
   Ntapi.ntsam, NtUtils.Sam, NtUtils.SysUtils, NtUtils.Security.Sid,
   NtUtils.Lsa.Sid, NtUtils.Errors, NtUiLib.Errors, DelphiUiLib.Reflection,
-  DelphiUiLib.Reflection.Strings, DevirtualizedTree.Provider, Vcl.Graphics;
+  DelphiUiLib.Reflection.Strings, DevirtualizedTree.Provider, UI.Colors;
 
 const
   colName = 0;
@@ -145,7 +145,7 @@ begin
   end;
 
   FHint := FStatus.ToString;
-  SetFontColor(clRed);
+  SetFontColor(ColorSettings.clForegroundError);
 end;
 
 { TSamSidNode }

@@ -199,7 +199,7 @@ begin
     RefreshItems;
   end
   else
-    tbxValue.Color := ColorSettings.clDisabledModified;
+    tbxValue.Color := ColorSettings.clBackgroundError;
 end;
 
 procedure TBitsFrame.TreeChecked;

@@ -117,7 +117,7 @@ begin
   else
     FHint := FStatus.ToString;
 
-  SetFontColor(ColorSettings.clHidden);
+  SetFontColor(ColorSettings.clForegroundInactive);
 end;
 
 { TLogonSessionSidNode }

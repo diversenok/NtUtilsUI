@@ -86,18 +86,13 @@ begin
 
   if FInfo.ProfilePath <> '' then
   begin
-    FHasColor := True;
-
     if FInfo.FullProfile then
-      FColor := ColorSettings.clUser
+      SetColor(ColorSettings.clBackgroundUser)
     else
-      FColor := ColorSettings.clSystem;
+      SetColor(ColorSettings.clBackgroundSystem);
 
     if not FInfo.IsLoaded then
-    begin
-      FHasFontColor := True;
-      FFontColor := ColorSettings.clHidden;
-    end;
+      SetFontColor(ColorSettings.clForegroundInactive);
 
     FHint := FHint + #$D#$A + BuildHint([
       THintSection.New('Profile Path', FColumnText[colPath]),

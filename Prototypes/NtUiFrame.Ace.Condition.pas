@@ -105,7 +105,7 @@ begin
   else
   begin
     FCondition := nil;
-    tbxCondition.Color := ColorSettings.clDisabledModified;
+    tbxCondition.Color := ColorSettings.clBackgroundError;
   end;
 end;
 

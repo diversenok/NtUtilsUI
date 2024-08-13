@@ -184,21 +184,20 @@ end;
 procedure TPrivilegeNodeData.SetColoringMode;
 begin
   ColoringMode := Mode;
-  FHasColor := Mode <> pcNone;
 
   case Mode of
-    pcRemoved: FColor := ColorSettings.clRemoved;
+    pcRemoved: SetColor(ColorSettings.clBackgroundInactive);
     pcStateBased:
       if BitTest(Privilege.Attributes and SE_PRIVILEGE_ENABLED) then
         if BitTest(Privilege.Attributes and SE_PRIVILEGE_ENABLED_BY_DEFAULT) then
-          FColor := ColorSettings.clEnabled
+          SetColor(ColorSettings.clBackgroundAllows)
         else
-          FColor := ColorSettings.clEnabledModified
+          SetColor(ColorSettings.clBackgroundAllowAccent)
       else
         if BitTest(Privilege.Attributes and SE_PRIVILEGE_ENABLED_BY_DEFAULT) then
-          FColor := ColorSettings.clDisabledModified
+          SetColor(ColorSettings.clBackgroundDenyAccent)
         else
-          FColor := ColorSettings.clDisabled;
+          SetColor(ColorSettings.clBackgroundDeny);
   end;
 
   Invalidate;

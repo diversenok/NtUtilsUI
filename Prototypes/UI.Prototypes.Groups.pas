@@ -103,8 +103,6 @@ type
   end;
 
 constructor TGroupNodeData.Create;
-var
-  HintSections: TArray<THintSection>;
 begin
   inherited Create(colMax);
 
@@ -116,9 +114,7 @@ begin
     FColumnText[colSidType] := TType.Represent(Lookup.SidType).Text;
 
   if Lookup.IsValid then
-    FColumnText[colFriendly] := Lookup.FullName
-  else
-    FColumnText[colFriendly] := FColumnText[colSid];
+    FColumnText[colFriendly] := Lookup.FullName;
 
   FColumnText[colFlags] := TType.Represent<TGroupAttributes>(
     Group.Attributes and not SE_GROUP_STATE_MASK,
@@ -129,43 +125,35 @@ begin
     Group.Attributes and SE_GROUP_STATE_MASK).Text;
 
   // Colors
-  FHasColor := True;
   if BitTest(Group.Attributes and SE_GROUP_INTEGRITY_ENABLED) then
     if BitTest(Group.Attributes and SE_GROUP_ENABLED) xor
       BitTest(Group.Attributes and SE_GROUP_ENABLED_BY_DEFAULT) then
-      FColor := ColorSettings.clIntegrityModified
+      SetColor(ColorSettings.clBackgroundAlterAccent)
     else
-      FColor := ColorSettings.clIntegrity
+      SetColor(ColorSettings.clBackgroundAlter)
   else
     if BitTest(Group.Attributes and SE_GROUP_ENABLED) then
       if BitTest(Group.Attributes and SE_GROUP_ENABLED_BY_DEFAULT) then
-        FColor := ColorSettings.clEnabled
+        SetColor(ColorSettings.clBackgroundAllows)
       else
-        FColor := ColorSettings.clEnabledModified
+        SetColor(ColorSettings.clBackgroundAllowAccent)
     else
       if BitTest(Group.Attributes and SE_GROUP_ENABLED_BY_DEFAULT) then
-        FColor := ColorSettings.clDisabledModified
+        SetColor(ColorSettings.clBackgroundDenyAccent)
       else
-        FColor := ColorSettings.clDisabled;
+        SetColor(ColorSettings.clBackgroundDeny);
 
   // Hint
-  HintSections := [
+  FHint := BuildHint([
     THintSection.New('Friendly Name', FColumnText[colFriendly]),
     THintSection.New('SID', FColumnText[colSid]),
     THintSection.New('Type', FColumnText[colSidType]),
     THintSection.New('State', FColumnText[colState]),
     THintSection.New('Flags', FColumnText[colFlags])
-  ];
+  ]);
 
-  // Show SID type only for successful lookups
-  if Lookup.SidType = SidTypeUndefined then
-    Delete(HintSections, 2, 1);
-
-  // Do not include the friendly name if we don't have one
   if not Lookup.IsValid then
-    Delete(HintSections, 0, 1);
-
-  FHint := BuildHint(HintSections);
+    FColumnText[colFriendly] := FColumnText[colSid];
 end;
 
 class function TGroupNodeData.CreateMany;

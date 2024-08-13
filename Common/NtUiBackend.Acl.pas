@@ -66,7 +66,7 @@ uses
   NtUtils.Security.Sid, NtUtils.Security, NtUtils.SysUtils,
   NtUiLib.Errors, VirtualTrees, DevirtualizedTree.Provider,
   DelphiUiLib.Reflection, DelphiUiLib.Strings, DelphiUiLib.Reflection.Strings,
-  UI.Colors, UI.Helper, VirtualTrees.Types, Vcl.Graphics;
+  UI.Colors, UI.Helper, VirtualTrees.Types;
 
 const
   colUse = 0;
@@ -199,25 +199,24 @@ begin
     THintSection.New('Condition', FColumnText[colCondition])
   ]);
 
-  FHasFontColor := BitTest(FAce.AceFlags and INHERIT_ONLY_ACE);
-  FFontColor := clDkGray;
+  if BitTest(FAce.AceFlags and INHERIT_ONLY_ACE) then
+    SetFontColor(ColorSettings.clForegroundInactive);
 
-  FHasColor := True;
   if FAce.AceType in AccessAllowedAces then
     if BitTest(FAce.AceFlags and INHERITED_ACE) then
-      FColor := ColorSettings.clEnabled
+      SetColor(ColorSettings.clBackgroundAllows)
     else
-      FColor := ColorSettings.clEnabledModified
+      SetColor(ColorSettings.clBackgroundAllowAccent)
   else if FAce.AceType in AccessDeniedAces then
     if BitTest(FAce.AceFlags and INHERITED_ACE) then
-      FColor := ColorSettings.clDisabled
+      SetColor(ColorSettings.clBackgroundDeny)
     else
-      FColor := ColorSettings.clDisabledModified
+      SetColor(ColorSettings.clBackgroundDeny)
   else
     if BitTest(FAce.AceFlags and INHERITED_ACE) then
-      FColor := ColorSettings.clIntegrity
+      SetColor(ColorSettings.clBackgroundAlter)
     else
-      FColor := ColorSettings.clIntegrityModified
+      SetColor(ColorSettings.clBackgroundAlterAccent)
 end;
 
 procedure TAceNode.SetAce;
