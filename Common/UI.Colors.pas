@@ -8,7 +8,7 @@ uses
 type
   TColorSettings = record
     // Text background
-    clBackgroundAllows: TColor;
+    clBackgroundAllow: TColor;
     clBackgroundAllowAccent: TColor;
     clBackgroundDeny: TColor;
     clBackgroundDenyAccent: TColor;
@@ -29,7 +29,7 @@ type
 
 var
   ColorSettings: TColorSettings = (
-    clBackgroundAllows: $E0F0E0;               // Light green
+    clBackgroundAllow: $E0F0E0;               // Light green
     clBackgroundAllowAccent: $C0F0C0;          // Medium-light green
     clBackgroundDeny: $E0E0F0;                 // Light red
     clBackgroundDenyAccent: $D0D0F0;           // Medium-light red

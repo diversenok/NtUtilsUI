@@ -190,7 +190,7 @@ begin
     pcStateBased:
       if BitTest(Privilege.Attributes and SE_PRIVILEGE_ENABLED) then
         if BitTest(Privilege.Attributes and SE_PRIVILEGE_ENABLED_BY_DEFAULT) then
-          SetColor(ColorSettings.clBackgroundAllows)
+          SetColor(ColorSettings.clBackgroundAllow)
         else
           SetColor(ColorSettings.clBackgroundAllowAccent)
       else

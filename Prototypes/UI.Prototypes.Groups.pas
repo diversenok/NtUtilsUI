@@ -134,7 +134,7 @@ begin
   else
     if BitTest(Group.Attributes and SE_GROUP_ENABLED) then
       if BitTest(Group.Attributes and SE_GROUP_ENABLED_BY_DEFAULT) then
-        SetColor(ColorSettings.clBackgroundAllows)
+        SetColor(ColorSettings.clBackgroundAllow)
       else
         SetColor(ColorSettings.clBackgroundAllowAccent)
     else

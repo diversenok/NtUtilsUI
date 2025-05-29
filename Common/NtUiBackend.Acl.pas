@@ -204,7 +204,7 @@ begin
 
   if FAce.AceType in AccessAllowedAces then
     if BitTest(FAce.AceFlags and INHERITED_ACE) then
-      SetColor(ColorSettings.clBackgroundAllows)
+      SetColor(ColorSettings.clBackgroundAllow)
     else
       SetColor(ColorSettings.clBackgroundAllowAccent)
   else if FAce.AceType in AccessDeniedAces then
