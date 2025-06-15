@@ -5,7 +5,7 @@ interface
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes,
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls,
-  NtUtils, NtUiFrame;
+  NtUtils, NtUiFrame, NtUiLib.AutoCompletion;
 
 type
   TSidChoice = (
@@ -25,7 +25,7 @@ type
     procedure tbxSidEnter(Sender: TObject);
     procedure btnChoiceClick(Sender: TObject);
   private
-    FSuggestionsInitialized: Boolean;
+    FSuggestions: IAutoCompletionSuggestions;
     FOnSidChanged: TNotifyEvent;
     SidCache: ISid;
     FSidChoice: TSidChoice;
@@ -186,11 +186,11 @@ end;
 
 procedure TSidEditor.tbxSidEnter;
 begin
-  if FSuggestionsInitialized then
-    Exit;
-
-  FSuggestionsInitialized := True;
-  ShlxEnableSidSuggestions(tbxSid.Handle);
+  if not Assigned(FSuggestions) then
+  begin
+    FSuggestions := ShlxPrepareeSidSuggestions;
+    ShlxEnableSuggestions(tbxSid.Handle, FSuggestions);
+  end;
 end;
 
 function TSidEditor.TryGetSid;
