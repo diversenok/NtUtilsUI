@@ -155,8 +155,7 @@ type
 
   TBaseTreeExtension = class abstract (TInterfacedObject)
   private
-    FTree: TDevirtualizedTree;
-    FTreeWeakRef: Weak<IUnknown>;
+    [Weak] FTree: TDevirtualizedTree;
   protected
     function Attached: Boolean;
     property Tree: TDevirtualizedTree read FTree;
@@ -220,23 +219,13 @@ uses
 { TBaseTreeExtension }
 
 function TBaseTreeExtension.Attached;
-var
-  StrongRef: IUnknown;
 begin
-  // It's safe to use the tree on the UI thread as long as the weak reference
-  // is alive
-  Result := FTreeWeakRef.Upgrade(StrongRef);
-
-  if not Result then
-    FTree := nil;
+  Result := Assigned(FTree);
 end;
 
 constructor TBaseTreeExtension.Create;
 begin
-  // We store a non-owning typed reference and a weak interface reference to
-  // correctly track object lifetime
   FTree := Tree;
-  FTreeWeakRef := Tree;
 end;
 
 { TTreeNodeInterfaceProvider }
