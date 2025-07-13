@@ -91,7 +91,7 @@ begin
 
   for i := 0 to High(FResourceIcons) do
   begin
-    Icon := Auto.From(TIcon.Create).Self;
+    Icon := Auto.CaptureObject(TIcon.Create).Self;
     Icon.LoadFromResourceName(HInstance, FResourceIcons[i].IconName);
     IconIndex := FImages.AddIcon(Icon);
 

@@ -290,7 +290,7 @@ function RegisterClipboardFormatW(
 function GlobalLockAuto(
   hMem: THGlobal;
   out Memory: Pointer;
-  out Lock: IAutoReleasable
+  out Reverter: IDeferredOperation
 ): TNtxStatus;
 begin
   Result.Location := 'GlobalLock';
@@ -298,19 +298,19 @@ begin
   Result.Win32Result := Assigned(Memory);
 
   if Result.IsSuccess then
-    Lock := Auto.Delay(
-      procedure
-      begin
-        GlobalUnlock(hMem);
-      end
-    );
+    Reverter := Auto.Defer(
+    procedure
+    begin
+      GlobalUnlock(hMem);
+    end
+  );
 end;
 
-function ReleaseStgMediumAuto(
+function DeferReleaseStgMedium(
   const Medium: TStgMedium
-): IAutoReleasable;
+): IDeferredOperation;
 begin
-  Result := Auto.Delay(
+  Result := Auto.Defer(
     procedure
     begin
       ReleaseStgMedium(Medium);
@@ -327,7 +327,7 @@ var
   FormatEtc: TFormatEtc;
   Medium: TStgMedium;
   SelList: PDSSelectionList;
-  Lock: IAutoReleasable;
+  MediumReleaser, GlobalUnlocker: IDeferredOperation;
 begin
   Result := ComxCreateInstanceWithFallback('objsel.dll', CLSID_DsObjectPicker,
     IDsObjectPicker, Picker, 'CLSID_DsObjectPicker');
@@ -384,8 +384,8 @@ begin
   if not Result.IsSuccess then
     Exit;
 
-  ReleaseStgMediumAuto(Medium);
-  Result := GlobalLockAuto(Medium.hGlobal, Pointer(SelList), Lock);
+  MediumReleaser := DeferReleaseStgMedium(Medium);
+  Result := GlobalLockAuto(Medium.hGlobal, Pointer(SelList), GlobalUnlocker);
 
   if not Result.IsSuccess then
     Exit;

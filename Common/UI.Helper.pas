@@ -14,7 +14,7 @@ type
   // Automatic operations on virtual tree views
   TVirtualTreeAutoHelper = class helper for TBaseVirtualTree
     function BeginUpdateAuto: IAutoReleasable;
-    function BackupSelectionAuto(Comparer: TMapRoutine<PVirtualNode, TCondition<PVirtualNode>>): IAutoReleasable;
+    function BackupSelectionAuto(Comparer: TMapRoutine<PVirtualNode, TCondition<PVirtualNode>>): IDeferredOperation;
   end;
 
   TComboBoxHelper = class helper for TComboBox
@@ -45,7 +45,7 @@ function TCollectionHelper.BeginUpdateAuto;
 begin
   BeginUpdate;
 
-  Result := Auto.Delay(
+  Result := Auto.Defer(
     procedure
     begin
       EndUpdate;
@@ -71,7 +71,7 @@ begin
     FocusCondition := nil;
 
   // Restore selection afterward
-  Result := Auto.Delay(
+  Result := Auto.Defer(
     procedure
     var
       SelectionCondition: TCondition<PVirtualNode>;
@@ -105,7 +105,7 @@ function TVirtualTreeAutoHelper.BeginUpdateAuto;
 begin
   BeginUpdate;
 
-  Result := Auto.Delay(
+  Result := Auto.Defer(
     procedure
     begin
       EndUpdate;
@@ -120,6 +120,7 @@ var
   PreviousEvent: TNotifyEvent;
   PreviousItem: String;
   PreviousItemFound: Boolean;
+  AutoEndUpdate: IDeferredOperation;
   i: Integer;
 begin
   // Save the current state
@@ -129,7 +130,7 @@ begin
   // Remove all items
   Self.OnChange := nil;
   Self.Items.BeginUpdate;
-  Auto.Delay(
+  AutoEndUpdate := Auto.Defer(
     procedure
     begin
       Self.Items.EndUpdate;

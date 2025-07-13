@@ -43,7 +43,7 @@ uses
 
 procedure TAppContainerFieldFrame.btnSelectClick;
 var
-  Info: TAppContainerInfo;
+  Info: TRtlxAppContainerInfo;
 begin
   if not Assigned(NtUiLibSelectAppContainerAllUsers) then
     Exit;

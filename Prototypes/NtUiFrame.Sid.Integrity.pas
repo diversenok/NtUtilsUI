@@ -118,9 +118,11 @@ begin
 end;
 
 procedure TFrameIntegrity.UpdateComboBoxValue;
+var
+  OnChangeReverter: IDeferredOperation;
 begin
   ComboBox.OnChange := nil;
-  Auto.Delay(
+  OnChangeReverter := Auto.Defer(
     procedure
     begin
       ComboBox.OnChange := ComboBoxChange;
@@ -142,9 +144,11 @@ begin
 end;
 
 procedure TFrameIntegrity.UpdateTrackBarValue;
+var
+  OnChangeReverter: IDeferredOperation;
 begin
   TrackBar.OnChange := nil;
-  Auto.Delay(
+  OnChangeReverter := Auto.Defer(
     procedure
     begin
       TrackBar.OnChange := TrackBarChange;

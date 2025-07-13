@@ -32,14 +32,14 @@ end;
 type
   TUIExceptionHandler = class
     procedure Display(Sender: TObject; E: Exception);
-    class var Instance: IAutoObject<TUIExceptionHandler>;
+    class var Instance: IObject<TUIExceptionHandler>;
   end;
 
 procedure EnableNtUiLibExceptionHandling;
 begin
   // Cache the instance since we need a "procedure of object"
   if not Assigned(TUIExceptionHandler.Instance) then
-    TUIExceptionHandler.Instance := Auto.From(TUIExceptionHandler.Create);
+    TUIExceptionHandler.Instance := Auto.CaptureObject(TUIExceptionHandler.Create);
 
   Application.OnException := TUIExceptionHandler.Instance.Self.Display;
 end;
@@ -59,6 +59,6 @@ end;
 
 initialization
   // Enable exception handling for DelphiUtils.AutoEvents
-  AutoEventsExceptionHanlder := ReportAutoEventsException;
+  AutoExceptionHanlder := ReportAutoEventsException;
 end.
 

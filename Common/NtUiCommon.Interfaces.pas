@@ -259,7 +259,7 @@ begin
 
   Tree.BeginUpdate;
 
-  Result := Auto.Delay(
+  Result := Auto.Defer(
     procedure
     begin
       // This will capture the entire object with its weak tree reference

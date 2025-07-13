@@ -118,7 +118,7 @@ begin
 
   FColumnText[colFlags] := TType.Represent<TGroupAttributes>(
     Group.Attributes and not SE_GROUP_STATE_MASK,
-    [Auto.From(IgnoreSubEnumsAttribute.Create).Self]
+    [Auto.CaptureObject(IgnoreSubEnumsAttribute.Create).Self]
   ).Text;
 
   FColumnText[colState] := TType.Represent<TGroupAttributes>(

@@ -112,6 +112,7 @@ end;
 function TAceConditionFrame.TrySetCondition;
 var
   SDDL: String;
+  OnChangeReverter: IDeferredOperation;
 begin
   FCondition := nil;
   SDDL := '';
@@ -129,7 +130,7 @@ begin
 
   // Suppress recursive invocation
   tbxCondition.OnChange := nil;
-  Auto.Delay(
+  OnChangeReverter := Auto.Defer(
     procedure
     begin
       tbxCondition.OnChange := tbxConditionChange;

@@ -61,7 +61,7 @@ var
   { AppContainer Profiles }
 
   NtUiLibShowAppContainer: procedure(
-    const Info: TAppContainerInfo
+    const Info: TRtlxAppContainerInfo
   );
 
   NtUiLibShowAppContainers: procedure(
@@ -75,12 +75,12 @@ var
   NtUiLibSelectAppContainer: function (
     Owner: TComponent;
     const User: ISid
-  ): TAppContainerInfo;
+  ): TRtlxAppContainerInfo;
 
   NtUiLibSelectAppContainerAllUsers: function (
     Owner: TComponent;
     [opt] const DefaultUser: ISid = nil
-  ): TAppContainerInfo;
+  ): TRtlxAppContainerInfo;
 
   { ACE }
 

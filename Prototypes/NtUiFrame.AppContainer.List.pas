@@ -155,7 +155,7 @@ end;
 function NtUiLibSelectAppContainer(
   Owner: TComponent;
   const User: ISid
-): TAppContainerInfo;
+): TRtlxAppContainerInfo;
 var
   ProfileNode: IAppContainerNode;
 begin

@@ -48,10 +48,12 @@ begin
 end;
 
 procedure TGuidFrame.SetGuid;
+var
+  OnChangeReverter: IDeferredOperation;
 begin
   // Prevent recursion
   tbxGuid.OnChange := nil;
-  Auto.Delay(
+  OnChangeReverter := Auto.Defer(
     procedure
     begin
       tbxGuid.OnChange := tbxGuidChange;

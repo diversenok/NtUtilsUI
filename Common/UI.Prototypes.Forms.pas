@@ -4,7 +4,7 @@ interface
 
 uses
   Winapi.Windows, System.Classes, Vcl.Controls, Vcl.Forms,
-  DelphiUtils.AutoEvents, VclEx.Form;
+  DelphiUtils.AutoObjects, DelphiUtils.AutoEvents, VclEx.Form;
 
 type
   TFormEvents = class abstract

@@ -15,13 +15,13 @@ type
   TAppContainerViewFrame = class(TFrame, IHasDefaultCaption)
     Tree: TDevirtualizedTree;
   private
-    FInfo: TAppContainerInfo;
+    FInfo: TRtlxAppContainerInfo;
     procedure InspectMenu(Node: PVirtualNode);
   protected
     procedure Loaded; override;
   public
     function GetDefaultCaption: String;
-    procedure LoadFor(const Info: TAppContainerInfo);
+    procedure LoadFor(const Info: TRtlxAppContainerInfo);
   end;
 
 implementation
@@ -58,7 +58,7 @@ end;
 
 { Integration }
 
-function Initializer(const Info: TAppContainerInfo): TFrameInitializer;
+function Initializer(const Info: TRtlxAppContainerInfo): TFrameInitializer;
 begin
   Result := function (AOwner: TComponent): TFrame
     var
@@ -74,7 +74,7 @@ begin
     end;
 end;
 
-procedure NtUiLibShowAppContainer(const Info: TAppContainerInfo);
+procedure NtUiLibShowAppContainer(const Info: TRtlxAppContainerInfo);
 begin
   if not Assigned(NtUiLibHostFramePick) then
     raise ENotSupportedException.Create('Frame host not available');

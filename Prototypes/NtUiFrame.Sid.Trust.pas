@@ -165,9 +165,11 @@ begin
 end;
 
 procedure TFrameTrustSid.UpdateLevelComboBox;
+var
+  OnChangeReverter: IAutoReleasable;
 begin
   cbxLevel.OnChange := nil;
-  Auto.Delay(
+  OnChangeReverter := Auto.Defer(
     procedure
     begin
       cbxLevel.OnChange := cbxLevelChange;
@@ -188,9 +190,11 @@ begin
 end;
 
 procedure TFrameTrustSid.UpdateLevelTrackBar;
+var
+  OnChangeReverter: IAutoReleasable;
 begin
   TrackBarLevel.OnChange := nil;
-  Auto.Delay(
+  OnChangeReverter := Auto.Defer(
     procedure
     begin
       TrackBarLevel.OnChange := TrackBarLevelChange;
@@ -201,9 +205,11 @@ begin
 end;
 
 procedure TFrameTrustSid.UpdateTypeComboBox;
+var
+  OnChangeReverter: IAutoReleasable;
 begin
   cbxType.OnChange := nil;
-  Auto.Delay(
+  OnChangeReverter := Auto.Defer(
     procedure
     begin
       cbxType.OnChange := cbxTypeChange;
@@ -221,9 +227,11 @@ begin
 end;
 
 procedure TFrameTrustSid.UpdateTypeTrackBar;
+var
+  OnChangeReverter: IAutoReleasable;
 begin
   TrackBarType.OnChange := nil;
-  Auto.Delay(
+  OnChangeReverter := Auto.Defer(
     procedure
     begin
       TrackBarType.OnChange := TrackBarTypeChange;

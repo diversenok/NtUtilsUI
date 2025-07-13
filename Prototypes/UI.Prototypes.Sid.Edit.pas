@@ -134,9 +134,11 @@ begin
 end;
 
 procedure TSidEditor.SetSid;
+var
+  OnCheckedReverter: IDeferredOperation;
 begin
   tbxSid.OnChange := nil;
-  Auto.Delay(
+  OnCheckedReverter := Auto.Defer(
     procedure
     begin
       tbxSid.OnChange := tbxSidChange;

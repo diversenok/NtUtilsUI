@@ -52,10 +52,12 @@ begin
 end;
 
 procedure THexEditFrame.SetData;
+var
+  OnChangeReverter: IDeferredOperation;
 begin
   // Prevent recursive calls
   tbxHexString.OnChange := nil;
-  Auto.Delay(
+  OnChangeReverter := Auto.Defer(
     procedure
     begin
       tbxHexString.OnChange := tbxHexStringChange;

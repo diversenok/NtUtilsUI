@@ -18,16 +18,16 @@ const
   colMax = 5;
 
 type
-  TAppContainerInfo = NtUtils.Security.AppContainer.TAppContainerInfo;
+  TRtlxAppContainerInfo = NtUtils.Security.AppContainer.TRtlxAppContainerInfo;
 
-  TAppContainerInfoHelper = record helper for TAppContainerInfo
+  TAppContainerInfoHelper = record helper for TRtlxAppContainerInfo
     function Hint: String;
   end;
 
   IAppContainerNode = interface (INodeProvider)
     ['{AF1E4CBD-1752-4655-8C13-D6B0D18AFE3D}']
-    function GetInfo: TAppContainerInfo;
-    property Info: TAppContainerInfo read GetInfo;
+    function GetInfo: TRtlxAppContainerInfo;
+    property Info: TRtlxAppContainerInfo read GetInfo;
   end;
 
 // Derive AppContainer SID from name or SID
@@ -41,7 +41,7 @@ function UiLibGetDefaultUser: ISid;
 
 // Populate an AppContainer node from its information
 function UiLibMakeAppContainerNode(
-  const Info: TAppContainerInfo
+  const Info: TRtlxAppContainerInfo
 ): IAppContainerNode;
 
 // Enumerate AppContainers and convert them into node providers
@@ -54,12 +54,12 @@ function UiLibEnumerateAppContainers(
 // Add property nodes for AppContainer
 procedure UiLibMakeAppContainerPropertyNodes(
   Tree: TDevirtualizedTree;
-  const Info: TAppContainerInfo
+  const Info: TRtlxAppContainerInfo
 );
 
 // Invoke the inspect menu on a property node
 procedure UiLibInspectAppContainerProperty(
-  const Info: TAppContainerInfo;
+  const Info: TRtlxAppContainerInfo;
   NodeIndex: Integer
 );
 
@@ -91,13 +91,13 @@ end;
 type
   TAppContainerNode = class (TNodeProvider, IAppContainerNode)
   private
-    FInfo: TAppContainerInfo;
+    FInfo: TRtlxAppContainerInfo;
   protected
     procedure Initialize; override;
   public
-    function GetInfo: TAppContainerInfo;
+    function GetInfo: TRtlxAppContainerInfo;
     constructor Create(
-      const Info: TAppContainerInfo
+      const Info: TRtlxAppContainerInfo
     );
   end;
 
@@ -170,7 +170,7 @@ end;
 function UiLibEnumerateAppContainers;
 var
   Sids: TArray<ISid>;
-  Info: TAppContainerInfo;
+  Info: TRtlxAppContainerInfo;
   i: Integer;
 begin
   Result := RtlxEnumerateAppContainerSIDs(Sids, ParentSid, User);
@@ -187,10 +187,7 @@ begin
   end;
 end;
 
-procedure UiLibMakeAppContainerPropertyNodes(
-  Tree: TDevirtualizedTree;
-  const Info: TAppContainerInfo
-);
+procedure UiLibMakeAppContainerPropertyNodes;
 var
   Node: IEditableNodeProvider;
   ParentSid: ISid;
@@ -312,7 +309,7 @@ end;
 procedure UiLibInspectAppContainerProperty;
 var
   ParentSid: ISid;
-  ParentInfo: TAppContainerInfo;
+  ParentInfo: TRtlxAppContainerInfo;
 begin
   if not Assigned(NtUiLibShowAppContainer) or (NodeIndex <> 2) then
     Exit;

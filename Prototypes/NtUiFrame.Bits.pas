@@ -102,11 +102,12 @@ const
 var
   Node: PVirtualNode;
   FlagNode: IFlagNode;
+  OnCheckedReverter: IDeferredOperation;
 begin
   Tree.BeginUpdateAuto;
   SuppressTreeReadOnly;
   Tree.OnChecked := nil;
-  Auto.Delay(
+  OnCheckedReverter := Auto.Defer(
     procedure
     begin
       Tree.OnChecked := TreeChecked;
@@ -121,11 +122,13 @@ begin
 end;
 
 procedure TBitsFrame.RefreshText;
+var
+  OnCheckedReverter: IDeferredOperation;
 begin
   if not Editing then
   begin
     tbxValue.OnChange := nil;
-    Auto.Delay(
+    OnCheckedReverter := Auto.Defer(
       procedure
       begin
         tbxValue.OnChange := tbxValueChange;
@@ -170,7 +173,7 @@ begin
   if FIsReadOnly then
   begin
     SetTreeReadOnly(False);
-    Result := Auto.Delay(
+    Result := Auto.Defer(
       procedure
       begin
         SetTreeReadOnly(True);

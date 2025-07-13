@@ -119,7 +119,7 @@ end;
 function NtUiLibSelectAppContainerAllUsers(
   Owner: TComponent;
   [opt] const DefaultUser: ISid
-): TAppContainerInfo;
+): TRtlxAppContainerInfo;
 var
   ProfileNode: IAppContainerNode;
 begin
