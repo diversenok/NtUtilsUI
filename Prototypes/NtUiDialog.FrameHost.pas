@@ -53,6 +53,7 @@ var
   ModalCaptions: IHasModalCaptions;
   DefaultCaption: IHasDefaultCaption;
   DefaultAction: IAllowsDefaultNodeAction;
+  DelayedLoad: IDelayedLoad;
   BottomMargin, OtherMargin: Integer;
 begin
   if not Assigned(Frame) then
@@ -108,6 +109,10 @@ begin
       DefaultAction.OnMainAction := DefaultActionChosen;
     end;
   end;
+
+  // Initialize the frame
+  if FFrameRef.QueryInterface(IDelayedLoad, DelayedLoad).IsSuccess then
+    DelayedLoad.DelayedLoad;
 end;
 
 procedure TFrameHostDialog.btnCloseClick;
