@@ -7,7 +7,7 @@ unit NtUiBackend.UserProfiles;
 interface
 
 uses
-  DevirtualizedTree, NtUtils.Profiles, NtUtils;
+  DevirtualizedTree, NtUtils.Profiles, NtUtils, NtUiCommon.Prototypes;
 
 const
   colUserName = 0;
@@ -20,14 +20,9 @@ const
 type
   IProfileNode = interface (INodeProvider)
     ['{3FEAB0A3-69D5-45EA-AA34-F35FBDC60E57}']
-    function GetInfo: TProfileInfo;
-    property Info: TProfileInfo read GetInfo;
+    function GetInfo: TNtUiLibProfileInfo;
+    property Info: TNtUiLibProfileInfo read GetInfo;
   end;
-
-// Populate a user profile node from its information
-function UiLibMakeProfileNode(
-  const Info: TProfileInfo
-): IProfileNode;
 
 // Enumerate user profiles and convert them into node providers
 function UiLibEnumerateProfiles(
@@ -49,72 +44,80 @@ uses
 type
   TProfileNode = class (TNodeProvider, IProfileNode)
   private
-    FInfo: TProfileInfo;
+    FUser: ISid;
+    FListKey: IHandle;
+    FIsLoaded: Boolean;
   protected
     procedure Initialize; override;
   public
-    function GetInfo: TProfileInfo;
+    function GetInfo: TNtUiLibProfileInfo;
     constructor Create(
-      const Info: TProfileInfo
+      const User: ISid
     );
   end;
 
 constructor TProfileNode.Create;
 begin
   inherited Create(colMax);
-  FInfo := Info;
+  FUser := User;
 end;
 
 function TProfileNode.GetInfo;
 begin
-  Result := FInfo;
+  Result.User := FUser;
+  Result.hxListKey := FListKey;
 end;
 
 procedure TProfileNode.Initialize;
 var
   UserRepresentation: TRepresentation;
+  FullProfile: LongBool;
+  ProfilePath: String;
 begin
   inherited;
 
-  UserRepresentation := TType.Represent(FInfo.User);
-  FColumnText[colUserName] := UserRepresentation.Text;
-  FColumnText[colSID] := RtlxSidToString(FInfo.User);
-  FColumnText[colPath] := FInfo.ProfilePath;
-  FColumnText[colFullProfile] := YesNoToString(FInfo.FullProfile);
-  FColumnText[colLoaded] := YesNoToString(FInfo.IsLoaded);
-  FHint := UserRepresentation.Hint;
+  RtlxOpenProfileListKey(FUser, FListKey);
+  FIsLoaded := RtlxIsProfileLoaded(FUser);
+  ProfilePath := '';
 
-  if FInfo.ProfilePath <> '' then
+  if Assigned(FListKey) then
   begin
-    if FInfo.FullProfile then
+    if not RtlxQueryProfileIsFullProfile(FListKey, FullProfile).IsSuccess then
+      FullProfile := False;
+
+    FColumnText[colFullProfile] := YesNoToString(FullProfile);
+
+    if FullProfile then
       SetColor(ColorSettings.clBackgroundUser)
     else
       SetColor(ColorSettings.clBackgroundSystem);
 
-    if not FInfo.IsLoaded then
-      SetFontColor(ColorSettings.clForegroundInactive);
-
-    FHint := FHint + #$D#$A + BuildHint([
-      THintSection.New('Profile Path', FColumnText[colPath]),
-      THintSection.New('Loaded', FColumnText[colLoaded])
-    ]);
+    if RtlxQueryProfilePath(FListKey, ProfilePath).IsSuccess then
+      FColumnText[colPath] := ProfilePath;
   end;
+
+  UserRepresentation := TType.Represent(FUser);
+  FColumnText[colUserName] := UserRepresentation.Text;
+  FColumnText[colSID] := RtlxSidToString(FUser);
+  FColumnText[colLoaded] := YesNoToString(FIsLoaded);
+
+  FHint := UserRepresentation.Hint + #$D#$A + BuildHint([
+    THintSection.New('Profile Path', FColumnText[colPath]),
+    THintSection.New('Loaded', FColumnText[colLoaded])
+  ]);
+
+  if not FIsLoaded then
+    SetFontColor(ColorSettings.clForegroundInactive);
 end;
 
 { Functions }
 
-function UiLibMakeProfileNode;
-begin
-  Result := TProfileNode.Create(Info);
-end;
-
 function UiLibEnumerateProfiles;
 var
   Sids: TArray<ISid>;
-  Info: TProfileInfo;
   i: Integer;
 begin
-  Result := UnvxEnumerateProfiles(Sids);
+  Result := RtlxEnumerateProfiles(Sids);
 
   if not Result.IsSuccess then
     Exit;
@@ -122,10 +125,7 @@ begin
   SetLength(Providers, Length(Sids));
 
   for i := 0 to High(Sids) do
-  begin
-    UnvxQueryProfile(Sids[i], Info);
-    Providers[i] := UiLibMakeProfileNode(Info);
-  end;
+    Providers[i] := TProfileNode.Create(Sids[i]);
 end;
 
 end.

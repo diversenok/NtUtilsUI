@@ -95,7 +95,7 @@ begin
   NtUiLibHostFrameShow(Initializer);
 end;
 
-function NtUiLibSelectUserProfile(Owner: TComponent): TProfileInfo;
+function NtUiLibSelectUserProfile(Owner: TComponent): TNtUiLibProfileInfo;
 var
   ProfileNode: IProfileNode;
 begin

@@ -69,7 +69,8 @@ uses
   Ntapi.ntseapi, NtUtils.SysUtils, NtUtils.Security.Sid, NtUtils.Tokens,
   NtUtils.Tokens.Info, NtUtils.Packages, NtUtils.Profiles, Vcl.Graphics,
   Vcl.Controls, DevirtualizedTree.Provider, NtUiLib.Errors,
-  DelphiUiLib.Reflection.Strings, UI.Colors, UI.Helper, NtUiCommon.Prototypes;
+  DelphiUiLib.Reflection.Strings, UI.Colors, UI.Helper, NtUiCommon.Prototypes,
+  NtUtils.Profiles.AppContainer;
 
 {$BOOLEVAL OFF}
 {$IFOPT R+}{$DEFINE R+}{$ENDIF}
@@ -194,7 +195,6 @@ var
   Status: TNtxStatus;
   IsPackage: Boolean;
   FolderPath: String;
-  CurrentUser: ISid;
 begin
   Tree.BeginUpdateAuto;
   Tree.Clear;
@@ -283,24 +283,14 @@ begin
   Node.EnabledMainActionMenu := False;
   Node.ColumnText[0] := 'File Path';
 
-  if NtxQuerySidToken(NtxCurrentEffectiveToken, TokenUser,
-    CurrentUser).IsSuccess and RtlxEqualSids(CurrentUser, Info.User) then
-  begin
-    // Querying folder only works for on current user
-    Status := UnvxQueryFolderAppContainer(Info.Sid, FolderPath);
+  Status := UnvxQueryAppContainerPath(FolderPath, Info.User, Info.Sid);
 
-    if Status.IsSuccess then
-      Node.ColumnText[1] := FolderPath
-    else
-    begin
-      Node.ColumnText[1] := '<Unable to query>';
-      Node.Hint := Status.ToString;
-    end;
-  end
+  if Status.IsSuccess then
+    Node.ColumnText[1] := FolderPath
   else
   begin
-    Node.ColumnText[1] := '<Unable to query>';
-    Node.Hint := 'Cannot query information for another user';
+    Node.ColumnText[1] := '<Failed to query>';
+    Node.Hint := Status.ToString;
   end;
 
   Tree.AddChildEx(nil, Node);

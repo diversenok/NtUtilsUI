@@ -52,11 +52,18 @@ var
 
   { User Profiles }
 
+type
+  TNtUiLibProfileInfo = record
+    User: ISid;
+    hxListKey: IHandle;
+  end;
+
+var
   NtUiLibShowUserProfiles: procedure;
 
   NtUiLibSelectUserProfile: function (
     Owner: TComponent
-  ): TProfileInfo;
+  ): TNtUiLibProfileInfo;
 
   { AppContainer Profiles }
 
