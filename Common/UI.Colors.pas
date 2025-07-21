@@ -29,7 +29,7 @@ type
 
 var
   ColorSettings: TColorSettings = (
-    clBackgroundAllow: $E0F0E0;               // Light green
+    clBackgroundAllow: $E0F0E0;                // Light green
     clBackgroundAllowAccent: $C0F0C0;          // Medium-light green
     clBackgroundDeny: $E0E0F0;                 // Light red
     clBackgroundDenyAccent: $D0D0F0;           // Medium-light red
@@ -41,6 +41,7 @@ var
     clBackgroundSystem: $FFDDBB;               // Light blue
     clBackgroundUser: $AAFFFF;                 // Light yellow
     clBackgroundGuiThread: $77FFFF;            // Light yellow
+
     clForegroundError: $0000F0;                // Red
     clForegroundInactive: $808080;             // Gray
     clForegroundLink: $D77800;                 // Blue
