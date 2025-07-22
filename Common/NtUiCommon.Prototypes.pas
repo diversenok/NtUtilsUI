@@ -139,6 +139,18 @@ var
     ParentWindow: THwnd
   ): String;
 
+type
+  TNtUiLibCapability = record
+    Name: String;
+    AppSid: ISid;
+    GroupSid: ISid;
+  end;
+
+var
+  NtUiLibSelectCapabilities: function (
+    Owner: TComponent
+  ): TArray<TNtUiLibCapability>;
+
 implementation
 
 end.
