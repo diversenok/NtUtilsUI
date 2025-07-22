@@ -20,7 +20,7 @@ object AppContainerListFrame: TAppContainerListFrame
     inherited Splitter: TSplitter
       Left = 434
     end
-    inherited tbxSearchBox: TButtonedEdit
+    inherited tbxSearchBox: TButtonedEditEx
       Width = 434
     end
     inherited cbxColumn: TComboBox

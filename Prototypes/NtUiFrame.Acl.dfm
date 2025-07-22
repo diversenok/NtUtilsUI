@@ -204,7 +204,7 @@ inherited AclFrame: TAclFrame
     inherited Splitter: TSplitter
       Left = 454
     end
-    inherited tbxSearchBox: TButtonedEdit
+    inherited tbxSearchBox: TButtonedEditEx
       Width = 454
     end
     inherited cbxColumn: TComboBox

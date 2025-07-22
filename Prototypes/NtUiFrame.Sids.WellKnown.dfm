@@ -77,7 +77,7 @@ inherited WellKnownSidsFrame: TWellKnownSidsFrame
     inherited Splitter: TSplitter
       Left = 474
     end
-    inherited tbxSearchBox: TButtonedEdit
+    inherited tbxSearchBox: TButtonedEditEx
       Width = 474
     end
     inherited cbxColumn: TComboBox

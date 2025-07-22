@@ -17,7 +17,7 @@ inherited SearchFrame: TSearchFrame
     MinSize = 110
     ResizeStyle = rsUpdate
   end
-  object tbxSearchBox: TButtonedEdit
+  object tbxSearchBox: TButtonedEditEx
     Left = 0
     Top = 0
     Width = 270

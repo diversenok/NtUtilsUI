@@ -10,11 +10,11 @@ uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes,
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls,
   Vcl.ExtCtrls, VirtualTrees, DevirtualizedTree, NtUiFrame,
-  NtUiCommon.Interfaces, System.Actions, Vcl.ActnList;
+  NtUiCommon.Interfaces, System.Actions, Vcl.ActnList, VclEx.Edit;
 
 type
   TSearchFrame = class(TBaseFrame, ICanConsumeEscape, IObservesActivation)
-    tbxSearchBox: TButtonedEdit;
+    tbxSearchBox: TButtonedEditEx;
     cbxColumn: TComboBox;
     Splitter: TSplitter;
     ActionList: TActionList;
