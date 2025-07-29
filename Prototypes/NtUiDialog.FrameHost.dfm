@@ -11,11 +11,9 @@ object FrameHostDialog: TFrameHostDialog
   Font.Name = 'Tahoma'
   Font.Style = []
   KeyPreview = True
-  OldCreateOrder = False
   Position = poOwnerFormCenter
   ShowHint = True
   OnKeyDown = FormKeyDown
-  PixelsPerInch = 96
   TextHeight = 13
   object btnClose: TButton
     Left = 3

@@ -14,7 +14,7 @@ uses
 
 type
   TAceFrame = class(TFrame, ICanConsumeEscape, IHasDefaultCaption,
-    IHasModalCaptions, IHasModalResult)
+    IHasModalButtonCaptions, IHasModalResult)
     cbxType: TComboBox;
     lblType: TLabel;
     lblFlags: TLabel;

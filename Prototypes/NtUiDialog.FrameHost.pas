@@ -28,7 +28,7 @@ type
   protected
     procedure AddFrame(Frame: TFrame; AllowModal: Boolean);
   public
-    property FrameModalResult: IInterface read FFrameModalResult;
+    function PickModal: IInterface;
     class function Pick(AOwner: TComponent; Initializer: TFrameInitializer): IInterface; static;
     class procedure Display(Initializer: TFrameInitializer); static;
   end;
@@ -50,7 +50,7 @@ const
   BIG_MARGIN = 31;
 var
   ModalResultObservation: IHasModalResultObservation;
-  ModalCaptions: IHasModalCaptions;
+  ButtonCaptions: IHasModalButtonCaptions;
   DefaultCaption: IHasDefaultCaption;
   DefaultAction: IAllowsDefaultNodeAction;
   DelayedLoad: IDelayedLoad;
@@ -94,11 +94,11 @@ begin
     end;
 
     // Adjust button captions
-    if FFrameRef.QueryInterface(IHasModalCaptions,
-      ModalCaptions).IsSuccess then
+    if FFrameRef.QueryInterface(IHasModalButtonCaptions,
+      ButtonCaptions).IsSuccess then
     begin
-      btnSelect.Caption := ModalCaptions.ConfirmationCaption;
-      btnClose.Caption := ModalCaptions.CancellationCaption;
+      btnSelect.Caption := ButtonCaptions.ConfirmationCaption;
+      btnClose.Caption := ButtonCaptions.CancellationCaption;
     end;
 
     // Set the default action on the frame
@@ -110,7 +110,7 @@ begin
     end;
   end;
 
-  // Initialize the frame
+  // Delay-initialize the frame
   if FFrameRef.QueryInterface(IDelayedLoad, DelayedLoad).IsSuccess then
     DelayedLoad.DelayedLoad;
 end;
@@ -130,6 +130,7 @@ begin
   else
     FFrameModalResult := nil;
 
+  // Initiate closing if no exceptions occured
   ModalResult := mrOk;
 end;
 
@@ -190,11 +191,20 @@ begin
     raise;
   end;
 
-  Form.ShowModal;
-  Result := Form.FrameModalResult;
+  // Show the dialog and free on close
+  Result := Form.PickModal;
 
   if not Assigned(Result) then
     Abort;
+end;
+
+function TFrameHostDialog.PickModal;
+begin
+  ShowModal;
+
+  // Note: the form will be destroyed when it processes the next message.
+  // until then, we can access the field.
+  Result := FFrameModalResult;
 end;
 
 initialization
