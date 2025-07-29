@@ -130,9 +130,12 @@ type
 
   // Indicates ability to observe changes to modal result availability
   IHasModalResultObservation = interface (IHasModalResult)
-    ['{54D9BDA1-4689-4650-828E-174D1C14897F}']
+    ['{D4AB2813-C236-43D7-9ABF-C46CE7923770}']
+    function GetHasModalResult: Boolean;
     function GetOnModalResultChanged: TNotifyEvent;
     procedure SetOnModalResultChanged(const Callback: TNotifyEvent);
+
+    property HasModalResult: Boolean read GetHasModalResult;
     property OnModalResultChanged: TNotifyEvent
       read GetOnModalResultChanged
       write SetOnModalResultChanged;
@@ -201,6 +204,7 @@ type
     procedure SetMainActionCaption(const Value: String);
     property OnMainActionSet: TNotifyEvent read GetOnMainActionSet write SetOnMainActionSet;
     function GetModalResult: IInterface;
+    function GetHasModalResult: Boolean;
     function GetOnModalResultChanged: TNotifyEvent;
     procedure SetOnModalResultChanged(const Callback: TNotifyEvent);
     property ModalResultFilter: TGuid read FModalResultFilter write FModalResultFilter;
@@ -338,6 +342,13 @@ begin
     Result := FTree.FocusedNode.Provider
   else
     Result := nil;
+end;
+
+function TTreeNodeInterfaceProvider.GetHasModalResult;
+begin
+  // Our implementation of GetModalResult is simple enough so there is nothing
+  // to optimize here, but other code might benefit from it.
+  Result := Assigned(GetModalResult());
 end;
 
 function TTreeNodeInterfaceProvider.GetMainActionCaption;

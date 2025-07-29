@@ -170,11 +170,11 @@ end;
 
 procedure TFrameHostDialog.FrameModalResultChanged;
 var
-  ModalResultImpl: IHasModalResult;
+  ModalResultImpl: IHasModalResultObservation;
 begin
-  btnSelect.Enabled := Assigned(FFrameRef) and FFrameRef.QueryInterface(
-    IHasModalResult, ModalResultImpl).IsSuccess and
-    Assigned(ModalResultImpl.ModalResult);
+  if Assigned(FFrameRef) and FFrameRef.QueryInterface(
+    IHasModalResultObservation, ModalResultImpl).IsSuccess then
+    btnSelect.Enabled := ModalResultImpl.HasModalResult;
 end;
 
 class function TFrameHostDialog.Pick;
