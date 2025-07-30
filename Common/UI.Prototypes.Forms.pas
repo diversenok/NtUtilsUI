@@ -1,5 +1,9 @@
 unit UI.Prototypes.Forms;
 
+{
+  This module provides base classes for forms.
+}
+
 interface
 
 uses
@@ -7,7 +11,13 @@ uses
   DelphiUtils.AutoObjects, DelphiUtils.AutoEvents, VclEx.Form;
 
 type
-  TFormEvents = class abstract
+  TMainForm = class abstract (TFormEx)
+  private
+    class var FInstance: TMainForm;
+  public
+    constructor Create(AOwner: TComponent); override;
+    destructor Destroy; override;
+    class property Instance: TMainForm read FInstance;
     class var OnMainFormClose: TAutoEvent;
   end;
 
@@ -24,8 +34,9 @@ type
   protected
     procedure CreateParams(var Params: TCreateParams); override;
     procedure DoCreate; override;
+    procedure DoShow; override;
   public
-    constructor CreateChild(AOwner: TComponent; Mode: TChildFormMode);
+    constructor Create(AOwner: TComponent; Mode: TChildFormMode); reintroduce;
     property ChildMode: TChildFormMode read FChildMode;
   end;
 
@@ -34,9 +45,26 @@ implementation
 uses
   System.SysUtils, UI.Exceptions;
 
+{ TMainForm }
+
+constructor TMainForm.Create;
+begin
+  inherited Create(AOwner);
+  Assert(not Assigned(FInstance), 'Created multiple main forms.');
+  FInstance := Self;
+end;
+
+destructor TMainForm.Destroy;
+begin
+  if FInstance = Self then
+    FInstance := nil;
+
+  inherited;
+end;
+
 { TChildForm }
 
-constructor TChildForm.CreateChild;
+constructor TChildForm.Create;
 begin
   FChildMode := Mode;
   inherited Create(AOwner);
@@ -58,7 +86,18 @@ end;
 procedure TChildForm.DoCreate;
 begin
   inherited;
-  FMainFormCloseSubscription := TFormEvents.OnMainFormClose.Subscribe(Close);
+  FMainFormCloseSubscription := TMainForm.OnMainFormClose.Subscribe(Close);
+end;
+
+procedure TChildForm.DoShow;
+begin
+  // Our parent class makes us inherit stay-on-top from the owner
+  inherited;
+
+  // If there is no owner, inherit it from the main form
+  if not Assigned(Owner) and Assigned(TMainForm.Instance) and
+    (TMainForm.Instance.FormStyle = fsStayOnTop) and (FormStyle = fsNormal) then
+    FormStyle := fsStayOnTop;
 end;
 
 end.

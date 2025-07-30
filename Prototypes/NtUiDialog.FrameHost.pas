@@ -144,7 +144,7 @@ class procedure TFrameHostDialog.Display;
 var
   Form: TFrameHostDialog;
 begin
-  Form := TFrameHostDialog.CreateChild(nil, cfmDesktop);
+  Form := TFrameHostDialog.Create(nil, cfmDesktop);
 
   try
     Form.AddFrame(Initializer(Form), False);
@@ -182,7 +182,7 @@ class function TFrameHostDialog.Pick;
 var
   Form: TFrameHostDialog;
 begin
-  Form := TFrameHostDialog.CreateChild(AOwner, cfmApplication);
+  Form := TFrameHostDialog.Create(AOwner, cfmApplication);
 
   try
     Form.AddFrame(Initializer(Form), True);
