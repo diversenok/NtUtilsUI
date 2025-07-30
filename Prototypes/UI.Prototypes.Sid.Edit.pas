@@ -50,7 +50,7 @@ implementation
 
 uses
   Ntapi.ntstatus, Ntapi.WinNt, NtUtils.Lsa.Sid, NtUiLib.AutoCompletion.Sid,
-  NtUtils.Security.Sid, UI.Prototypes.Forms, Resources.Icon.Catalogue,
+  NtUtils.Security.Sid, NtUiCommon.Forms, Resources.Icon.Catalogue,
   Resources.Icon.UserPicker, Resources.Icon.Choose, NtUiCommon.Prototypes,
   NtUiFrame.Sids.Abbreviations;
 

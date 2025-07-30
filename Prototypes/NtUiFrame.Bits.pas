@@ -50,7 +50,7 @@ type
 implementation
 
 uses
-  VirtualTrees.Types, UI.Helper, UI.Colors, DelphiUiLib.Reflection.Strings,
+  VirtualTrees.Types, NtUiCommon.Helpers, NtUiCommon.Colors, DelphiUiLib.Reflection.Strings,
   DelphiUiLib.Strings, NtUiCommon.Prototypes;
 
 {$R *.dfm}

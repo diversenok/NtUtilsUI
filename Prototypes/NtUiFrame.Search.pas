@@ -54,7 +54,7 @@ type
 implementation
 
 uses
-  VirtualTreesEx, UI.Helper;
+  VirtualTreesEx, NtUiCommon.Helpers;
 
 {$R *.dfm}
 {$R '..\Icons\SearchBox.res'}

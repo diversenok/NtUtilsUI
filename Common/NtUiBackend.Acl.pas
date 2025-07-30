@@ -66,7 +66,7 @@ uses
   NtUtils.Security.Sid, NtUtils.Security, NtUtils.SysUtils,
   NtUiLib.Errors, VirtualTrees, DevirtualizedTree.Provider,
   DelphiUiLib.Reflection, DelphiUiLib.Strings, DelphiUiLib.Reflection.Strings,
-  UI.Colors, UI.Helper, VirtualTrees.Types;
+  NtUiCommon.Colors, NtUiCommon.Helpers, VirtualTrees.Types;
 
 const
   colUse = 0;

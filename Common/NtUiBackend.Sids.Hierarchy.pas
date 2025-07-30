@@ -42,7 +42,8 @@ implementation
 uses
   Ntapi.WinNt, Ntapi.ntpebteb, NtUtils.Security.Sid, NtUtils.Lsa.Sid,
   DelphiUiLib.Reflection, DelphiUiLib.Reflection.Strings, VirtualTrees,
-  DevirtualizedTree.Provider, UI.Helper, System.UITypes, UI.Colors;
+  DevirtualizedTree.Provider, NtUiCommon.Helpers, System.UITypes,
+  NtUiCommon.Colors;
 
 type
   TSidHierarchySpecialHandling = (

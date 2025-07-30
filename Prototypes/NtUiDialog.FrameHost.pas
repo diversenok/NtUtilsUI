@@ -8,7 +8,7 @@ interface
 
 uses
   System.SysUtils, System.Classes, Vcl.Graphics, Vcl.Controls, Vcl.Forms,
-  Vcl.Dialogs, Vcl.StdCtrls, DevirtualizedTree, UI.Prototypes.Forms;
+  Vcl.Dialogs, Vcl.StdCtrls, DevirtualizedTree, NtUiCommon.Forms;
 
 type
   TFrameInitializer = reference to function (AOwner: TComponent): TFrame;

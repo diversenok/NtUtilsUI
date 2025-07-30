@@ -5,7 +5,7 @@ interface
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes,
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, VirtualTrees,
-  VirtualTrees.Types, UI.Helper, NtUtils, NtUtils.Lsa.Sid, Vcl.Menus,
+  VirtualTrees.Types, NtUiCommon.Helpers, NtUtils, NtUtils.Lsa.Sid, Vcl.Menus,
   DelphiUtils.Arrays, Ntapi.ntseapi, DevirtualizedTree,
   DevirtualizedTree.Provider, VirtualTreesEx;
 
@@ -75,7 +75,7 @@ uses
   Ntapi.WinNt, Ntapi.ntlsa, DelphiApi.Reflection,
   NtUtils.Security.Sid, NtUtils.Lsa, NtUtils.SysUtils,
   DelphiUiLib.Reflection.Strings, DelphiUiLib.Reflection,
-  NtUiLib.Reflection.Types, UI.Colors;
+  NtUiLib.Reflection.Types, NtUiCommon.Colors;
 
 {$R *.dfm}
 

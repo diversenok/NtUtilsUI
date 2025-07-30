@@ -74,9 +74,9 @@ type
 implementation
 
 uses
-  NtUiBackend.Acl, UI.Helper, Resources.Icon.Add, Resources.Icon.Delete,
-  Resources.Icon.Down, Resources.Icon.Up, Resources.Icon.Verify,
-  NtUiCommon.Prototypes;
+  NtUiBackend.Acl, NtUiCommon.Helpers, Resources.Icon.Add,
+  Resources.Icon.Delete, Resources.Icon.Down, Resources.Icon.Up,
+  Resources.Icon.Verify, NtUiCommon.Prototypes;
 
 {$R *.dfm}
 

@@ -30,7 +30,7 @@ type
 implementation
 
 uses
-  NtUtils.SysUtils, UI.Colors;
+  NtUtils.SysUtils, NtUiCommon.Colors;
 
 {$R *.dfm}
 

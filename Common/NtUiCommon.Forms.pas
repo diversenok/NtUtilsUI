@@ -1,4 +1,4 @@
-unit UI.Prototypes.Forms;
+unit NtUiCommon.Forms;
 
 {
   This module provides base classes for forms.
@@ -22,9 +22,9 @@ type
   end;
 
   TChildFormMode = (
-    cfmNormal,      // A child of the owner form
-    cfmApplication, // A child of the Application form
-    cfmDesktop      // A child of the desktop that appears on the taskbar
+    cfmNormal,      // No taskbar; overlaps the owner
+    cfmApplication, // No taskbar; side-by-side with the owner; use with modal
+    cfmDesktop      // Visible on taskbar; side-by-side with the owner
   );
 
   TChildForm = class abstract (TFormEx)
@@ -43,7 +43,7 @@ type
 implementation
 
 uses
-  System.SysUtils, UI.Exceptions;
+  System.SysUtils, NtUiCommon.Exceptions;
 
 { TMainForm }
 

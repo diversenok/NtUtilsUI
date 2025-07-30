@@ -1,4 +1,4 @@
-unit UI.Helper;
+unit NtUiCommon.Helpers;
 
 interface
 

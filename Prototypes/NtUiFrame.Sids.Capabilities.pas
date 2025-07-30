@@ -29,8 +29,8 @@ type
 implementation
 
 uses
-  NtUiBackend.Sids.Capabilities, UI.Helper, NtUiCommon.Prototypes, NtUtils,
-  VirtualTrees.Types;
+  NtUiBackend.Sids.Capabilities, NtUiCommon.Helpers, NtUiCommon.Prototypes,
+  NtUtils, VirtualTrees.Types;
 
 {$R *.dfm}
 

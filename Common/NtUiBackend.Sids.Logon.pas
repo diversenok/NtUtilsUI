@@ -32,7 +32,7 @@ uses
   NtUtils.Security.Sid, NtUtils.Lsa.Sid, NtUtils.Lsa.Logon, NtUtils.Errors,
   NtUiLib.Errors, DevirtualizedTree.Provider, DelphiUtils.Arrays,
   DelphiUiLib.Strings, DelphiUiLib.Reflection.Strings, DelphiUiLib.Reflection,
-  UI.Colors;
+  NtUiCommon.Colors;
 
 {$BOOLEVAL OFF}
 {$IFOPT R+}{$DEFINE R+}{$ENDIF}

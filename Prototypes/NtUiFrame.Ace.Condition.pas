@@ -36,7 +36,7 @@ type
 implementation
 
 uses
-  UI.Colors, NtUtils.Security, Vcl.ImgList, Resources.Icon.Verify;
+  NtUiCommon.Colors, NtUtils.Security, Vcl.ImgList, Resources.Icon.Verify;
 
 {$R *.dfm}
 

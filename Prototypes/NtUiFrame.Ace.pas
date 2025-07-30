@@ -66,7 +66,7 @@ type
 implementation
 
 uses
-  NtUtils, NtUtils.Security, UI.Colors, NtUiLib.TaskDialog,
+  NtUtils, NtUtils.Security, NtUiCommon.Colors, NtUiLib.TaskDialog,
   NtUiCommon.Prototypes;
 
 {$R *.dfm}

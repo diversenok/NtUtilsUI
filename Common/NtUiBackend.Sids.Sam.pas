@@ -53,7 +53,7 @@ implementation
 uses
   Ntapi.ntsam, NtUtils.Sam, NtUtils.SysUtils, NtUtils.Security.Sid,
   NtUtils.Lsa.Sid, NtUtils.Errors, NtUiLib.Errors, DelphiUiLib.Reflection,
-  DelphiUiLib.Reflection.Strings, DevirtualizedTree.Provider, UI.Colors;
+  DelphiUiLib.Reflection.Strings, DevirtualizedTree.Provider, NtUiCommon.Colors;
 
 const
   colName = 0;

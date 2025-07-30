@@ -33,7 +33,7 @@ implementation
 
 uses
   DevirtualizedTree.Provider, NtUtils.Security.Sid, DelphiUiLib.Reflection,
-  DelphiUiLib.Reflection.Strings, UI.Colors;
+  DelphiUiLib.Reflection.Strings, NtUiCommon.Colors;
 
 {$BOOLEVAL OFF}
 {$IFOPT R+}{$DEFINE R+}{$ENDIF}

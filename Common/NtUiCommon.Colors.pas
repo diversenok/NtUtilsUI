@@ -1,4 +1,4 @@
-unit UI.Colors;
+unit NtUiCommon.Colors;
 
 interface
 

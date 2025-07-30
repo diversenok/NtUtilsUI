@@ -1,4 +1,4 @@
-unit UI.ProcessIcons;
+unit NtUiCommon.Icons;
 
 { This module provides storage for icons extracted from executable files. Once
   obtained, the icon is cached in an ImageList and can be used in the UI. }
