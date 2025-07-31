@@ -26,7 +26,7 @@ uses
 
 procedure ReportException;
 begin
-  ShowNtxException(Application.Handle, E)
+  ShowNtxException(Application.Handle, E);
 end;
 
 type
