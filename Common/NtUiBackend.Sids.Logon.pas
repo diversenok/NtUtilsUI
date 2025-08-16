@@ -106,7 +106,7 @@ end;
 procedure TLogonSessionErrorNode.Initialize;
 begin
   inherited;
-  FColumnText[colId] := IntToHexEx(FLogonId);
+  FColumnText[colId] := UIntToHexEx(FLogonId);
 
   if FStatus.IsSuccess then
   begin
@@ -148,7 +148,7 @@ end;
 procedure TLogonSessionSidNode.Initialize;
 begin
   inherited;
-  FColumnText[colId] := IntToHexEx(FLogonId);
+  FColumnText[colId] := UIntToHexEx(FLogonId);
   FColumnText[colSid] := RtlxSidToString(FSidName.SID);
 
   if FLogonType in [TSecurityLogonType.Interactive..High(TSecurityLogonType)] then

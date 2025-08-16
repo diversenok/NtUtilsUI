@@ -24,7 +24,7 @@ type
     procedure btnClearClick(Sender: TObject);
     procedure btnAllClick(Sender: TObject);
   private
-    FTypeSize: Integer;
+    FTypeSize: Byte;
     FValidMask: UInt64;
     FValue: UInt64;
     FIsReadOnly: Boolean;
@@ -136,10 +136,10 @@ begin
     );
 
     // Update the text
-    tbxValue.Text := IntToHexEx(FValue, FTypeSize * 2);
+    tbxValue.Text := UIntToHexEx(FValue, FTypeSize * 2);
   end;
 
-  tbxValue.Hint := BuildHint('Decimal', IntToStrEx(FValue));
+  tbxValue.Hint := BuildHint('Decimal', UIntToStrEx(FValue));
   tbxValue.Color := clWindow;
 end;
 

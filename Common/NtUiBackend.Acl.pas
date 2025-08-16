@@ -149,7 +149,7 @@ begin
     FColumnText[colAceAccessMask] := RepresentType(FAccessMaskType,
       FAce.Mask).Text;
 
-  FColumnText[colAceAccessMaskNumeric] := IntToHexEx(FAce.Mask, 6);
+  FColumnText[colAceAccessMaskNumeric] := UIntToHexEx(FAce.Mask, 6);
   FColumnText[colSid] := TType.Represent(FAce.Sid).Text;
   FColumnText[colSidRaw] := RtlxSidToString(FAce.Sid);
 

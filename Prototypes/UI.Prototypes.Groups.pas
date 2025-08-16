@@ -75,7 +75,7 @@ uses
   Ntapi.WinNt, Ntapi.ntlsa, DelphiApi.Reflection,
   NtUtils.Security.Sid, NtUtils.Lsa, NtUtils.SysUtils,
   DelphiUiLib.Reflection.Strings, DelphiUiLib.Reflection,
-  NtUiLib.Reflection.Types, NtUiCommon.Colors;
+  NtUiLib.Reflection.Types, NtUiCommon.Colors, DelphiUiLib.Reflection.Numeric;
 
 {$R *.dfm}
 

@@ -24,7 +24,7 @@ type
 procedure UiLibAddBitNodes(
   Tree: TDevirtualizedTree;
   ATypeInfo: Pointer;
-  out TypeSize: Integer;
+  out TypeSize: Byte;
   out FullMask: UInt64
 );
 
@@ -59,7 +59,8 @@ type
   TFlagNode = class (TNodeProvider, IFlagNode)
   protected
     FSize: Integer;
-    FFlag: TFlagName;
+    FName: String;
+    FValue: UInt64;
     FMask: UInt64;
   public
     function GetName: String;
@@ -67,7 +68,8 @@ type
     function GetMask: UInt64;
     constructor Create(
       Size: Integer;
-      const Flag: TFlagName;
+      const Name: String;
+      const Value: UInt64;
       const Mask: UInt64;
       IsSubEnum: Boolean
     );
@@ -77,17 +79,18 @@ constructor TFlagNode.Create;
 begin
   inherited Create(1);
   FSize := Size;
-  FFlag := Flag;
+  FName := Name;
+  FValue := Value;
   FMask := Mask;
 
-  FColumnText[0] := Flag.Name;
+  FColumnText[0] := Name;
   FHint := BuildHint([
-    THintSection.New('Name', Flag.Name),
-    THintSection.New('Value', IntToHexEx(Flag.Value, Size * 2))
+    THintSection.New('Name', Name),
+    THintSection.New('Value', UIntToHexEx(Value, Size * 2))
   ]);
 
   if IsSubEnum then
-    FHint := FHint + #$D#$A + BuildHint('Mask', IntToHexEx(Mask, Size * 2));
+    FHint := FHint + #$D#$A + BuildHint('Mask', UIntToHexEx(Mask, Size * 2));
 end;
 
 function TFlagNode.GetMask;
@@ -97,12 +100,12 @@ end;
 
 function TFlagNode.GetName;
 begin
-  Result := FFlag.Name;
+  Result := FName;
 end;
 
 function TFlagNode.GetValue;
 begin
-  Result := FFlag.Value;
+  Result := FValue;
 end;
 
 function SizeToMask(
@@ -125,10 +128,9 @@ function UiLibCollectEnumNodes(
 var
   Attributes: TCustomAttributeArray;
   a: TCustomAttribute;
-  ValidBits: TValidBits;
+  ValidValues: TValidValues;
   NamingStyle: NamingStyleAttribute;
   Names: TArray<String>;
-  FlagName: TFlagName;
   i, Count: Integer;
 begin
   // Use the default group
@@ -141,20 +143,20 @@ begin
   Attributes := RttiEnumType.GetAttributes;
 
   // By default, accept the entire range
-  ValidBits := [0..Byte(RttiEnumType.MaxValue)];
+  ValidValues := [0..Byte(RttiEnumType.MaxValue)];
 
   for a in Attributes do
-    if a is ValidBitsAttribute then
+    if a is ValidValuesAttribute then
     begin
       // Use the custom range
-      ValidBits := ValidBitsAttribute(a).ValidBits;
+      ValidValues := ValidValuesAttribute(a).Values;
       Break;
     end
-    else if a is RangeAttribute then
+    else if a is MinValueAttribute then
     begin
       // Allow overwriting the minimal value
-      if RangeAttribute(a).MinValue > 0 then
-        ValidBits := ValidBits - [0..Byte(RangeAttribute(a).MinValue - 1)];
+      if MinValueAttribute(a).MinValue > 0 then
+        ValidValues := ValidValues - [0..Byte(MinValueAttribute(a).MinValue - 1)];
       Break;
     end;
 
@@ -170,7 +172,7 @@ begin
   // Count valid names
   Count := 0;
   for i := 0 to RttiEnumType.MaxValue do
-    if i in ValidBits then
+    if i in ValidValues then
       Inc(Count);
 
   // Save valid names
@@ -179,24 +181,21 @@ begin
 
   Count := 0;
   for i := 0 to RttiEnumType.MaxValue do
-    if i in ValidBits then
+    if i in ValidValues then
     begin
-      FlagName.Value := Cardinal(i);
-      FlagName.Name := Names[i];
-
       if Assigned(NamingStyle) then
-        case NamingStyle.NamingStyle of
+        case NamingStyle.Style of
           nsCamelCase:
-            FlagName.Name := PrettifyCamelCase(FlagName.Name,
-              NamingStyle.Prefix, NamingStyle.Suffix);
+            Names[i] := PrettifyCamelCase(Names[i], NamingStyle.Prefix,
+              NamingStyle.Suffix);
 
           nsSnakeCase:
-            FlagName.Name := PrettifySnakeCase(FlagName.Name,
-              NamingStyle.Prefix, NamingStyle.Suffix);
+            Names[i] := PrettifySnakeCase(Names[i], NamingStyle.Prefix,
+              NamingStyle.Suffix);
         end;
 
-      Result.Nodes[Count] := TFlagNode.Create(RttiEnumType.TypeSize, FlagName,
-        SizeToMask(RttiEnumType.TypeSize), True);
+      Result.Nodes[Count] := TFlagNode.Create(RttiEnumType.TypeSize, Names[i],
+        Cardinal(i), SizeToMask(RttiEnumType.TypeSize), True);
       Inc(Count);
     end;
 end;
@@ -226,7 +225,8 @@ begin
     if a is SubEnumAttribute then
     begin
       SubEnums[Count] := TFlagNode.Create(TypeSize,
-        SubEnumAttribute(a).Flag, SubEnumAttribute(a).Mask, True);
+        SubEnumAttribute(a).Name, SubEnumAttribute(a).Value,
+        SubEnumAttribute(a).Mask, True);
       Inc(Count)
     end;
 
@@ -251,9 +251,9 @@ begin
 
     // Allow attributes to override group names
     for j := 0 to High(GroupNames) do
-      if GroupNames[j].Flag.Value = Groups[i].Key then
+      if GroupNames[j].Mask = Groups[i].Key then
       begin
-        Result[i].Name := GroupNames[j].Flag.Name;
+        Result[i].Name := GroupNames[j].Name;
         Break;
       end;
 
@@ -278,7 +278,7 @@ begin
   Count := 0;
   for a in Attributes do
     if a is FlagNameAttribute then
-      if FlagNameAttribute(a).Flag.Value and not Filter = 0 then
+      if FlagNameAttribute(a).Value and not Filter = 0 then
         Inc(Count);
 
   SetLength(Result, Count);
@@ -287,10 +287,10 @@ begin
   Count := 0;
   for a in Attributes do
     if a is FlagNameAttribute then
-      if FlagNameAttribute(a).Flag.Value and not Filter = 0 then
+      if FlagNameAttribute(a).Value and not Filter = 0 then
       begin
-        Result[Count] := TFlagNode.Create(TypeSize, FlagNameAttribute(a).Flag,
-          FlagNameAttribute(a).Flag.Value, False);
+        Result[Count] := TFlagNode.Create(TypeSize, FlagNameAttribute(a).Name,
+          FlagNameAttribute(a).Value, FlagNameAttribute(a).Value, False);
         Inc(Count)
       end;
 end;
@@ -314,8 +314,8 @@ begin
   // Convert them into node groups
   for i := 0 to High(GroupAttributes) do
   begin
-    Result[i].Name := GroupAttributes[i].Flag.Name;
-    Result[i].Mask := GroupAttributes[i].Flag.Value;
+    Result[i].Name := GroupAttributes[i].Name;
+    Result[i].Mask := GroupAttributes[i].Mask;
     Result[i].UseMaskHint := True;
     Result[i].IsDefault := False;
     Result[i].CheckBoxType := ctCheckBox;
@@ -352,10 +352,10 @@ var
   a: TCustomAttribute;
 begin
   for a in Attributes do
-    if a is ValidBitsAttribute then
+    if a is ValidMaskAttribute then
     begin
       // Save the valid mask
-      FullMask := ValidBitsAttribute(a).ValidMask;
+      FullMask := ValidMaskAttribute(a).Mask;
       Break;
     end;
 end;
@@ -404,7 +404,7 @@ begin
       GroupNode.ColumnText[0] := Groups[i].Name;
 
       if Groups[i].UseMaskHint then
-        GroupNode.Hint := BuildHint('Mask', IntToHexEx(Groups[i].Mask));
+        GroupNode.Hint := BuildHint('Mask', UIntToHexEx(Groups[i].Mask));
 
       ParentNode := Tree.AddChildEx(nil, GroupNode).Node;
     end
@@ -432,7 +432,7 @@ var
 begin
   RttiContext := TRttiContext.Create;
   RttiType := RttiContext.GetType(ATypeInfo);
-  TypeSize := RttiType.TypeSize;
+  TypeSize := Byte(RttiType.TypeSize);
   FullMask := SizeToMask(TypeSize);
 
   if RttiType is TRttiEnumerationType then

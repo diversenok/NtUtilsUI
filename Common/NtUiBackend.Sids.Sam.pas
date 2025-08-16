@@ -10,9 +10,9 @@ uses
   NtUtils, DevirtualizedTree, NtUiBackend.Sids, DelphiApi.Reflection;
 
 type
-  [NamingStyle(nsCamelCase, 'sn'), Range(1)]
+  [NamingStyle(nsCamelCase, 'sn'), MinValue(1)]
   TSamNodeKind = (
-    snInvalid = 0,
+    [Reserved] snInvalid = 0,
     snDomain,
     snGroup,
     snAlias,
