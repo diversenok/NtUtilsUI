@@ -50,7 +50,7 @@ type
 implementation
 
 uses
-  NtUtils.SysUtils, NtUtils.Security.Sid, NtUiCommon.Prototypes;
+  DelphiUiLib.Strings, NtUtils.Security.Sid, NtUiCommon.Prototypes;
 
 {$R *.dfm}
 
@@ -64,7 +64,7 @@ begin
     4: FLevel := SECURITY_PROCESS_PROTECTION_LEVEL_WINDOWS_RID;
     5: FLevel := SECURITY_PROCESS_PROTECTION_LEVEL_WINTCB_RID;
   else
-    if not RtlxStrToUInt(cbxLevel.Text, Cardinal(FLevel)) then
+    if not UiLibStringToUInt(cbxLevel.Text, Cardinal(FLevel)) then
       Exit;
   end;
 
@@ -78,7 +78,7 @@ begin
     1: FType := SECURITY_PROCESS_PROTECTION_TYPE_LITE_RID;
     2: FType := SECURITY_PROCESS_PROTECTION_TYPE_FULL_RID;
   else
-    if not RtlxStrToUInt(cbxType.Text, Cardinal(FType)) then
+    if not UiLibStringToUInt(cbxType.Text, Cardinal(FType)) then
       Exit;
   end;
 
@@ -185,7 +185,7 @@ begin
     SECURITY_PROCESS_PROTECTION_LEVEL_WINDOWS_RID:      cbxLevel.ItemIndex := 4;
     SECURITY_PROCESS_PROTECTION_LEVEL_WINTCB_RID:       cbxLevel.ItemIndex := 5;
   else
-    cbxLevel.Text := RtlxUIntToStr(FLevel, nsHexadecimal, 4);
+    cbxLevel.Text := UiLibUIntToHex(FLevel, 4);
   end;
 end;
 
@@ -222,7 +222,7 @@ begin
     SECURITY_PROCESS_PROTECTION_TYPE_LITE_RID: cbxType.ItemIndex := 1;
     SECURITY_PROCESS_PROTECTION_TYPE_FULL_RID: cbxType.ItemIndex := 2;
   else
-    cbxType.Text := RtlxUIntToStr(FType, nsHexadecimal, 3);
+    cbxType.Text := UiLibUIntToHex(FType);
   end;
 end;
 

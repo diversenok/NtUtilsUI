@@ -10,7 +10,8 @@ uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes,
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, VirtualTrees,
   VirtualTreesEx, DevirtualizedTree, Vcl.StdCtrls, Vcl.ExtCtrls, Ntapi.WinNt,
-  DelphiUtils.AutoObjects, NtUiCommon.Interfaces, NtUiBackend.Bits;
+  DelphiUtils.AutoObjects, NtUiCommon.Interfaces, NtUiBackend.Bits,
+  NtUtils.SysUtils;
 
 type
   TBitsFrame = class(TFrame, IHasDefaultCaption)
@@ -24,7 +25,7 @@ type
     procedure btnClearClick(Sender: TObject);
     procedure btnAllClick(Sender: TObject);
   private
-    FTypeSize: Byte;
+    FSize: TIntegerSize;
     FValidMask: UInt64;
     FValue: UInt64;
     FIsReadOnly: Boolean;
@@ -78,7 +79,7 @@ end;
 procedure TBitsFrame.LoadAccessMaskType;
 begin
   SuppressTreeReadOnly;
-  FTypeSize := SizeOf(TAccessMask);
+  FSize := isCardinal;
   UiLibAddAccessMaskNodes(Tree, ATypeInfo, GenericMapping, FValidMask,
     ShowGenericRights, ShowMiscRights);
 
@@ -89,7 +90,7 @@ end;
 procedure TBitsFrame.LoadType;
 begin
   SuppressTreeReadOnly;
-  UiLibAddBitNodes(Tree, ATypeInfo, FTypeSize, FValidMask);
+  UiLibAddBitNodes(Tree, ATypeInfo, FSize, FValidMask);
 
   // Update item states
   SetValue(FValue);
@@ -136,10 +137,10 @@ begin
     );
 
     // Update the text
-    tbxValue.Text := UIntToHexEx(FValue, FTypeSize * 2);
+    tbxValue.Text := UiLibUIntToHex(FValue, NUMERIC_WIDTH_PER_SIZE[FSize]);
   end;
 
-  tbxValue.Hint := BuildHint('Decimal', UIntToStrEx(FValue));
+  tbxValue.Hint := BuildHint('Decimal', UiLibUIntToDec(FValue));
   tbxValue.Color := clWindow;
 end;
 
@@ -188,15 +189,8 @@ procedure TBitsFrame.tbxValueChange;
 var
   NewValue: UInt64;
 begin
-  if TryStrToUInt64Ex(tbxValue.Text, NewValue) then
+  if UiLibStringToUInt64(tbxValue.Text, NewValue, False, FSize) then
   begin
-    // Truncate the value to the size of the type
-    case FTypeSize of
-      1: NewValue := NewValue and Byte(-1);
-      2: NewValue := NewValue and Word(-1);
-      4: NewValue := NewValue and Cardinal(-1);
-    end;
-
     FValue := NewValue;
     RefreshText(True);
     RefreshItems;

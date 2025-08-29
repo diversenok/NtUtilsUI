@@ -63,10 +63,10 @@ function UiLibCollectAces(
 implementation
 
 uses
-  NtUtils.Security.Sid, NtUtils.Security, NtUtils.SysUtils,
-  NtUiLib.Errors, VirtualTrees, DevirtualizedTree.Provider,
-  DelphiUiLib.Reflection, DelphiUiLib.Strings, DelphiUiLib.Reflection.Strings,
-  NtUiCommon.Colors, NtUiCommon.Helpers, VirtualTrees.Types;
+  NtUtils.Security.Sid, NtUtils.Security, NtUtils.SysUtils, NtUiLib.Errors,
+  VirtualTrees, DevirtualizedTree.Provider, DelphiUiLib.Reflection,
+  DelphiUiLib.Strings, DelphiUiLib.Reflection.Strings, NtUiCommon.Colors,
+  NtUiCommon.Helpers, VirtualTrees.Types;
 
 const
   colUse = 0;
@@ -149,7 +149,8 @@ begin
     FColumnText[colAceAccessMask] := RepresentType(FAccessMaskType,
       FAce.Mask).Text;
 
-  FColumnText[colAceAccessMaskNumeric] := UIntToHexEx(FAce.Mask, 6);
+  FColumnText[colAceAccessMaskNumeric] := UiLibUIntToHex(FAce.Mask, 6 or
+    NUMERIC_WIDTH_ROUND_TO_BYTE);
   FColumnText[colSid] := TType.Represent(FAce.Sid).Text;
   FColumnText[colSidRaw] := RtlxSidToString(FAce.Sid);
 

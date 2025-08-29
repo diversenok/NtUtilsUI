@@ -70,7 +70,7 @@ procedure TWellKnownSidNode.Initialize;
 begin
   inherited;
 
-  FColumnText[colIndex] := UIntToStrEx(Cardinal(FEnumValue));
+  FColumnText[colIndex] := UiLibUIntToDec(Cardinal(FEnumValue));
   FColumnText[colEnumName] := GetEnumName(TypeInfo(TWellKnownSidType),
     Integer(FEnumValue));
   FColumnText[colSid] := RtlxSidToString(FSidName.SID);

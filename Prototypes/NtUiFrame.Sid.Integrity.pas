@@ -43,7 +43,7 @@ type
 implementation
 
 uses
-  NtUtils.SysUtils, NtUtils.Security.Sid, NtUiCommon.Prototypes;
+  DelphiUiLib.Strings, NtUtils.Security.Sid, NtUiCommon.Prototypes;
 
 {$R *.dfm}
 
@@ -58,7 +58,7 @@ begin
     5: FValue := SECURITY_MANDATORY_SYSTEM_RID;
     6: FValue := SECURITY_MANDATORY_PROTECTED_PROCESS_RID;
   else
-    if not RtlxStrToUInt(ComboBox.Text, Cardinal(FValue)) then
+    if not UiLibStringToUInt(ComboBox.Text, Cardinal(FValue)) then
       Exit;
   end;
 
@@ -139,7 +139,7 @@ begin
     SECURITY_MANDATORY_SYSTEM_RID:            ComboBox.ItemIndex := 5;
     SECURITY_MANDATORY_PROTECTED_PROCESS_RID: ComboBox.ItemIndex := 6;
   else
-    ComboBox.Text := RtlxUIntToStr(FValue, nsHexadecimal, 4);
+    ComboBox.Text := UiLibUIntToHex(FValue, 4);
   end;
 end;
 

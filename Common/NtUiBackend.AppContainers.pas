@@ -66,11 +66,11 @@ procedure UiLibInspectAppContainerProperty(
 implementation
 
 uses
-  Ntapi.ntseapi, NtUtils.SysUtils, NtUtils.Security.Sid, NtUtils.Tokens,
-  NtUtils.Tokens.Info, NtUtils.Packages, NtUtils.Profiles, Vcl.Graphics,
-  Vcl.Controls, DevirtualizedTree.Provider, NtUiLib.Errors,
+  Ntapi.ntseapi, DelphiApi.Reflection, NtUtils.SysUtils, NtUtils.Security.Sid,
+  NtUtils.Tokens, NtUtils.Tokens.Info, NtUtils.Packages, NtUtils.Profiles,
+  Vcl.Graphics, Vcl.Controls, DevirtualizedTree.Provider, NtUiLib.Errors,
   DelphiUiLib.Reflection.Strings, NtUiCommon.Colors, NtUiCommon.Helpers,
-  NtUiCommon.Prototypes, NtUtils.Profiles.AppContainer;
+  NtUiCommon.Prototypes, NtUtils.Profiles.AppContainer, DelphiUiLib.Strings;
 
 {$BOOLEVAL OFF}
 {$IFOPT R+}{$DEFINE R+}{$ENDIF}
@@ -125,7 +125,7 @@ begin
   if FInfo.Moniker <> '' then
   begin
     IsPackage := PkgxIsValidFamilyName(FInfo.Moniker);
-    FColumnText[colIsPackage] := YesNoToString(IsPackage);
+    FColumnText[colIsPackage] := BooleanToString(IsPackage, bkYesNo);
     FColumnText[colDisplayName] := RtlxStringOrDefault(FInfo.DisplayName, '(None)');
     FColumnText[colFriendlyName] := RtlxStringOrDefault(FInfo.FriendlyName, '(None)');
     FColumnText[colFriendlyName] := RtlxStringOrDefault(FColumnText[colFriendlyName], '(None)');

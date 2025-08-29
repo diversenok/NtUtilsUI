@@ -7,7 +7,7 @@ unit NtUiBackend.Bits;
 interface
 
 uses
-  Ntapi.WinNt, DevirtualizedTree;
+  Ntapi.WinNt, NtUtils.SysUtils, DevirtualizedTree;
 
 type
   IFlagNode = interface (INodeProvider)
@@ -24,7 +24,7 @@ type
 procedure UiLibAddBitNodes(
   Tree: TDevirtualizedTree;
   ATypeInfo: Pointer;
-  out TypeSize: Byte;
+  out TypeSize: TIntegerSize;
   out FullMask: UInt64
 );
 
@@ -49,6 +49,7 @@ uses
 type
   TNodeGroup = record
     Name: String;
+    Size: TIntegerSize;
     Mask: UInt64;
     UseMaskHint : Boolean;
     IsDefault: Boolean;
@@ -58,7 +59,7 @@ type
 
   TFlagNode = class (TNodeProvider, IFlagNode)
   protected
-    FSize: Integer;
+    FSize: TIntegerSize;
     FName: String;
     FValue: UInt64;
     FMask: UInt64;
@@ -67,7 +68,7 @@ type
     function GetValue: UInt64;
     function GetMask: UInt64;
     constructor Create(
-      Size: Integer;
+      Size: TIntegerSize;
       const Name: String;
       const Value: UInt64;
       const Mask: UInt64;
@@ -86,11 +87,13 @@ begin
   FColumnText[0] := Name;
   FHint := BuildHint([
     THintSection.New('Name', Name),
-    THintSection.New('Value', UIntToHexEx(Value, Size * 2))
+    THintSection.New('Value', UiLibUIntToHex(Value,
+      NUMERIC_WIDTH_PER_SIZE[Size]))
   ]);
 
   if IsSubEnum then
-    FHint := FHint + #$D#$A + BuildHint('Mask', UIntToHexEx(Mask, Size * 2));
+    FHint := FHint + #$D#$A + BuildHint('Mask', UiLibUIntToHex(Mask,
+      NUMERIC_WIDTH_PER_SIZE[Size]));
 end;
 
 function TFlagNode.GetMask;
@@ -108,16 +111,33 @@ begin
   Result := FValue;
 end;
 
+function ByteSizeToIntegerSize(
+  ByteSize: Byte
+): TIntegerSize;
+begin
+  case ByteSize of
+    1: Result := isByte;
+    2: Result := isWord;
+    4: Result := isCardinal;
+    8: Result := isUInt64;
+  else
+    Error(reAssertionFailed);
+    Result := isUInt64;
+  end;
+end;
+
 function SizeToMask(
-  TypeSize: Integer
+  TypeSize: TIntegerSize
 ): UInt64;
 begin
   case TypeSize of
-    1: Result := Byte(-1);
-    2: Result := Word(-1);
-    4: Result := Cardinal(-1);
+    isByte: Result := Byte(-1);
+    isWord: Result := Word(-1);
+    isCardinal: Result := Cardinal(-1);
+    isUInt64: Result := UInt64(-1);
   else
-    Result := Uint64(-1);
+    Error(reAssertionFailed);
+    Result := UInt64(-1);
   end;
 end;
 
@@ -135,7 +155,8 @@ var
 begin
   // Use the default group
   Result.Name := 'Options group';
-  Result.Mask := SizeToMask(RttiEnumType.TypeSize);
+  Result.Size := ByteSizeToIntegerSize(RttiEnumType.TypeSize);
+  Result.Mask := SizeToMask(Result.Size);
   Result.UseMaskHint := False;
   Result.IsDefault := True;
   Result.CheckBoxType := ctRadioButton;
@@ -194,15 +215,15 @@ begin
               NamingStyle.Suffix);
         end;
 
-      Result.Nodes[Count] := TFlagNode.Create(RttiEnumType.TypeSize, Names[i],
-        Cardinal(i), SizeToMask(RttiEnumType.TypeSize), True);
+      Result.Nodes[Count] := TFlagNode.Create(Result.Size, Names[i],
+        Cardinal(i), SizeToMask(Result.Size), True);
       Inc(Count);
     end;
 end;
 
 function UiLibCollectSubEnumNodes(
   const Attributes: TCustomAttributeArray;
-  TypeSize: Integer
+  Size: TIntegerSize
 ): TArray<TNodeGroup>;
 var
   a: TCustomAttribute;
@@ -224,7 +245,7 @@ begin
   for a in Attributes do
     if a is SubEnumAttribute then
     begin
-      SubEnums[Count] := TFlagNode.Create(TypeSize,
+      SubEnums[Count] := TFlagNode.Create(Size,
         SubEnumAttribute(a).Name, SubEnumAttribute(a).Value,
         SubEnumAttribute(a).Mask, True);
       Inc(Count)
@@ -267,7 +288,7 @@ end;
 
 function UiLibCollectFlagNodes(
   const Attributes: TCustomAttributeArray;
-  TypeSize: Integer;
+  Size: TIntegerSize;
   Filter: UInt64 = UInt64(-1)
 ): TArray<IFlagNode>;
 var
@@ -289,7 +310,7 @@ begin
     if a is FlagNameAttribute then
       if FlagNameAttribute(a).Value and not Filter = 0 then
       begin
-        Result[Count] := TFlagNode.Create(TypeSize, FlagNameAttribute(a).Name,
+        Result[Count] := TFlagNode.Create(Size, FlagNameAttribute(a).Name,
           FlagNameAttribute(a).Value, FlagNameAttribute(a).Value, False);
         Inc(Count)
       end;
@@ -297,7 +318,7 @@ end;
 
 function UiLibCollectAllFlagNodes(
   const Attributes: TCustomAttributeArray;
-  TypeSize: Integer
+  Size: TIntegerSize
 ): TArray<TNodeGroup>;
 var
   GroupAttributes: TArray<FlagGroupAttribute>;
@@ -308,7 +329,7 @@ begin
   RttixFilterAttributes(Attributes, FlagGroupAttribute,
     TCustomAttributeArray(GroupAttributes));
 
-  UngroupedBits := SizeToMask(TypeSize);
+  UngroupedBits := SizeToMask(Size);
   SetLength(Result, Length(GroupAttributes));
 
   // Convert them into node groups
@@ -340,8 +361,7 @@ begin
 
   // Collect nodes for each group
   for i := 0 to High(Result) do
-    Result[i].Nodes := UiLibCollectFlagNodes(Attributes, TypeSize,
-      Result[i].Mask);
+    Result[i].Nodes := UiLibCollectFlagNodes(Attributes, Size, Result[i].Mask);
 end;
 
 procedure UiLibUpdateFullMask(
@@ -404,7 +424,8 @@ begin
       GroupNode.ColumnText[0] := Groups[i].Name;
 
       if Groups[i].UseMaskHint then
-        GroupNode.Hint := BuildHint('Mask', UIntToHexEx(Groups[i].Mask));
+        GroupNode.Hint := BuildHint('Mask', UiLibUIntToHex(Groups[i].Mask,
+          NUMERIC_WIDTH_PER_SIZE[Groups[i].Size]));
 
       ParentNode := Tree.AddChildEx(nil, GroupNode).Node;
     end
@@ -432,7 +453,7 @@ var
 begin
   RttiContext := TRttiContext.Create;
   RttiType := RttiContext.GetType(ATypeInfo);
-  TypeSize := Byte(RttiType.TypeSize);
+  TypeSize := ByteSizeToIntegerSize(RttiType.TypeSize);
   FullMask := SizeToMask(TypeSize);
 
   if RttiType is TRttiEnumerationType then
@@ -442,8 +463,8 @@ begin
   begin
     // Collect flags and sub-enums from all (explicit + inherited) attributes
     Attributes := RttixEnumerateAttributes(RttiContext, RttiType);
-    Groups := UiLibCollectAllFlagNodes(Attributes, RttiType.TypeSize);
-    Groups := Groups + UiLibCollectSubEnumNodes(Attributes, RttiType.TypeSize);
+    Groups := UiLibCollectAllFlagNodes(Attributes, TypeSize);
+    Groups := Groups + UiLibCollectSubEnumNodes(Attributes, TypeSize);
 
     // Allow attributes override the full mask
     UiLibUpdateFullMask(Attributes, FullMask);
@@ -474,7 +495,7 @@ begin
   Attributes := RttixEnumerateAttributes(RttiContext, RttiType);
 
   // Allow the attributes to override the Full Access mask
-  FullMask := SizeToMask(RttiType.TypeSize);
+  FullMask := Cardinal(-1);
   UiLibUpdateFullMask(Attributes, FullMask);
 
   Tree.BeginUpdateAuto;
@@ -494,33 +515,31 @@ begin
   // Add groups of rights
   Group.Name := 'Read';
   Group.Mask := GenericMapping.GenericRead;
-  Group.Nodes := UiLibCollectFlagNodes(Attributes, RttiType.TypeSize,
+  Group.Nodes := UiLibCollectFlagNodes(Attributes, isCardinal,
     Group.Mask and SPECIFIC_RIGHTS_ALL);
   Groups[0] := Group;
 
   Group.Name := 'Write';
   Group.Mask := GenericMapping.GenericWrite;
-  Group.Nodes := UiLibCollectFlagNodes(Attributes, RttiType.TypeSize,
+  Group.Nodes := UiLibCollectFlagNodes(Attributes, isCardinal,
     Group.Mask and SPECIFIC_RIGHTS_ALL);
   Groups[1] := Group;
 
   Group.Name := 'Execute';
   Group.Mask := GenericMapping.GenericExecute;
-  Group.Nodes := UiLibCollectFlagNodes(Attributes, RttiType.TypeSize,
+  Group.Nodes := UiLibCollectFlagNodes(Attributes, isCardinal,
     Group.Mask and SPECIFIC_RIGHTS_ALL);
   Groups[2] := Group;
 
   Group.Name := 'Other';
   Group.Mask := SPECIFIC_RIGHTS_ALL and not GenericMapping.GenericRead
     and not GenericMapping.GenericWrite and not GenericMapping.GenericExecute;
-  Group.Nodes := UiLibCollectFlagNodes(Attributes, RttiType.TypeSize,
-    Group.Mask);
+  Group.Nodes := UiLibCollectFlagNodes(Attributes, isCardinal, Group.Mask);
   Groups[3] := Group;
 
   Group.Name := 'Standard';
   Group.Mask := FullMask and STANDARD_RIGHTS_ALL;
-  Group.Nodes := UiLibCollectFlagNodes(Attributes, RttiType.TypeSize,
-    Group.Mask);
+  Group.Nodes := UiLibCollectFlagNodes(Attributes, isCardinal, Group.Mask);
   Groups[4] := Group;
 
   i := 5;
@@ -529,8 +548,7 @@ begin
   begin
     Group.Name := 'Generic';
     Group.Mask := GENERIC_RIGHTS_ALL;
-    Group.Nodes := UiLibCollectFlagNodes(Attributes, RttiType.TypeSize,
-      Group.Mask);
+    Group.Nodes := UiLibCollectFlagNodes(Attributes, isCardinal, Group.Mask);
     Groups[i] := Group;
     Inc(i);
   end;
@@ -539,8 +557,7 @@ begin
   begin
     Group.Name := 'Miscellaneous';
     Group.Mask := MAXIMUM_ALLOWED or ACCESS_SYSTEM_SECURITY;
-    Group.Nodes := UiLibCollectFlagNodes(Attributes, RttiType.TypeSize,
-      Group.Mask);
+    Group.Nodes := UiLibCollectFlagNodes(Attributes, isCardinal, Group.Mask);
     Groups[i] := Group;
   end;
 

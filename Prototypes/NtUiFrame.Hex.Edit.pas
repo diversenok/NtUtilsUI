@@ -109,8 +109,8 @@ procedure THexEditFrame.UpdateHint;
 begin
   if Assigned(FData) then
     tbxHexString.Hint := BuildHint([
-      THintSection.New('Number of bytes (dec)', UIntToStrEx(FData.Size)),
-      THintSection.New('Number of bytes (hex)', UIntToHexEx(FData.Size))
+      THintSection.New('Number of bytes (dec)', UiLibUIntToDec(FData.Size)),
+      THintSection.New('Number of bytes (hex)', UiLibUIntToHex(FData.Size))
     ])
   else
     tbxHexString.Hint := '';

@@ -32,8 +32,9 @@ function UiLibEnumerateProfiles(
 implementation
 
 uses
-  DevirtualizedTree.Provider, NtUtils.Security.Sid, DelphiUiLib.Reflection,
-  DelphiUiLib.Reflection.Strings, NtUiCommon.Colors;
+  DelphiApi.Reflection, DevirtualizedTree.Provider, NtUtils.Security.Sid,
+  DelphiUiLib.Reflection, DelphiUiLib.Strings, DelphiUiLib.Reflection.Strings,
+  NtUiCommon.Colors;
 
 {$BOOLEVAL OFF}
 {$IFOPT R+}{$DEFINE R+}{$ENDIF}
@@ -85,7 +86,7 @@ begin
     if not RtlxQueryProfileIsFullProfile(FListKey, FullProfile).IsSuccess then
       FullProfile := False;
 
-    FColumnText[colFullProfile] := YesNoToString(FullProfile);
+    FColumnText[colFullProfile] := BooleanToString(FullProfile, bkYesNo);
 
     if FullProfile then
       SetColor(ColorSettings.clBackgroundUser)
@@ -99,7 +100,7 @@ begin
   UserRepresentation := TType.Represent(FUser);
   FColumnText[colUserName] := UserRepresentation.Text;
   FColumnText[colSID] := RtlxSidToString(FUser);
-  FColumnText[colLoaded] := YesNoToString(FIsLoaded);
+  FColumnText[colLoaded] := BooleanToString(FIsLoaded, bkYesNo);
 
   FHint := UserRepresentation.Hint + #$D#$A + BuildHint([
     THintSection.New('Profile Path', FColumnText[colPath]),
