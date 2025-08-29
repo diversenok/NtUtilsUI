@@ -222,7 +222,7 @@ begin
     SECURITY_PROCESS_PROTECTION_TYPE_LITE_RID: cbxType.ItemIndex := 1;
     SECURITY_PROCESS_PROTECTION_TYPE_FULL_RID: cbxType.ItemIndex := 2;
   else
-    cbxType.Text := UiLibUIntToHex(FType);
+    cbxType.Text := UiLibUIntToHex(FType, 3);
   end;
 end;
 
