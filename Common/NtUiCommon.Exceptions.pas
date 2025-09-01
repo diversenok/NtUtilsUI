@@ -7,9 +7,6 @@ unit NtUiCommon.Exceptions;
 
 interface
 
-uses
-  System.SysUtils;
-
 // Show NtUiLib exception dialog
 procedure ReportException(E: TObject);
 
@@ -20,7 +17,7 @@ implementation
 
 uses
   DelphiUtils.AutoObjects, DelphiUtils.AutoEvents, NtUiLib.Exceptions.Dialog,
-  Vcl.Forms;
+  System.SysUtils, Vcl.Forms;
 
 { NtUiLib Exception Handler }
 
