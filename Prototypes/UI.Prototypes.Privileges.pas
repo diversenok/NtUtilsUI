@@ -60,8 +60,8 @@ function PrivilegesToIDs(
 implementation
 
 uses
-  Ntapi.ntlsa, DelphiUiLib.Strings, DelphiUiLib.Reflection.Strings,
-  DelphiUiLib.Reflection, NtUiCommon.Colors, NtUiCommon.Helpers, VirtualTrees.Types;
+  Ntapi.ntlsa, DelphiUiLib.Strings, DelphiUiLib.Reflection, NtUiCommon.Colors,
+  NtUiCommon.Helpers, VirtualTrees.Types;
 
 {$R *.dfm}
 

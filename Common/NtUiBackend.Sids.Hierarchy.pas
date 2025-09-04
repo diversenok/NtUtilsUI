@@ -41,7 +41,7 @@ implementation
 
 uses
   Ntapi.WinNt, Ntapi.ntpebteb, NtUtils.Security.Sid, NtUtils.Lsa.Sid,
-  DelphiUiLib.Reflection, DelphiUiLib.Reflection.Strings, VirtualTrees,
+  DelphiUiLib.Reflection, DelphiUiLib.Strings, VirtualTrees,
   DevirtualizedTree.Provider, NtUiCommon.Helpers, System.UITypes,
   NtUiCommon.Colors;
 

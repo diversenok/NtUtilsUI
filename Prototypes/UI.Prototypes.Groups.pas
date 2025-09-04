@@ -72,9 +72,8 @@ function GroupsToSids(
 implementation
 
 uses
-  Ntapi.WinNt, Ntapi.ntlsa, DelphiApi.Reflection,
-  NtUtils.Security.Sid, NtUtils.Lsa, NtUtils.SysUtils,
-  DelphiUiLib.Reflection.Strings, DelphiUiLib.Reflection,
+  Ntapi.WinNt, Ntapi.ntlsa, DelphiApi.Reflection, NtUtils.Security.Sid,
+  NtUtils.Lsa, NtUtils.SysUtils, DelphiUiLib.Strings, DelphiUiLib.Reflection,
   NtUiLib.Reflection.Types, NtUiCommon.Colors, DelphiUiLib.Reflection.Numeric;
 
 {$R *.dfm}
