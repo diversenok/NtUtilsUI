@@ -74,7 +74,7 @@ implementation
 uses
   Ntapi.WinNt, Ntapi.ntlsa, DelphiApi.Reflection, NtUtils.Security.Sid,
   NtUtils.Lsa, NtUtils.SysUtils, DelphiUiLib.Strings, DelphiUiLib.Reflection,
-  NtUiLib.Reflection.Types, NtUiCommon.Colors, DelphiUiLib.Reflection.Numeric;
+  NtUiLib.Reflection.Types, NtUiCommon.Colors;
 
 {$R *.dfm}
 
@@ -116,11 +116,10 @@ begin
     FColumnText[colFriendly] := Lookup.FullName;
 
   FColumnText[colFlags] := TType.Represent<TGroupAttributes>(
-    Group.Attributes and not SE_GROUP_STATE_MASK,
-    [Auto.CaptureObject(IgnoreSubEnumsAttribute.Create).Self]
+    Group.Attributes and not SE_GROUP_STATE_MASK
   ).Text;
 
-  FColumnText[colState] := TType.Represent<TGroupAttributes>(
+  FColumnText[colState] := TType.Represent<TGroupAttributesState>(
     Group.Attributes and SE_GROUP_STATE_MASK).Text;
 
   // Colors
