@@ -125,7 +125,8 @@ type
 procedure TPrivilegeNodeData.Adjust;
 begin
   Privilege.Attributes := NewAttributes;
-  FColumnText[colState] := TType.Represent(Privilege.Attributes).Text;
+  FColumnText[colState] := TType.Represent<TPrivilegeAttributesState>(
+    Privilege.Attributes).Text;
 
   SetColoringMode(ColoringMode);
   Invalidate;
@@ -137,7 +138,8 @@ begin
 
   Self.Privilege := Privilege;
   FColumnText[colValue] := IntToStr(Privilege.Luid);
-  FColumnText[colState] := TType.Represent(Privilege.Attributes).Text;
+  FColumnText[colState] := TType.Represent<TPrivilegeAttributesState>(
+    Privilege.Attributes).Text;
   FColumnText[colIntegrity] := TType.Represent(
     LsaxQueryIntegrityPrivilege(Privilege.Luid)).Text;
 
