@@ -64,7 +64,7 @@ implementation
 
 uses
   NtUtils.Security.Sid, NtUtils.Security, NtUtils.SysUtils, NtUiLib.Errors,
-  VirtualTrees, DevirtualizedTree.Provider, DelphiUiLib.Reflection,
+  VirtualTrees, DevirtualizedTree.Provider, DelphiUiLib.LiteReflection,
   DelphiUiLib.Strings, NtUiCommon.Colors, NtUiCommon.Helpers,
   VirtualTrees.Types;
 
@@ -139,24 +139,23 @@ begin
   else
     FColumnText[colUse] := '(Unknown)';
 
-  FColumnText[colAceType] := TType.Represent(FAce.AceType).Text;
-  FColumnText[colAceFlags] := TType.Represent(FAce.AceFlags).Text;
+  FColumnText[colAceType] := Rttix.Format(FAce.AceType);
+  FColumnText[colAceFlags] := Rttix.Format(FAce.AceFlags);
 
   if FAce.AceType = SYSTEM_MANDATORY_LABEL_ACE_TYPE then
-    FColumnText[colAceAccessMask] := RepresentType(
-      TypeInfo(TMandatoryLabelMask), FAce.Mask).Text
-  else  
-    FColumnText[colAceAccessMask] := RepresentType(FAccessMaskType,
-      FAce.Mask).Text;
+    FColumnText[colAceAccessMask] := Rttix.Format<TMandatoryLabelMask>(FAce.Mask)
+  else
+    FColumnText[colAceAccessMask] := RttixFormat(FAccessMaskType,
+      FAce.Mask);
 
   FColumnText[colAceAccessMaskNumeric] := UiLibUIntToHex(FAce.Mask, 6 or
     NUMERIC_WIDTH_ROUND_TO_BYTE);
-  FColumnText[colSid] := TType.Represent(FAce.Sid).Text;
+  FColumnText[colSid] := Rttix.Format(FAce.Sid);
   FColumnText[colSidRaw] := RtlxSidToString(FAce.Sid);
 
   if FAce.AceType = ACCESS_ALLOWED_COMPOUND_ACE_TYPE then
   begin
-    FColumnText[colServerSid] := TType.Represent(FAce.ServerSID).Text;
+    FColumnText[colServerSid] := Rttix.Format(FAce.ServerSID);
     FColumnText[colServerSidRaw] := RtlxSidToString(FAce.ServerSID);
   end
   else

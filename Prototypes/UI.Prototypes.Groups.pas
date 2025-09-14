@@ -73,8 +73,8 @@ implementation
 
 uses
   Ntapi.WinNt, Ntapi.ntlsa, DelphiApi.Reflection, NtUtils.Security.Sid,
-  NtUtils.Lsa, NtUtils.SysUtils, DelphiUiLib.Strings, DelphiUiLib.Reflection,
-  NtUiLib.Reflection.Types, NtUiCommon.Colors;
+  NtUtils.Lsa, NtUtils.SysUtils, DelphiUiLib.Strings,
+  DelphiUiLib.LiteReflection, NtUiCommon.Colors;
 
 {$R *.dfm}
 
@@ -110,17 +110,16 @@ begin
   FColumnText[colSid] := RtlxSidToString(Group.Sid);
 
   if Lookup.SidType <> SidTypeUndefined then
-    FColumnText[colSidType] := TType.Represent(Lookup.SidType).Text;
+    FColumnText[colSidType] := Rttix.Format(Lookup.SidType);
 
   if Lookup.IsValid then
     FColumnText[colFriendly] := Lookup.FullName;
 
-  FColumnText[colFlags] := TType.Represent<TGroupAttributes>(
-    Group.Attributes and not SE_GROUP_STATE_MASK
-  ).Text;
+  FColumnText[colFlags] := Rttix.Format<TGroupAttributes>(
+    Group.Attributes and not SE_GROUP_STATE_MASK);
 
-  FColumnText[colState] := TType.Represent<TGroupAttributesState>(
-    Group.Attributes and SE_GROUP_STATE_MASK).Text;
+  FColumnText[colState] := Rttix.Format<TGroupAttributesState>(
+    Group.Attributes and SE_GROUP_STATE_MASK);
 
   // Colors
   if BitTest(Group.Attributes and SE_GROUP_INTEGRITY_ENABLED) then

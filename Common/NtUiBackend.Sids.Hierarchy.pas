@@ -41,7 +41,7 @@ implementation
 
 uses
   Ntapi.WinNt, Ntapi.ntpebteb, NtUtils.Security.Sid, NtUtils.Lsa.Sid,
-  DelphiUiLib.Reflection, DelphiUiLib.Strings, VirtualTrees,
+  DelphiUiLib.LiteReflection, DelphiUiLib.Strings, VirtualTrees,
   DevirtualizedTree.Provider, NtUiCommon.Helpers, System.UITypes,
   NtUiCommon.Colors;
 
@@ -334,7 +334,7 @@ begin
     if FSidName.IsValid then
     begin
       FColumnText[colFriendlyName] := FSidName.FullName;
-      FColumnText[colSidType] := TType.Represent(FSidName.SidType).Text;
+      FColumnText[colSidType] := Rttix.Format(FSidName.SidType);
     end;
 
     FHint := BuildHint([

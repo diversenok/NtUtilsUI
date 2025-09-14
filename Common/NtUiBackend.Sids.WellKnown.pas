@@ -24,7 +24,7 @@ implementation
 
 uses
   DevirtualizedTree.Provider, NtUtils.Security.Sid, NtUtils.Lsa.Sid,
-  DelphiUiLib.Strings, DelphiUiLib.Reflection, System.SysUtils, System.TypInfo;
+  DelphiUiLib.Strings, DelphiUiLib.LiteReflection, System.SysUtils;
 
 const
   colIndex = 0;
@@ -70,13 +70,12 @@ begin
   inherited;
 
   FColumnText[colIndex] := UiLibUIntToDec(Cardinal(FEnumValue));
-  FColumnText[colEnumName] := GetEnumName(TypeInfo(TWellKnownSidType),
-    Integer(FEnumValue));
+  FColumnText[colEnumName] := Rttix.Format(FEnumValue, [RttixPreserveEnumCase]);
   FColumnText[colSid] := RtlxSidToString(FSidName.SID);
 
   if FSidName.IsValid then
   begin
-    FColumnText[colSidType] := TType.Represent(FSidName.SidType).Text;
+    FColumnText[colSidType] := Rttix.Format(FSidName.SidType);
     FColumnText[colFriendlyName] := FSidName.FullName;
   end;
 

@@ -60,8 +60,8 @@ function PrivilegesToIDs(
 implementation
 
 uses
-  Ntapi.ntlsa, DelphiUiLib.Strings, DelphiUiLib.Reflection, NtUiCommon.Colors,
-  NtUiCommon.Helpers, VirtualTrees.Types;
+  Ntapi.ntlsa, DelphiUiLib.Strings, DelphiUiLib.LiteReflection,
+  NtUiCommon.Colors, NtUiCommon.Helpers, VirtualTrees.Types;
 
 {$R *.dfm}
 
@@ -125,8 +125,8 @@ type
 procedure TPrivilegeNodeData.Adjust;
 begin
   Privilege.Attributes := NewAttributes;
-  FColumnText[colState] := TType.Represent<TPrivilegeAttributesState>(
-    Privilege.Attributes).Text;
+  FColumnText[colState] := Rttix.Format<TPrivilegeAttributesState>(
+    Privilege.Attributes);
 
   SetColoringMode(ColoringMode);
   Invalidate;
@@ -138,10 +138,10 @@ begin
 
   Self.Privilege := Privilege;
   FColumnText[colValue] := IntToStr(Privilege.Luid);
-  FColumnText[colState] := TType.Represent<TPrivilegeAttributesState>(
-    Privilege.Attributes).Text;
-  FColumnText[colIntegrity] := TType.Represent(
-    LsaxQueryIntegrityPrivilege(Privilege.Luid)).Text;
+  FColumnText[colState] := Rttix.Format<TPrivilegeAttributesState>(
+    Privilege.Attributes);
+  FColumnText[colIntegrity] := Rttix.Format(
+    LsaxQueryIntegrityPrivilege(Privilege.Luid));
 
   // Try to query the name and the description from the system
   if LsaxQueryPrivilege(Privilege.Luid, FColumnText[colName],
@@ -159,8 +159,7 @@ begin
   else
   begin
     // Otherwise, prepare names based on well-known privileges
-    FColumnText[colFriendly] := TType.Represent(TSeWellKnownPrivilege(
-      Privilege.Luid)).Text;
+    FColumnText[colFriendly] := Rttix.Format(Privilege.Luid);
   end;
 
   SetColoringMode(pcStateBased);

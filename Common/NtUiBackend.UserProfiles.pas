@@ -33,7 +33,8 @@ implementation
 
 uses
   DelphiApi.Reflection, DevirtualizedTree.Provider, NtUtils.Security.Sid,
-  DelphiUiLib.Reflection, DelphiUiLib.Strings, NtUiCommon.Colors;
+  DelphiUiLib.LiteReflection, DelphiUiLib.Strings, NtUiCommon.Colors,
+  NtUtils.SysUtils;
 
 {$BOOLEVAL OFF}
 {$IFOPT R+}{$DEFINE R+}{$ENDIF}
@@ -70,9 +71,9 @@ end;
 
 procedure TProfileNode.Initialize;
 var
-  UserRepresentation: TRepresentation;
   FullProfile: LongBool;
   ProfilePath: String;
+  UserReflection: TRttixFullReflection;
 begin
   inherited;
 
@@ -96,15 +97,16 @@ begin
       FColumnText[colPath] := ProfilePath;
   end;
 
-  UserRepresentation := TType.Represent(FUser);
-  FColumnText[colUserName] := UserRepresentation.Text;
+  UserReflection := Rttix.FormatFull(FUser);
+  FColumnText[colUserName] := UserReflection.Text;
   FColumnText[colSID] := RtlxSidToString(FUser);
   FColumnText[colLoaded] := BooleanToString(FIsLoaded, bkYesNo);
 
-  FHint := UserRepresentation.Hint + #$D#$A + BuildHint([
-    THintSection.New('Profile Path', FColumnText[colPath]),
-    THintSection.New('Loaded', FColumnText[colLoaded])
-  ]);
+  FHint := RtlxJoinStrings([UserReflection.Hint,
+    BuildHint([
+      THintSection.New('Profile Path', FColumnText[colPath]),
+      THintSection.New('Loaded', FColumnText[colLoaded])
+    ])], #$D#$A);
 
   if not FIsLoaded then
     SetFontColor(ColorSettings.clForegroundInactive);

@@ -23,7 +23,7 @@ function NtUiLibCollectSidAbbreviations(
 implementation
 
 uses
-  NtUtils.Security.Sid, NtUtils.Lsa.Sid, DelphiUiLib.Reflection,
+  NtUtils.Security.Sid, NtUtils.Lsa.Sid, DelphiUiLib.LiteReflection,
   DelphiUiLib.Strings, DevirtualizedTree.Provider, DevirtualizedTree;
 
 const
@@ -73,7 +73,7 @@ begin
 
   if FSidName.IsValid then
   begin
-    FColumnText[colSidType] := TType.Represent(FSidName.SidType).Text;
+    FColumnText[colSidType] := Rttix.Format(FSidName.SidType);
     FColumnText[colFriendlyName] := FSidName.FullName;
   end;
 

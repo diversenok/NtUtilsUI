@@ -41,9 +41,9 @@ procedure UiLibAddAccessMaskNodes(
 implementation
 
 uses
-  DelphiApi.Reflection, DelphiUtils.Arrays, DelphiUiLib.Reflection,
-  DelphiUiLib.Strings, System.Rtti, DevirtualizedTree.Provider,
-  NtUiCommon.Helpers, VirtualTrees.Types, System.SysUtils;
+  DelphiApi.Reflection, DelphiUtils.Arrays, DelphiUiLib.Strings, System.Rtti,
+  DevirtualizedTree.Provider, NtUiCommon.Helpers, VirtualTrees.Types,
+  System.SysUtils;
 
 type
   TNodeGroup = record
@@ -140,6 +140,9 @@ begin
   end;
 end;
 
+type
+  TCustomAttributeArray = TArray<TCustomAttribute>;
+
 function UiLibCollectEnumNodes(
   const RttiContext: TRttiContext;
   const RttiEnumType: TRttiEnumerationType
@@ -216,6 +219,52 @@ begin
 
       Result.Nodes[Count] := TFlagNode.Create(Result.Size, Names[i],
         Cardinal(i), SizeToMask(Result.Size), True);
+      Inc(Count);
+    end;
+end;
+
+function RttixEnumerateAttributes(
+  const RttiContext: TRttiContext;
+  const RttiType: TRttiType
+): TCustomAttributeArray;
+var
+  a: TCustomAttribute;
+begin
+  Result := RttiType.GetAttributes;
+
+  for a in Result do
+    if a is InheritsFromAttribute then
+    begin
+      // Recursively collect inherited attributes
+      Result := Result + RttixEnumerateAttributes(RttiContext,
+        RttiContext.GetType(InheritsFromAttribute(a).TypeInfo));
+
+      Break;
+    end;
+end;
+
+procedure RttixFilterAttributes(
+  const Attributes: TCustomAttributeArray;
+  const Filter: TCustomAttributeClass;
+  out FilteredAttributes: TCustomAttributeArray
+);
+var
+  a: TCustomAttribute;
+  Count: Cardinal;
+begin
+  Count := 0;
+
+  for a in Attributes do
+    if a is Filter then
+      Inc(Count);
+
+  SetLength(FilteredAttributes, Count);
+
+  Count := 0;
+  for a in Attributes do
+    if a is Filter then
+    begin
+      FilteredAttributes[Count] := a;
       Inc(Count);
     end;
 end;

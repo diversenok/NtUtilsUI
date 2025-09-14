@@ -52,7 +52,7 @@ implementation
 
 uses
   Ntapi.ntsam, NtUtils.Sam, NtUtils.SysUtils, NtUtils.Security.Sid,
-  NtUtils.Lsa.Sid, NtUtils.Errors, NtUiLib.Errors, DelphiUiLib.Reflection,
+  NtUtils.Lsa.Sid, NtUtils.Errors, NtUiLib.Errors, DelphiUiLib.LiteReflection,
   DelphiUiLib.Strings, DevirtualizedTree.Provider, NtUiCommon.Colors;
 
 const
@@ -140,7 +140,7 @@ begin
 
   if FKind <> snInvalid then
   begin
-    FColumnText[colAccountType] := TType.Represent(FKind).Text;;
+    FColumnText[colAccountType] := Rttix.Format(FKind);
     FColumnText[colSid] := '<unable to query>';
   end;
 
@@ -179,12 +179,12 @@ begin
   inherited;
 
   FColumnText[colName] := FName;
-  FColumnText[colAccountType] := TType.Represent(FKind).Text;
+  FColumnText[colAccountType] := Rttix.Format(FKind);
   FColumnText[colSid] := RtlxSidToString(FSidName.Sid);
 
   if FSidName.IsValid then
   begin
-    FColumnText[colSidType] := TType.Represent(FSidName.SidType).Text;
+    FColumnText[colSidType] := Rttix.Format(FSidName.SidType);
     FColumnText[colSidFullName] := FSidName.FullName;
   end;
 

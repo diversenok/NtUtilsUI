@@ -39,7 +39,7 @@ type
 implementation
 
 uses
-  DelphiUiLib.Reflection, NtUiBackend.AppContainers, NtUiCommon.Prototypes;
+  DelphiUiLib.LiteReflection, NtUiBackend.AppContainers, NtUiCommon.Prototypes;
 
 {$BOOLEVAL OFF}
 {$IFOPT R+}{$DEFINE R+}{$ENDIF}
@@ -75,16 +75,16 @@ end;
 
 procedure TAppContainerListAllUsersFrame.LoadForUser;
 var
-  Representation: TRepresentation;
+  UserReflection: TRttixFullReflection;
 begin
   if not Assigned(SelectedUser) then
     FUser := UiLibGetDefaultUser
   else
     FUser := SelectedUser;
 
-  Representation := TType.Represent(FUser);
-  tbxUser.Text := Representation.Text;
-  tbxUser.Hint := Representation.Hint;
+  UserReflection := Rttix.FormatFull(FUser);
+  tbxUser.Text := UserReflection.Text;
+  tbxUser.Hint := UserReflection.Hint;
   AppContainersFrame.LoadForUser(SelectedUser);
 end;
 

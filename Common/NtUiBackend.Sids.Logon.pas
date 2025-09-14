@@ -31,7 +31,7 @@ implementation
 uses
   NtUtils.Security.Sid, NtUtils.Lsa.Sid, NtUtils.Lsa.Logon, NtUtils.Errors,
   NtUiLib.Errors, DevirtualizedTree.Provider, DelphiUtils.Arrays,
-  DelphiUiLib.Strings, DelphiUiLib.Reflection, NtUiCommon.Colors;
+  DelphiUiLib.Strings, DelphiUiLib.LiteReflection, NtUiCommon.Colors;
 
 {$BOOLEVAL OFF}
 {$IFOPT R+}{$DEFINE R+}{$ENDIF}
@@ -151,12 +151,12 @@ begin
   FColumnText[colSid] := RtlxSidToString(FSidName.SID);
 
   if FLogonType in [TSecurityLogonType.Interactive..High(TSecurityLogonType)] then
-    FColumnText[colLogonType] := TType.Represent(FLogonType).Text;
+    FColumnText[colLogonType] := Rttix.Format(FLogonType);
 
   if FSidName.IsValid then
   begin
     FColumnText[colFriendlyName] := FSidName.FullName;
-    FColumnText[colSidType] := TType.Represent(FSidName.SidType).Text;
+    FColumnText[colSidType] := Rttix.Format(FSidName.SidType);
   end;
 
   FHint := BuildHint([
