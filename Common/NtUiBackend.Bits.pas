@@ -41,9 +41,9 @@ procedure UiLibAddAccessMaskNodes(
 implementation
 
 uses
-  DelphiApi.Reflection, DelphiUtils.Arrays, DelphiUiLib.Strings, System.Rtti,
+  DelphiApi.Reflection, DelphiUtils.Arrays, DelphiUiLib.Strings,
   DevirtualizedTree.Provider, NtUiCommon.Helpers, VirtualTrees.Types,
-  System.SysUtils;
+  DelphiUtils.LiteRTTI, System.SysUtils;
 
 type
   TNodeGroup = record
@@ -71,7 +71,7 @@ type
       const Name: String;
       const Value: UInt64;
       const Mask: UInt64;
-      IsSubEnum: Boolean
+      ValueKind: TRttixBitwiseFlagKind
     );
   end;
 
@@ -90,7 +90,7 @@ begin
       NUMERIC_WIDTH_PER_SIZE[Size]))
   ]);
 
-  if IsSubEnum then
+  if ValueKind = rbkSubEnum then
     FHint := FHint + #$D#$A + BuildHint('Mask', UiLibUIntToHex(Mask,
       NUMERIC_WIDTH_PER_SIZE[Size]));
 end;
@@ -140,189 +140,90 @@ begin
   end;
 end;
 
-type
-  TCustomAttributeArray = TArray<TCustomAttribute>;
-
 function UiLibCollectEnumNodes(
-  const RttiContext: TRttiContext;
-  const RttiEnumType: TRttiEnumerationType
+  const EnumType: IRttixEnumType;
+  Size: TIntegerSize
 ): TNodeGroup;
 var
-  Attributes: TCustomAttributeArray;
-  a: TCustomAttribute;
-  ValidValues: TValidValues;
-  NamingStyle: NamingStyleAttribute;
-  Names: TArray<String>;
+  Attributes: TArray<PLiteRttiAttribute>;
   i, Count: Integer;
+  Name: String;
 begin
   // Use the default group
   Result.Name := 'Options group';
-  Result.Size := ByteSizeToIntegerSize(RttiEnumType.TypeSize);
-  Result.Mask := SizeToMask(Result.Size);
+  Result.Size := Size;
+  Result.Mask := SizeToMask(Size);
   Result.UseMaskHint := False;
   Result.IsDefault := True;
   Result.CheckBoxType := ctRadioButton;
 
-  Attributes := RttiEnumType.GetAttributes;
-
-  // By default, accept the entire range
-  ValidValues := [0..Byte(RttiEnumType.MaxValue)];
-
-  for a in Attributes do
-    if a is ValidValuesAttribute then
-    begin
-      // Use the custom range
-      ValidValues := ValidValuesAttribute(a).Values;
-      Break;
-    end
-    else if a is MinValueAttribute then
-    begin
-      // Allow overwriting the minimal value
-      if MinValueAttribute(a).MinValue > 0 then
-        ValidValues := ValidValues - [0..Byte(MinValueAttribute(a).MinValue - 1)];
-      Break;
-    end;
-
-  // Find the naming style
-  NamingStyle := nil;
-  for a in Attributes do
-    if a is NamingStyleAttribute then
-    begin
-      NamingStyle := NamingStyleAttribute(a);
-      Break;
-    end;
+  Attributes := EnumType.GetAttributes;
 
   // Count valid names
   Count := 0;
-  for i := 0 to RttiEnumType.MaxValue do
-    if i in ValidValues then
-      Inc(Count);
+  for i in EnumType.ValidValues do
+    Inc(Count);
 
   // Save valid names
-  Names := RttiEnumType.GetNames;
   SetLength(Result.Nodes, Count);
 
   Count := 0;
-  for i := 0 to RttiEnumType.MaxValue do
-    if i in ValidValues then
-    begin
-      if Assigned(NamingStyle) then
-        case NamingStyle.Style of
-          nsCamelCase:
-            Names[i] := PrettifyCamelCase(Names[i], NamingStyle.Prefix,
-              NamingStyle.Suffix);
+  for i in EnumType.ValidValues do
+  begin
+    Name := EnumType.TypeInfo.EnumerationName(i);
 
-          nsSnakeCase:
-            Names[i] := PrettifySnakeCase(Names[i], NamingStyle.Prefix,
-              NamingStyle.Suffix);
-        end;
+    case EnumType.NamingStyle of
+      nsCamelCase:
+        Name := PrettifyCamelCase(Name, EnumType.Prefix, EnumType.Suffix);
 
-      Result.Nodes[Count] := TFlagNode.Create(Result.Size, Names[i],
-        Cardinal(i), SizeToMask(Result.Size), True);
-      Inc(Count);
+      nsSnakeCase:
+        Name := PrettifySnakeCase(Name, EnumType.Prefix, EnumType.Suffix);
     end;
-end;
 
-function RttixEnumerateAttributes(
-  const RttiContext: TRttiContext;
-  const RttiType: TRttiType
-): TCustomAttributeArray;
-var
-  a: TCustomAttribute;
-begin
-  Result := RttiType.GetAttributes;
-
-  for a in Result do
-    if a is InheritsFromAttribute then
-    begin
-      // Recursively collect inherited attributes
-      Result := Result + RttixEnumerateAttributes(RttiContext,
-        RttiContext.GetType(InheritsFromAttribute(a).TypeInfo));
-
-      Break;
-    end;
-end;
-
-procedure RttixFilterAttributes(
-  const Attributes: TCustomAttributeArray;
-  const Filter: TCustomAttributeClass;
-  out FilteredAttributes: TCustomAttributeArray
-);
-var
-  a: TCustomAttribute;
-  Count: Cardinal;
-begin
-  Count := 0;
-
-  for a in Attributes do
-    if a is Filter then
-      Inc(Count);
-
-  SetLength(FilteredAttributes, Count);
-
-  Count := 0;
-  for a in Attributes do
-    if a is Filter then
-    begin
-      FilteredAttributes[Count] := a;
-      Inc(Count);
-    end;
+    Result.Nodes[Count] := TFlagNode.Create(Size, Name, Cardinal(i),
+      Result.Mask, rbkSubEnum);
+    Inc(Count);
+  end;
 end;
 
 function UiLibCollectSubEnumNodes(
-  const Attributes: TCustomAttributeArray;
+  const BitwiseType: IRttixBitwiseType;
   Size: TIntegerSize
 ): TArray<TNodeGroup>;
 var
-  a: TCustomAttribute;
-  SubEnums: TArray<IFlagNode>;
-  Groups: TArray<TArrayGroup<UInt64, IFlagNode>>;
-  GroupNames: TArray<FlagGroupAttribute>;
-  Count, i, j: Integer;
+  SubEnums: TArray<TRttixBitwiseFlag>;
+  Groups: TArray<TArrayGroup<UInt64, TRttixBitwiseFlag>>;
+  i, j: Integer;
 begin
-  // Count sub enums
-  Count := 0;
-  for a in Attributes do
-    if a is SubEnumAttribute then
-      Inc(Count);
-
-  SetLength(SubEnums, Count);
-
-  // Save sub enums
-  Count := 0;
-  for a in Attributes do
-    if a is SubEnumAttribute then
+  // Collect sub-enum attributes
+  SubEnums := TArray.Filter<TRttixBitwiseFlag>(BitwiseType.Flags,
+    function (const Entry: TRttixBitwiseFlag): Boolean
     begin
-      SubEnums[Count] := TFlagNode.Create(Size,
-        SubEnumAttribute(a).Name, SubEnumAttribute(a).Value,
-        SubEnumAttribute(a).Mask, True);
-      Inc(Count)
-    end;
+      Result := Entry.Kind = rbkSubEnum;
+    end
+  );
 
-  // Group all sub-enums by masks
-  Groups := TArray.GroupBy<IFlagNode, UInt64>(SubEnums,
-    function (const Node: IFlagNode): UInt64
+  // Group sub-enums by mask
+  Groups := TArray.GroupBy<TRttixBitwiseFlag, UInt64>(SubEnums,
+    function (const Node: TRttixBitwiseFlag): UInt64
     begin
       Result := Node.Mask;
     end
   );
 
-  // Collect known names for groups
-  RttixFilterAttributes(Attributes, FlagGroupAttribute,
-    TCustomAttributeArray(GroupNames));
-
-  // Convert flag groups into node groups
+  // Prepare node groups
   SetLength(Result, Length(Groups));
 
   for i := 0 to High(Result) do
   begin
     Result[i].Name := 'Options group';
+    Result[i].Size := Size;
 
     // Allow attributes to override group names
-    for j := 0 to High(GroupNames) do
-      if GroupNames[j].Mask = Groups[i].Key then
+    for j := 0 to High(BitwiseType.FlagGroups) do
+      if BitwiseType.FlagGroups[j].Mask = Groups[i].Key then
       begin
-        Result[i].Name := GroupNames[j].Name;
+        Result[i].Name := BitwiseType.FlagGroups[j].Name;
         Break;
       end;
 
@@ -330,61 +231,57 @@ begin
     Result[i].UseMaskHint := True;
     Result[i].IsDefault := True;
     Result[i].CheckBoxType := ctRadioButton;
-    Result[i].Nodes := Groups[i].Values;
+
+    SetLength(Result[i].Nodes, Length(Groups[i].Values));
+    for j := 0 to High(Result[i].Nodes) do
+      Result[i].Nodes[j] := TFlagNode.Create(Size,
+        Groups[i].Values[j].Name, Groups[i].Values[j].Value,
+        Groups[i].Values[j].Mask, rbkSubEnum);
   end;
 end;
 
 function UiLibCollectFlagNodes(
-  const Attributes: TCustomAttributeArray;
+  const BitwiseType: IRttixBitwiseType;
   Size: TIntegerSize;
   Filter: UInt64 = UInt64(-1)
 ): TArray<IFlagNode>;
 var
-  a: TCustomAttribute;
-  Count: Integer;
+  Flags: TArray<TRttixBitwiseFlag>;
+  i: Integer;
 begin
-  // Count flags
-  Count := 0;
-  for a in Attributes do
-    if a is FlagNameAttribute then
-      if FlagNameAttribute(a).Value and not Filter = 0 then
-        Inc(Count);
+  // Collect matching flag attributes
+  Flags := TArray.Filter<TRttixBitwiseFlag>(BitwiseType.Flags,
+    function (const Entry: TRttixBitwiseFlag): Boolean
+    begin
+      Result := (Entry.Kind = rbkFlag) and (Entry.Value and not Filter = 0);
+    end
+  );
 
-  SetLength(Result, Count);
+  // Prepare nodes
+  SetLength(Result, Length(Flags));
 
-  // Save flags
-  Count := 0;
-  for a in Attributes do
-    if a is FlagNameAttribute then
-      if FlagNameAttribute(a).Value and not Filter = 0 then
-      begin
-        Result[Count] := TFlagNode.Create(Size, FlagNameAttribute(a).Name,
-          FlagNameAttribute(a).Value, FlagNameAttribute(a).Value, False);
-        Inc(Count)
-      end;
+  for i := 0 to High(Result) do
+    Result[i] := TFlagNode.Create(Size, Flags[i].Name, Flags[i].Value,
+      Flags[i].Value, rbkFlag);
 end;
 
 function UiLibCollectAllFlagNodes(
-  const Attributes: TCustomAttributeArray;
+  const BitwiseType: IRttixBitwiseType;
   Size: TIntegerSize
 ): TArray<TNodeGroup>;
 var
-  GroupAttributes: TArray<FlagGroupAttribute>;
   UngroupedBits: UInt64;
   i: Integer;
 begin
-  // Infer flag groups from the type information
-  RttixFilterAttributes(Attributes, FlagGroupAttribute,
-    TCustomAttributeArray(GroupAttributes));
-
   UngroupedBits := SizeToMask(Size);
-  SetLength(Result, Length(GroupAttributes));
+  SetLength(Result, Length(BitwiseType.FlagGroups));
 
   // Convert them into node groups
-  for i := 0 to High(GroupAttributes) do
+  for i := 0 to High(Result) do
   begin
-    Result[i].Name := GroupAttributes[i].Name;
-    Result[i].Mask := GroupAttributes[i].Mask;
+    Result[i].Size := Size;
+    Result[i].Name := BitwiseType.FlagGroups[i].Name;
+    Result[i].Mask := BitwiseType.FlagGroups[i].Mask;
     Result[i].UseMaskHint := True;
     Result[i].IsDefault := False;
     Result[i].CheckBoxType := ctCheckBox;
@@ -396,7 +293,7 @@ begin
     // Construct a default groups
     SetLength(Result, Length(Result) + 1);
 
-    if Length(GroupAttributes) > 0 then
+    if Length(BitwiseType.FlagGroups) > 0 then
       Result[High(Result)].Name := 'Other'
     else
       Result[High(Result)].Name := 'Flags';
@@ -409,23 +306,7 @@ begin
 
   // Collect nodes for each group
   for i := 0 to High(Result) do
-    Result[i].Nodes := UiLibCollectFlagNodes(Attributes, Size, Result[i].Mask);
-end;
-
-procedure UiLibUpdateFullMask(
-  const Attributes: TCustomAttributeArray;
-  var FullMask: UInt64
-);
-var
-  a: TCustomAttribute;
-begin
-  for a in Attributes do
-    if a is ValidMaskAttribute then
-    begin
-      // Save the valid mask
-      FullMask := ValidMaskAttribute(a).Mask;
-      Break;
-    end;
+    Result[i].Nodes := UiLibCollectFlagNodes(BitwiseType, Size, Result[i].Mask);
 end;
 
 procedure UiLibAddNodeGroups(
@@ -494,31 +375,33 @@ end;
 
 procedure UiLibAddBitNodes;
 var
-  RttiContext: TRttiContext;
-  RttiType: TRttiType;
-  Attributes: TCustomAttributeArray;
+  RttiType: IRttixType;
+  EnumType: IRttixEnumType;
+  BitwiseType: IRttixBitwiseType;
   Groups: TArray<TNodeGroup>;
 begin
-  RttiContext := TRttiContext.Create;
-  RttiType := RttiContext.GetType(ATypeInfo);
-  TypeSize := ByteSizeToIntegerSize(RttiType.TypeSize);
-  FullMask := SizeToMask(TypeSize);
+  RttiType := RttixTypeInfo(ATypeInfo);
 
-  if RttiType is TRttiEnumerationType then
-    // Enumerations have no bit flags and one sub enum group
-    Groups := [UiLibCollectEnumNodes(RttiContext, TRttiEnumerationType(RttiType))]
-  else if (RttiType is TRttiOrdinalType) or (RttiType is TRttiInt64Type) then
+  if RttiType.SubKind = rtkEnumeration then
   begin
-    // Collect flags and sub-enums from all (explicit + inherited) attributes
-    Attributes := RttixEnumerateAttributes(RttiContext, RttiType);
-    Groups := UiLibCollectAllFlagNodes(Attributes, TypeSize);
-    Groups := Groups + UiLibCollectSubEnumNodes(Attributes, TypeSize);
+    EnumType := RttiType as IRttixEnumType;
+    TypeSize := ByteSizeToIntegerSize(EnumType.Size);
+    FullMask := SizeToMask(TypeSize);
 
-    // Allow attributes override the full mask
-    UiLibUpdateFullMask(Attributes, FullMask);
+    // Enumerations have no bit flags and one sub enum group
+    Groups := [UiLibCollectEnumNodes(EnumType, TypeSize)];
+  end
+  else if RttiType.SubKind = rtkBitwise then
+  begin
+    BitwiseType := RttiType as IRttixBitwiseType;
+
+    // Collect flags and sub-enums from all (explicit + inherited) attributes
+    Groups := UiLibCollectAllFlagNodes(BitwiseType, TypeSize);
+    Groups := Groups + UiLibCollectSubEnumNodes(BitwiseType, TypeSize);
+    FullMask := BitwiseType.ValidMask;
   end
   else
-    raise EArgumentException.Create('Ordinal type expected');
+    raise EArgumentException.Create('Expected an enumeration or bitwise type');
 
   // Add the grouped nodes
   UiLibAddNodeGroups(Tree, Groups);
@@ -526,25 +409,19 @@ end;
 
 procedure UiLibAddAccessMaskNodes;
 var
-  RttiContext: TRttiContext;
-  RttiType: TRttiType;
-  Attributes: TCustomAttributeArray;
+  RttiType: IRttixType;
+  BitwiseType: IRttixBitwiseType;
   Groups: TArray<TNodeGroup>;
   Group: TNodeGroup;
   i: Integer;
 begin
-  RttiContext := TRttiContext.Create;
-  RttiType := RttiContext.GetType(ATypeInfo);
+  RttiType := RttixTypeInfo(ATypeInfo);
 
-  if not (RttiType is TRttiOrdinalType) then
-    raise EArgumentException.Create('Ordinal type expected');
+  if RttiType.SubKind <> rtkBitwise then
+    raise EArgumentException.Create('Expected a bitwise type');
 
-  // Use all (explicit and inherited) attributes
-  Attributes := RttixEnumerateAttributes(RttiContext, RttiType);
-
-  // Allow the attributes to override the Full Access mask
-  FullMask := Cardinal(-1);
-  UiLibUpdateFullMask(Attributes, FullMask);
+  BitwiseType := RttiType as IRttixBitwiseType;
+  FullMask := BitwiseType.ValidMask;
 
   Tree.BeginUpdateAuto;
   Tree.Clear;
@@ -563,31 +440,31 @@ begin
   // Add groups of rights
   Group.Name := 'Read';
   Group.Mask := GenericMapping.GenericRead;
-  Group.Nodes := UiLibCollectFlagNodes(Attributes, isCardinal,
+  Group.Nodes := UiLibCollectFlagNodes(BitwiseType, isCardinal,
     Group.Mask and SPECIFIC_RIGHTS_ALL);
   Groups[0] := Group;
 
   Group.Name := 'Write';
   Group.Mask := GenericMapping.GenericWrite;
-  Group.Nodes := UiLibCollectFlagNodes(Attributes, isCardinal,
+  Group.Nodes := UiLibCollectFlagNodes(BitwiseType, isCardinal,
     Group.Mask and SPECIFIC_RIGHTS_ALL);
   Groups[1] := Group;
 
   Group.Name := 'Execute';
   Group.Mask := GenericMapping.GenericExecute;
-  Group.Nodes := UiLibCollectFlagNodes(Attributes, isCardinal,
+  Group.Nodes := UiLibCollectFlagNodes(BitwiseType, isCardinal,
     Group.Mask and SPECIFIC_RIGHTS_ALL);
   Groups[2] := Group;
 
   Group.Name := 'Other';
   Group.Mask := SPECIFIC_RIGHTS_ALL and not GenericMapping.GenericRead
     and not GenericMapping.GenericWrite and not GenericMapping.GenericExecute;
-  Group.Nodes := UiLibCollectFlagNodes(Attributes, isCardinal, Group.Mask);
+  Group.Nodes := UiLibCollectFlagNodes(BitwiseType, isCardinal, Group.Mask);
   Groups[3] := Group;
 
   Group.Name := 'Standard';
   Group.Mask := FullMask and STANDARD_RIGHTS_ALL;
-  Group.Nodes := UiLibCollectFlagNodes(Attributes, isCardinal, Group.Mask);
+  Group.Nodes := UiLibCollectFlagNodes(BitwiseType, isCardinal, Group.Mask);
   Groups[4] := Group;
 
   i := 5;
@@ -596,7 +473,7 @@ begin
   begin
     Group.Name := 'Generic';
     Group.Mask := GENERIC_RIGHTS_ALL;
-    Group.Nodes := UiLibCollectFlagNodes(Attributes, isCardinal, Group.Mask);
+    Group.Nodes := UiLibCollectFlagNodes(BitwiseType, isCardinal, Group.Mask);
     Groups[i] := Group;
     Inc(i);
   end;
@@ -605,7 +482,7 @@ begin
   begin
     Group.Name := 'Miscellaneous';
     Group.Mask := MAXIMUM_ALLOWED or ACCESS_SYSTEM_SECURITY;
-    Group.Nodes := UiLibCollectFlagNodes(Attributes, isCardinal, Group.Mask);
+    Group.Nodes := UiLibCollectFlagNodes(BitwiseType, isCardinal, Group.Mask);
     Groups[i] := Group;
   end;
 
