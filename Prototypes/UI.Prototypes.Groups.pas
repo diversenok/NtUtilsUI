@@ -55,6 +55,8 @@ type
     procedure SetChecked(const Value: TArray<TGroup>);
     procedure SetIsChecked(const Group: TGroup; const Value: Boolean);
     procedure DoDefaultAction(Node: PVirtualNode);
+  protected
+    procedure FrameEnabledChanged(var Message: TMessage); message CM_ENABLEDCHANGED;
   public
     procedure Load(Groups: TArray<TGroup>; Mode: TGroupViewingMode = gvNormal);
     procedure Add(Groups: TArray<TGroup>);
@@ -64,6 +66,7 @@ type
     property Selected: TArray<TGroup> read GetSelected;
     property Checked: TArray<TGroup> read GetChecked write SetChecked;
     property IsChecked[const Group: TGroup]: Boolean read GetIsChecked write SetIsChecked;
+    property ViewingMode: TGroupViewingMode read FViewingMode write FViewingMode;
     constructor Create(AOwner: TComponent); override;
   published
     property OnDefaultAction: TDefaultAction read FDefaultAction write FDefaultAction;
@@ -303,6 +306,12 @@ begin
 
     VST.InvalidateNode(Node);
   end;
+end;
+
+procedure TFrameGroups.FrameEnabledChanged;
+begin
+  inherited;
+  VST.Enabled := Enabled;
 end;
 
 function TFrameGroups.GetAllGroups;
