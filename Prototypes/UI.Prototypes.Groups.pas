@@ -36,11 +36,16 @@ type
   end;
 
   TDefaultAction = procedure(const Group: TGroup) of object;
+  TGroupViewingMode = (
+    gvNormal,
+    gvCapability // removes SE_GROUP_ENABLED_BY_DEFAULT from state
+  );
 
   TFrameGroups = class(TFrame)
     VST: TDevirtualizedTree;
   private
     FDefaultAction: TDefaultAction;
+    FViewingMode: TGroupViewingMode;
     function GetAllGroups: TArray<TGroup>;
     function GetChecked: TArray<TGroup>;
     function GetIsChecked(const Group: TGroup): Boolean;
@@ -51,7 +56,7 @@ type
     procedure SetIsChecked(const Group: TGroup; const Value: Boolean);
     procedure DoDefaultAction(Node: PVirtualNode);
   public
-    procedure Load(Groups: TArray<TGroup>);
+    procedure Load(Groups: TArray<TGroup>; Mode: TGroupViewingMode = gvNormal);
     procedure Add(Groups: TArray<TGroup>);
     procedure EditSelectedGroup(Callback: TEditGroupCallback);
     procedure EditSelectedGroups(Callback: TEditAttributesCallback);
@@ -94,14 +99,18 @@ type
   TGroupNodeData = class (TNodeProvider, IGroup, INodeProvider)
     Group: TGroup;
     Lookup: TTranslatedName;
-    constructor Create(const Src: TGroup; const LookupSrc: TTranslatedName);
-    class function CreateMany(const Src: TArray<TGroup>): TArray<INodeProvider>; static;
+    FViewingMode: TGroupViewingMode;
+    constructor Create(const Src: TGroup; const LookupSrc: TTranslatedName; ViewingMode: TGroupViewingMode);
+    class function CreateMany(const Src: TArray<TGroup>; ViewingMode: TGroupViewingMode): TArray<INodeProvider>; static;
     function GetGroup: TGroup;
     function GetLookup: TTranslatedName;
     function Matches(const Sid: ISid): Boolean;
   end;
 
 constructor TGroupNodeData.Create;
+const
+  STATE_MASK: array [TGroupViewingMode] of TGroupAttributes =
+    (SE_GROUP_STATE_MASK, SE_GROUP_ENABLED);
 begin
   inherited Create(colMax);
 
@@ -116,29 +125,43 @@ begin
     FColumnText[colFriendly] := Lookup.FullName;
 
   FColumnText[colFlags] := Rttix.Format<TGroupAttributes>(
-    Group.Attributes and not SE_GROUP_STATE_MASK);
+    Group.Attributes and not STATE_MASK[ViewingMode]);
 
-  FColumnText[colState] := Rttix.Format<TGroupAttributesState>(
-    Group.Attributes and SE_GROUP_STATE_MASK);
+  if ViewingMode = gvCapability then
+    FColumnText[colState] := Rttix.Format<TGroupAttributesMinimalState>(
+      Group.Attributes and STATE_MASK[ViewingMode])
+  else
+    FColumnText[colState] := Rttix.Format<TGroupAttributesFullState>(
+      Group.Attributes and STATE_MASK[ViewingMode]);
 
   // Colors
-  if BitTest(Group.Attributes and SE_GROUP_INTEGRITY_ENABLED) then
-    if BitTest(Group.Attributes and SE_GROUP_ENABLED) xor
-      BitTest(Group.Attributes and SE_GROUP_ENABLED_BY_DEFAULT) then
-      SetColor(ColorSettings.clBackgroundAlterAccent)
-    else
-      SetColor(ColorSettings.clBackgroundAlter)
-  else
+  if ViewingMode = gvCapability then
+  begin
     if BitTest(Group.Attributes and SE_GROUP_ENABLED) then
-      if BitTest(Group.Attributes and SE_GROUP_ENABLED_BY_DEFAULT) then
-        SetColor(ColorSettings.clBackgroundAllow)
-      else
-        SetColor(ColorSettings.clBackgroundAllowAccent)
+      SetColor(ColorSettings.clBackgroundAllow)
     else
-      if BitTest(Group.Attributes and SE_GROUP_ENABLED_BY_DEFAULT) then
-        SetColor(ColorSettings.clBackgroundDenyAccent)
+      SetColor(ColorSettings.clBackgroundDeny);
+  end
+  else
+  begin
+    if BitTest(Group.Attributes and SE_GROUP_INTEGRITY_ENABLED) then
+      if BitTest(Group.Attributes and SE_GROUP_ENABLED) xor
+        BitTest(Group.Attributes and SE_GROUP_ENABLED_BY_DEFAULT) then
+        SetColor(ColorSettings.clBackgroundAlterAccent)
       else
-        SetColor(ColorSettings.clBackgroundDeny);
+        SetColor(ColorSettings.clBackgroundAlter)
+    else
+      if BitTest(Group.Attributes and SE_GROUP_ENABLED) then
+        if BitTest(Group.Attributes and SE_GROUP_ENABLED_BY_DEFAULT) then
+          SetColor(ColorSettings.clBackgroundAllow)
+        else
+          SetColor(ColorSettings.clBackgroundAllowAccent)
+      else
+        if BitTest(Group.Attributes and SE_GROUP_ENABLED_BY_DEFAULT) then
+          SetColor(ColorSettings.clBackgroundDenyAccent)
+        else
+          SetColor(ColorSettings.clBackgroundDeny);
+  end;
 
   // Hint
   FHint := BuildHint([
@@ -169,7 +192,7 @@ begin
 
   SetLength(Result, Length(Src));
   for i := 0 to High(Src) do
-    Result[i] := TGroupNodeData.Create(Src[i], Lookup[i]);
+    Result[i] := TGroupNodeData.Create(Src[i], Lookup[i], ViewingMode);
 end;
 
 function TGroupNodeData.GetGroup;
@@ -195,7 +218,7 @@ var
 begin
   VST.BeginUpdateAuto;
 
-  for NewData in TGroupNodeData.CreateMany(Groups) do
+  for NewData in TGroupNodeData.CreateMany(Groups, FViewingMode) do
   begin
     VST.AddChildEx(VST.RootNode, NewData);
 
@@ -244,7 +267,7 @@ begin
   else if not LsaxLookupSid(NewGroup.Sid, Lookup).IsSuccess then
     Lookup := Default(TTranslatedName);
 
-  Node.Provider := TGroupNodeData.Create(NewGroup, Lookup);
+  Node.Provider := TGroupNodeData.Create(NewGroup, Lookup, FViewingMode);
   VST.InvalidateNode(Node);
 end;
 
@@ -275,7 +298,8 @@ begin
       AttributesToSet;
 
     // Reuse SID lookup
-    Node.Provider := TGroupNodeData.Create(NewGroup, Provider.Lookup);
+    Node.Provider := TGroupNodeData.Create(NewGroup, Provider.Lookup,
+      FViewingMode);
 
     VST.InvalidateNode(Node);
   end;
@@ -316,6 +340,7 @@ begin
   VST.BeginUpdateAuto;
   VST.BackupSelectionAuto(NodeComparer);
   VST.RootNodeCount := 0;
+  FViewingMode := Mode;
   Add(Groups);
 end;
 
