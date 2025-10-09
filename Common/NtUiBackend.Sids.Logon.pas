@@ -227,7 +227,7 @@ begin
     Exit;
 
   TArray.SortInline<TLogonId>(Luids,
-    function (const A, B: TLogonId): NativeInt
+    function (const A, B: TLogonId): Integer
     begin
       if A > B then
         Result := 1

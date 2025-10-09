@@ -70,7 +70,7 @@ begin
   inherited;
 
   FColumnText[colIndex] := UiLibUIntToDec(Cardinal(FEnumValue));
-  FColumnText[colEnumName] := Rttix.Format(FEnumValue, [RttixPreserveEnumCase]);
+  FColumnText[colEnumName] := Rttix.Format(FEnumValue, RttixPreserveEnumCase);
   FColumnText[colSid] := RtlxSidToString(FSidName.SID);
 
   if FSidName.IsValid then

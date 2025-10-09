@@ -188,12 +188,12 @@ begin
   SetColor(ColorForState(FCategory));
 end;
 
-function CompareBySid(const A, B: ICapabilityNode): NativeInt;
+function CompareBySid(const A, B: ICapabilityNode): Integer;
 begin
   Result := RtlxCompareSids(A.AppSid, B.AppSid);
 end;
 
-function CompareByName(const A, B: ICapabilityNode): NativeInt;
+function CompareByName(const A, B: ICapabilityNode): Integer;
 begin
   Result := RtlxCompareStrings(A.Name, b.Name);
 end;
