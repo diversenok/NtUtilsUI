@@ -69,33 +69,44 @@ end;
 procedure TSearchFrame.ApplySearch;
 var
   Node, Parent: PVirtualNode;
-  PerformSearch: Boolean;
+  VisibleNodes: TArray<PVirtualNode>;
+  Provider: INodeProvider;
+  Column: TColumnIndex;
+  ShouldBeVisibile: Boolean;
 begin
   if not Assigned(FTree) then
     Exit;
 
-  PerformSearch := HasQueryText;
+  Column := GetQueryColumn;
   FTree.BeginUpdateAuto;
 
   // Reset visibility
   for Node in FTree.Nodes do
-    FTree.IsVisible[Node] := not PerformSearch;
+    if Node.TryGetProvider(Provider) then
+      FTree.IsVisible[Node] := Provider.MatchesSearch('', Column);
 
-  if not PerformSearch then
+  if QueryText = '' then
     Exit;
 
-  // Traverse nodes
-  for Node in FTree.Nodes do
-    if not FTree.IsVisible[Node] and Node.HasProvider and
-      Node.Provider.MatchesSearch(QueryText, QueryColumn) then
-    begin
-      Parent := Node;
+  // Adjust visibility according to the query
+  VisibleNodes := FTree.VisibleNodes.ToArray;
 
-      repeat
-        // Unhide the matching node and all of its parents
-        FTree.IsVisible[Parent] := True;
-        Parent := FTree.NodeParent[Parent];
-      until not Assigned(Parent);
+  for Node in VisibleNodes do
+    if Node.TryGetProvider(Provider) then
+    begin
+      ShouldBeVisibile := Provider.MatchesSearch(QueryText, QueryColumn);
+
+      if ShouldBeVisibile then
+      begin
+        // Make the node and all of its parents visible
+        Parent := Node;
+        repeat
+          FTree.IsVisible[Parent] := True;
+          Parent := FTree.NodeParent[Parent];
+        until not Assigned(Parent);
+      end
+      else
+        FTree.IsVisible[Node] := False;
     end;
 end;
 

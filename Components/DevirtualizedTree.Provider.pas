@@ -330,6 +330,9 @@ var
   QueryLowercase: string;
   i: TVirtualTreeColumn;
 begin
+  if Query = '' then
+    Exit(True);
+
   QueryLowercase := Query.ToLower;
 
   // Single-column queries
