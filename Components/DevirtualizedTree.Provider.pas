@@ -46,7 +46,8 @@ type
     procedure NotifySelected; virtual;
     procedure NotifyExpanding(var HasChildren: Boolean); virtual;
     procedure NotifyCollapsing(var HasChildren: Boolean); virtual;
-    function MatchesSearch(const Query: String; Column: TColumnIndex): Boolean; virtual;
+    function SearchExpression(const UpcasedExpression: String; Column: TColumnIndex): Boolean; virtual;
+    function SearchNumber(const Value: UInt64; Signed: Boolean; Column: TColumnIndex): Boolean; virtual;
 
     function GetTree: TBaseVirtualTree; virtual;
     function GetNode: PVirtualNode; virtual;
@@ -177,7 +178,7 @@ type
 implementation
 
 uses
-  System.SysUtils;
+  NtUtils.SysUtils;
 
 { TNodeProvider }
 
@@ -325,29 +326,6 @@ begin
     FTree.InvalidateNode(FNode);
 end;
 
-function TNodeProvider.MatchesSearch;
-var
-  QueryLowercase: string;
-  i: TVirtualTreeColumn;
-begin
-  if Query = '' then
-    Exit(True);
-
-  QueryLowercase := Query.ToLower;
-
-  // Single-column queries
-  if Column >= 0 then
-    Exit(GetColumnText(Column).ToLower.Contains(QueryLowercase));
-
-  // Multi-column queries require at least one visible column to match
-  if Attached then
-    for i in FTree.Header.Columns.GetVisibleColumns do
-      if GetColumnText(i.Index).ToLower.Contains(QueryLowercase) then
-        Exit(True);
-
-  Result := False;
-end;
-
 procedure TNodeProvider.NotifyChecked;
 begin
 end;
@@ -424,6 +402,34 @@ begin
 
   FHasFontStyleForColumn[Column] := False;
   Invalidate;
+end;
+
+function TNodeProvider.SearchExpression;
+var
+  i: TVirtualTreeColumn;
+begin
+  if UpcasedExpression = '' then
+    Exit(True);
+
+  // Single-column queries
+  if Column >= 0 then
+    Exit(RtlxIsNameInExpressionUpcased(UpcasedExpression,
+      GetColumnText(Column)));
+
+  // Multi-column queries require at least one visible column to match
+  if Attached then
+    for i in FTree.Header.Columns.GetVisibleColumns do
+      if RtlxIsNameInExpressionUpcased(UpcasedExpression, GetColumnText(i.Index))
+        then
+        Exit(True);
+
+  Result := False;
+end;
+
+function TNodeProvider.SearchNumber;
+begin
+  // There is no generic number search but descendants can implement it
+  Result := False;
 end;
 
 procedure TNodeProvider.SetColor;

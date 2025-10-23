@@ -54,7 +54,7 @@ type
 implementation
 
 uses
-  VirtualTreesEx, NtUiCommon.Helpers;
+  VirtualTreesEx, NtUiCommon.Helpers, NtUtils.SysUtils;
 
 {$R *.dfm}
 {$R '..\Icons\SearchBox.res'}
@@ -72,7 +72,9 @@ var
   VisibleNodes: TArray<PVirtualNode>;
   Provider: INodeProvider;
   Column: TColumnIndex;
-  ShouldBeVisibile: Boolean;
+  Matches, IsNumberSearch, IsSignedNumber: Boolean;
+  Expression: String;
+  NumberQuery: UInt64;
 begin
   if not Assigned(FTree) then
     Exit;
@@ -83,20 +85,32 @@ begin
   // Reset visibility
   for Node in FTree.Nodes do
     if Node.TryGetProvider(Provider) then
-      FTree.IsVisible[Node] := Provider.MatchesSearch('', Column);
+      FTree.IsVisible[Node] := Provider.SearchExpression('', Column);
 
   if QueryText = '' then
     Exit;
 
-  // Adjust visibility according to the query
+  // Check if the query parses into a number
+  IsNumberSearch := RtlxStrToUInt64(QueryText, NumberQuery, nsDecimal,
+    [nsHexadecimal], True, [npSpace, npAccent, npApostrophe, npUnderscore]);
+  IsSignedNumber := IsNumberSearch and (Length(QueryText) > 1) and
+    (QueryText[Low(String)] = '-');
+
+  // Prepare an upcased expression for text search
+  Expression := '*' + RtlxUpperString(QueryText) + '*';
+
+  // Collect nodes that are visible without the search
   VisibleNodes := FTree.VisibleNodes.ToArray;
 
+  // Test each node against the query
   for Node in VisibleNodes do
     if Node.TryGetProvider(Provider) then
     begin
-      ShouldBeVisibile := Provider.MatchesSearch(QueryText, QueryColumn);
+      Matches := (IsNumberSearch and
+        Provider.SearchNumber(NumberQuery, IsSignedNumber, Column)) or
+        Provider.SearchExpression(Expression, QueryColumn);
 
-      if ShouldBeVisibile then
+      if Matches then
       begin
         // Make the node and all of its parents visible
         Parent := Node;

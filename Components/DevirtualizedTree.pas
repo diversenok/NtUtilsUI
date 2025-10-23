@@ -15,7 +15,7 @@ type
   PVirtualNode = VirtualTrees.PVirtualNode;
 
   INodeProvider = interface
-    ['{C2052EE1-1351-4EAE-A042-91D10CF7D268}']
+    ['{05550C04-3529-49CC-9D3B-A3A7AEF2BFBC}']
     procedure Attach(Node: PVirtualNode);
     procedure Detach;
     procedure Initialize;
@@ -61,7 +61,8 @@ type
     procedure NotifySelected;
     procedure NotifyExpanding(var HasChildren: Boolean);
     procedure NotifyCollapsing(var HasChildren: Boolean);
-    function MatchesSearch(const Query: String; Column: TColumnIndex): Boolean;
+    function SearchExpression(const UpcasedExpression: String; Column: TColumnIndex): Boolean;
+    function SearchNumber(const Value: UInt64; Signed: Boolean; Column: TColumnIndex): Boolean;
   end;
 
   TVirtualNodeHelper = record helper for TVirtualNode
