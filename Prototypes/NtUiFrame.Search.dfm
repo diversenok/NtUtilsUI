@@ -34,7 +34,7 @@ inherited SearchFrame: TSearchFrame
     Left = 276
     Top = 0
     Width = 160
-    Height = 21
+    Height = 23
     Align = alRight
     Style = csDropDownList
     ExtendedUI = True

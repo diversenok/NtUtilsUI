@@ -413,14 +413,17 @@ begin
 
   // Single-column queries
   if Column >= 0 then
-    Exit(RtlxIsNameInExpressionUpcased(UpcasedExpression,
-      GetColumnText(Column)));
+  begin
+    Result := RtlxIsNameInExpression(UpcasedExpression, GetColumnText(Column),
+      False, False);
+    Exit;
+  end;
 
   // Multi-column queries require at least one visible column to match
   if Attached then
     for i in FTree.Header.Columns.GetVisibleColumns do
-      if RtlxIsNameInExpressionUpcased(UpcasedExpression, GetColumnText(i.Index))
-        then
+      if RtlxIsNameInExpression(UpcasedExpression, GetColumnText(i.Index),
+        False, False) then
         Exit(True);
 
   Result := False;
