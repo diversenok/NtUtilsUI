@@ -33,7 +33,8 @@ type
     procedure UpdateColumns;
     function GetQueryText: String;
     function GetHasQueryText: Boolean;
-    function GetQueryColumn: Integer;
+    function GetQueryColumn: TColumnIndex;
+    function GetQueryColumns: TArray<TColumnIndex>;
     procedure ColumnVisibilityChanged(const Sender: TBaseVirtualTree; const Column: TColumnIndex; Visible: Boolean);
     procedure LeftButtonIconChanged(ImageList: TImageList; ImageIndex: Integer);
     procedure RightButtonIconChanged(ImageList: TImageList; ImageIndex: Integer);
@@ -44,7 +45,8 @@ type
     procedure ClearQuery;
     property HasQueryText: Boolean read GetHasQueryText;
     property QueryText: String read GetQueryText;
-    property QueryColumn: Integer read GetQueryColumn;
+    property QueryColumn: TColumnIndex read GetQueryColumn;
+    property QueryColumns: TArray<TColumnIndex> read GetQueryColumns;
     property OnQueryChange: TNotifyEvent read FOnQueryChange write FOnQueryChange;
     procedure AttachToTree(Tree: TDevirtualizedTree);
     procedure ApplySearch;
@@ -71,6 +73,7 @@ var
   Node, Parent: PVirtualNode;
   VisibleNodes: TArray<PVirtualNode>;
   Provider: INodeProvider;
+  SearchColumns: TArray<TColumnIndex>;
   Column: TColumnIndex;
   Matches, IsNumberSearch, IsSignedNumber: Boolean;
   Expression: String;
@@ -79,13 +82,13 @@ begin
   if not Assigned(FTree) then
     Exit;
 
-  Column := GetQueryColumn;
+  SearchColumns := GetQueryColumns;
   FTree.BeginUpdateAuto;
 
   // Reset visibility
   for Node in FTree.Nodes do
     if Node.TryGetProvider(Provider) then
-      FTree.IsVisible[Node] := Provider.SearchExpression('', Column);
+      FTree.IsVisible[Node] := Provider.SearchExpression('', -1);
 
   if QueryText = '' then
     Exit;
@@ -106,9 +109,18 @@ begin
   for Node in VisibleNodes do
     if Node.TryGetProvider(Provider) then
     begin
-      Matches := (IsNumberSearch and
-        Provider.SearchNumber(NumberQuery, IsSignedNumber, Column)) or
-        Provider.SearchExpression(Expression, QueryColumn);
+      Matches := False;
+
+      // At least one coulmn should match
+      for Column in SearchColumns do
+      begin
+        Matches := (IsNumberSearch and
+          Provider.SearchNumber(NumberQuery, IsSignedNumber, Column)) or
+          Provider.SearchExpression(Expression, Column);
+
+        if Matches then
+          Break;
+      end;
 
       if Matches then
       begin
@@ -170,6 +182,27 @@ begin
     Result := FColumnIndexes[Result]
   else
     Result := -1;
+end;
+
+function TSearchFrame.GetQueryColumns;
+var
+  VisibleColumns: TColumnsArray;
+  i: Integer;
+begin
+  i := cbxColumn.ItemIndex;
+
+  if (i > 0) and (i <= High(FColumnIndexes)) then
+    // Only the specified column
+    Result := [FColumnIndexes[i]]
+  else
+  begin
+    // All visible columns
+    VisibleColumns := FTree.Header.Columns.GetVisibleColumns;
+    SetLength(Result, Length(VisibleColumns));
+
+    for i := 0 to High(VisibleColumns) do
+      Result[i] := VisibleColumns[i].Index;
+  end;
 end;
 
 function TSearchFrame.GetQueryText;
