@@ -18,34 +18,37 @@ type
 
   TNodeProvider = class (TInterfacedObject, INodeProvider)
   protected
+    FInitialized: Boolean;
+    FHasColor: Boolean;
+    FHasFontColor: Boolean;
+    FHasFontStyle: Boolean;
+    FHasCursor: Boolean;
+    FEnabledMainActionMenu: Boolean;
+    FFirstExpandingCalled: Boolean;
     FTree: TDevirtualizedTree;
     FNode: PVirtualNode;
-    FInitialized: Boolean;
     FColumnText: TArray<String>;
     FHint: String;
-    FHasColor: Boolean;
     FColor: TColor;
-    FHasFontColor: Boolean;
     FFontColor: TColor;
     FHasFontColorForColumn: TArray<Boolean>;
     FFontColorForColumn: TArray<TColor>;
-    FHasFontStyle: Boolean;
     FFontStyle: TFontStyles;
     FHasFontStyleForColumn: TArray<Boolean>;
     FFontStyleForColumn: TArray<TFontStyles>;
-    FEnabledMainActionMenu: Boolean;
-    FHasCursor: Boolean;
     FCursor: TCursor;
 
     function Attached: Boolean; virtual;
     procedure Attach(Value: PVirtualNode); virtual;
     procedure Detach; virtual;
     procedure Initialize; virtual;
+    function InitializeChildren: Boolean; virtual;
     procedure Invalidate; virtual;
     procedure NotifyChecked; virtual;
     procedure NotifySelected; virtual;
     procedure NotifyExpanding(var HasChildren: Boolean); virtual;
     procedure NotifyCollapsing(var HasChildren: Boolean); virtual;
+    procedure NotifyFirstExpanding; virtual;
     function SearchExpression(const UpcasedExpression: String; Column: TColumnIndex): Boolean; virtual;
     function SearchNumber(const Value: UInt64; Signed: Boolean; Column: TColumnIndex): Boolean; virtual;
 
@@ -88,7 +91,7 @@ type
   end;
 
   IEditableNodeProvider = interface (INodeProvider)
-    ['{52A18D6F-5E69-4EEC-9C69-DC21202329CD}']
+    ['{2C3C26E6-6820-416D-BD44-AFE0D3AD7DC8}']
 
     procedure SetColumnText(Column: TColumnIndex; const Value: String);
     procedure SetHint(const Value: String);
@@ -107,17 +110,23 @@ type
     procedure ResetFontStyleForColumn(Column: TColumnIndex);
     procedure ResetCursor;
 
+    function GetOnInitialize: TDVTChangeEvent;
+    function GetOnInitializeChildren: TDVTChangeEvent;
     function GetOnAttach: TDVTChangeEvent;
     function GetOnDetach: TDVTChangeEvent;
     function GetOnChecked: TDVTChangeEvent;
     function GetOnSelected: TDVTChangeEvent;
     function GetOnExpanding: TDVTChangeEvent;
+    function GetOnFirstExpanding: TDVTChangeEvent;
     function GetOnCollapsing: TDVTChangeEvent;
+    procedure SetOnInitialize(Value: TDVTChangeEvent);
+    procedure SetOnInitializeChildren(Value: TDVTChangeEvent);
     procedure SetOnAttach(Value: TDVTChangeEvent);
     procedure SetOnDetach(Value: TDVTChangeEvent);
     procedure SetOnChecked(Value: TDVTChangeEvent);
     procedure SetOnSelected(Value: TDVTChangeEvent);
     procedure SetOnExpanding(Value: TDVTChangeEvent);
+    procedure SetOnFirstExpanding(Value: TDVTChangeEvent);
     procedure SetOnCollapsing(Value: TDVTChangeEvent);
 
     property Tree: TBaseVirtualTree read GetTree;
@@ -137,34 +146,45 @@ type
     property HasCursor: Boolean read GetHasCursor;
     property Cursor: TCursor read GetCursor write SetCursor;
     property EnabledMainActionMenu: Boolean read GetEnabledMainActionMenu write SetEnabledMainActionMenu;
+    property OnInitialize: TDVTChangeEvent read GetOnInitialize write SetOnInitialize;
+    property OnInitializeChildren: TDVTChangeEvent read GetOnInitializeChildren write SetOnInitializeChildren;
     property OnAttach: TDVTChangeEvent read GetOnAttach write SetOnAttach;
     property OnDetach: TDVTChangeEvent read GetOnDetach write SetOnDetach;
     property OnChecked: TDVTChangeEvent read GetOnChecked write SetOnChecked;
     property OnSelected: TDVTChangeEvent read GetOnSelected write SetOnSelected;
     property OnExpanding: TDVTChangeEvent read GetOnExpanding write SetOnExpanding;
+    property OnFirstExpanding: TDVTChangeEvent read GetOnFirstExpanding write SetOnFirstExpanding;
     property OnCollapsing: TDVTChangeEvent read GetOnCollapsing write SetOnCollapsing;
   end;
 
   TEditableNodeProvider = class (TNodeProvider, IEditableNodeProvider)
   protected
+    FOnInitialize: TDVTChangeEvent;
+    FOnInitializeChildren: TDVTChangeEvent;
     FOnAttach: TDVTChangeEvent;
     FOnDetach: TDVTChangeEvent;
     FOnChecked: TDVTChangeEvent;
     FOnSelected: TDVTChangeEvent;
-    FOnExpanding, FOnCollapsing: TDVTChangeEvent;
+    FOnExpanding, FOnFitstExpanding, FOnCollapsing: TDVTChangeEvent;
     FPreviouslySelected, FPreviouslySelectedValid: Boolean;
 
+    function GetOnInitialize: TDVTChangeEvent;
+    function GetOnInitializeChildren: TDVTChangeEvent;
     function GetOnAttach: TDVTChangeEvent; virtual;
     function GetOnDetach: TDVTChangeEvent; virtual;
     function GetOnChecked: TDVTChangeEvent; virtual;
     function GetOnSelected: TDVTChangeEvent; virtual;
     function GetOnExpanding: TDVTChangeEvent; virtual;
+    function GetOnFirstExpanding: TDVTChangeEvent;
     function GetOnCollapsing: TDVTChangeEvent; virtual;
+    procedure SetOnInitialize(Value: TDVTChangeEvent);
+    procedure SetOnInitializeChildren(Value: TDVTChangeEvent);
     procedure SetOnAttach(Value: TDVTChangeEvent); virtual;
     procedure SetOnDetach(Value: TDVTChangeEvent); virtual;
     procedure SetOnChecked(Value: TDVTChangeEvent); virtual;
     procedure SetOnSelected(Value: TDVTChangeEvent); virtual;
     procedure SetOnExpanding(Value: TDVTChangeEvent); virtual;
+    procedure SetOnFirstExpanding(Value: TDVTChangeEvent);
     procedure SetOnCollapsing(Value: TDVTChangeEvent); virtual;
 
     procedure Attach(Value: PVirtualNode); override;
@@ -320,6 +340,11 @@ begin
   FInitialized := True;
 end;
 
+function TNodeProvider.InitializeChildren;
+begin
+  Result := False;
+end;
+
 procedure TNodeProvider.Invalidate;
 begin
   if Attached then
@@ -335,6 +360,16 @@ begin
 end;
 
 procedure TNodeProvider.NotifyExpanding;
+begin
+  if not FFirstExpandingCalled then
+  begin
+    FFirstExpandingCalled := True;
+    NotifyFirstExpanding;
+    HasChildren := FNode.ChildCount > 0;
+  end;
+end;
+
+procedure TNodeProvider.NotifyFirstExpanding;
 begin
 end;
 
@@ -584,6 +619,21 @@ begin
   Result := FOnExpanding;
 end;
 
+function TEditableNodeProvider.GetOnFirstExpanding;
+begin
+  Result := FOnFitstExpanding;
+end;
+
+function TEditableNodeProvider.GetOnInitialize;
+begin
+  Result := FOnInitialize;
+end;
+
+function TEditableNodeProvider.GetOnInitializeChildren;
+begin
+  Result := FOnInitializeChildren;
+end;
+
 function TEditableNodeProvider.GetOnSelected;
 begin
   Result := FOnSelected;
@@ -655,6 +705,21 @@ end;
 procedure TEditableNodeProvider.SetOnExpanding;
 begin
   FOnExpanding := Value;
+end;
+
+procedure TEditableNodeProvider.SetOnFirstExpanding;
+begin
+  FOnFitstExpanding := Value;
+end;
+
+procedure TEditableNodeProvider.SetOnInitialize;
+begin
+  FOnInitialize := Value;
+end;
+
+procedure TEditableNodeProvider.SetOnInitializeChildren;
+begin
+  FOnInitializeChildren := Value;
 end;
 
 procedure TEditableNodeProvider.SetOnSelected;

@@ -15,10 +15,11 @@ type
   PVirtualNode = VirtualTrees.PVirtualNode;
 
   INodeProvider = interface
-    ['{05550C04-3529-49CC-9D3B-A3A7AEF2BFBC}']
+    ['{EF28060A-3354-4E43-BE46-5758144219F4}']
     procedure Attach(Node: PVirtualNode);
     procedure Detach;
     procedure Initialize;
+    function InitializeChildren: Boolean;
     procedure Invalidate;
 
     function GetTree: TBaseVirtualTree;
@@ -89,6 +90,7 @@ type
     procedure ValidateNodeDataSize(var Size: Integer); override;
     function DoExpanding(Node: PVirtualNode): Boolean; override;
     function DoCollapsing(Node: PVirtualNode): Boolean; override;
+    function DoInitChildren(Node: PVirtualNode; var ChildCount: Cardinal): Boolean; override;
     procedure DoGetCursor(var Cursor: TCursor); override;
     procedure DoFreeNode(Node: PVirtualNode); override;
     procedure DoInitNode(Parent, Node: PVirtualNode; var InitStates: TVirtualNodeInitStates); override;
@@ -284,6 +286,14 @@ begin
     pEventArgs.CellText := Provider.ColumnText[pEventArgs.Column];
 
   inherited;
+end;
+
+function TDevirtualizedTree.DoInitChildren;
+var
+  Provider: INodeProvider;
+begin
+  Result := inherited or (Node.TryGetProvider(Provider) and
+    Provider.InitializeChildren);
 end;
 
 procedure TDevirtualizedTree.DoInitNode;
