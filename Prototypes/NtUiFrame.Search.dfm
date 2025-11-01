@@ -2,7 +2,7 @@ inherited SearchFrame: TSearchFrame
   Left = 0
   Top = 0
   Width = 436
-  Height = 21
+  Height = 23
   Anchors = [akLeft, akTop, akRight]
   Constraints.MinHeight = 21
   Constraints.MinWidth = 240
@@ -11,7 +11,7 @@ inherited SearchFrame: TSearchFrame
     Left = 270
     Top = 0
     Width = 6
-    Height = 21
+    Height = 23
     Align = alRight
     AutoSnap = False
     MinSize = 110
@@ -21,7 +21,7 @@ inherited SearchFrame: TSearchFrame
     Left = 0
     Top = 0
     Width = 270
-    Height = 21
+    Height = 23
     Align = alClient
     TabOrder = 0
     TextHint = 'Search'
