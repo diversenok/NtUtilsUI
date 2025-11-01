@@ -148,7 +148,7 @@ procedure TLogonSessionSidNode.Initialize;
 begin
   inherited;
   FColumnText[colId] := UiLibUIntToHex(FLogonId);
-  FColumnText[colSid] := RtlxSidToString(FSidName.SID);
+  FColumnText[colSid] := RtlxSidToStringNoError(FSidName.SID);
 
   if FLogonType in [TSecurityLogonType.Interactive..High(TSecurityLogonType)] then
     FColumnText[colLogonType] := Rttix.Format(FLogonType);

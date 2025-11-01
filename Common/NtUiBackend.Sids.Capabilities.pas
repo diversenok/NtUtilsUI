@@ -178,8 +178,8 @@ begin
   inherited;
 
   FColumnText[colName] := FCapabilityName;
-  FColumnText[colAppSid] := RtlxSidToString(FAppSid);
-  FColumnText[colGroupSid] := RtlxSidToString(FGroupSid);
+  FColumnText[colAppSid] := RtlxSidToStringNoError(FAppSid);
+  FColumnText[colGroupSid] := RtlxSidToStringNoError(FGroupSid);
   FHint := BuildHint([
     THintSection.New('Name', FColumnText[colName]),
     THintSection.New('App Capability SID', FColumnText[colAppSid]),

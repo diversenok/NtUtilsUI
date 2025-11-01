@@ -119,7 +119,7 @@ begin
 
   Group := Src;
   Lookup := LookupSrc;
-  FColumnText[colSid] := RtlxSidToString(Group.Sid);
+  FColumnText[colSid] := RtlxSidToStringNoError(Group.Sid);
 
   if Lookup.SidType <> SidTypeUndefined then
     FColumnText[colSidType] := Rttix.Format(Lookup.SidType);

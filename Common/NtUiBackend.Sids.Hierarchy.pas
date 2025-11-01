@@ -329,7 +329,7 @@ begin
 
   if FPlaceholder = spNone then
   begin
-    FColumnText[colSid] := RtlxSidToString(FSidName.Sid);
+    FColumnText[colSid] := RtlxSidToStringNoError(FSidName.Sid);
 
     if FSidName.IsValid then
     begin

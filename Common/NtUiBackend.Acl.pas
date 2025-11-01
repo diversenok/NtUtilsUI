@@ -151,12 +151,12 @@ begin
   FColumnText[colAceAccessMaskNumeric] := UiLibUIntToHex(FAce.Mask, 6 or
     NUMERIC_WIDTH_ROUND_TO_BYTE);
   FColumnText[colSid] := Rttix.Format(FAce.Sid);
-  FColumnText[colSidRaw] := RtlxSidToString(FAce.Sid);
+  FColumnText[colSidRaw] := RtlxSidToStringNoError(FAce.Sid);
 
   if FAce.AceType = ACCESS_ALLOWED_COMPOUND_ACE_TYPE then
   begin
     FColumnText[colServerSid] := Rttix.Format(FAce.ServerSID);
-    FColumnText[colServerSidRaw] := RtlxSidToString(FAce.ServerSID);
+    FColumnText[colServerSidRaw] := RtlxSidToStringNoError(FAce.ServerSID);
   end
   else
   begin

@@ -180,7 +180,7 @@ begin
 
   FColumnText[colName] := FName;
   FColumnText[colAccountType] := Rttix.Format(FKind);
-  FColumnText[colSid] := RtlxSidToString(FSidName.Sid);
+  FColumnText[colSid] := RtlxSidToStringNoError(FSidName.Sid);
 
   if FSidName.IsValid then
   begin

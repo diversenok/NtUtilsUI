@@ -71,7 +71,7 @@ begin
 
   FColumnText[colIndex] := UiLibUIntToDec(Cardinal(FEnumValue));
   FColumnText[colEnumName] := Rttix.Format(FEnumValue, RttixPreserveEnumCase);
-  FColumnText[colSid] := RtlxSidToString(FSidName.SID);
+  FColumnText[colSid] := RtlxSidToStringNoError(FSidName.SID);
 
   if FSidName.IsValid then
   begin

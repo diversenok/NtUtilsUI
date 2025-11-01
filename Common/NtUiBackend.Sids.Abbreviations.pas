@@ -69,7 +69,7 @@ begin
   inherited;
 
   FColumnText[colSddl] := FSDDL;
-  FColumnText[colSid] := RtlxSidToString(FSidName.SID);
+  FColumnText[colSid] := RtlxSidToStringNoError(FSidName.SID);
 
   if FSidName.IsValid then
   begin

@@ -99,7 +99,7 @@ begin
 
   UserReflection := Rttix.FormatFull(FUser);
   FColumnText[colUserName] := UserReflection.Text;
-  FColumnText[colSID] := RtlxSidToString(FUser);
+  FColumnText[colSID] := RtlxSidToStringNoError(FUser);
   FColumnText[colLoaded] := BooleanToString(FIsLoaded, bkYesNo);
 
   FHint := RtlxJoinStrings([UserReflection.Hint,

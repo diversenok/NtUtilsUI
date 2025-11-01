@@ -83,7 +83,7 @@ begin
   Result := BuildHint([
     THintSection.New('Friendly Name', RtlxStringOrDefault(FriendlyName, '(Unknown)')),
     THintSection.New('Full Moniker', RtlxStringOrDefault(FullMoniker, '(Unknown)')),
-    THintSection.New('SID', RtlxSidToString(Sid))
+    THintSection.New('SID', RtlxSidToStringNoError(Sid))
   ]);
 end;
 
@@ -119,7 +119,7 @@ var
 begin
   inherited;
 
-  FColumnText[colSID] := RtlxSidToString(FInfo.Sid);
+  FColumnText[colSID] := RtlxSidToStringNoError(FInfo.Sid);
   FColumnText[colMoniker] := RtlxStringOrDefault(FInfo.Moniker, '(Unknown)');
 
   if FInfo.Moniker <> '' then
@@ -194,7 +194,7 @@ var
   ParentSid: ISid;
   Status: TNtxStatus;
   IsPackage: Boolean;
-  FolderPath: String;
+  Path: String;
 begin
   Tree.BeginUpdateAuto;
   Tree.Clear;
@@ -219,7 +219,7 @@ begin
   Node := TEditableNodeProvider.Create(2);
   Node.EnabledMainActionMenu := False;
   Node.ColumnText[0] := 'SID';
-  Node.ColumnText[1] := RtlxSidToString(Info.Sid);
+  Node.ColumnText[1] := RtlxSidToStringNoError(Info.Sid);
   Tree.AddChildEx(nil, Node);
 
   // Parent SID
@@ -233,7 +233,7 @@ begin
 
     if Status.IsSuccess then
     begin
-      Node.ColumnText[1] := RtlxSidToString(ParentSid);
+      Node.ColumnText[1] := RtlxSidToStringNoError(ParentSid);
       Node.FontStyleForColumn[1] := [TFontStyle.fsUnderline];
       Node.FontColorForColumn[1] := ColorSettings.clForegroundLink;
       Node.Cursor := crHandPoint;
@@ -272,21 +272,24 @@ begin
   Tree.AddChildEx(nil, Node);
 
   // Registry path
-  Node := TEditableNodeProvider.Create(2);
-  Node.EnabledMainActionMenu := False;
-  Node.ColumnText[0] := 'Registry Path';
-  Node.ColumnText[1] := RtlxQueryStoragePathAppContainer(Info);
-  Tree.AddChildEx(nil, Node);
+  if RtlxQueryStoragePathAppContainer(Info, Path).IsSuccess then
+  begin
+    Node := TEditableNodeProvider.Create(2);
+    Node.EnabledMainActionMenu := False;
+    Node.ColumnText[0] := 'Registry Path';
+    Node.ColumnText[1] := Path;
+    Tree.AddChildEx(nil, Node);
+  end;
 
   // File path
   Node := TEditableNodeProvider.Create(2);
   Node.EnabledMainActionMenu := False;
   Node.ColumnText[0] := 'File Path';
 
-  Status := UnvxQueryAppContainerPath(FolderPath, Info.User, Info.Sid);
+  Status := UnvxQueryAppContainerPath(Path, Info.User, Info.Sid);
 
   if Status.IsSuccess then
-    Node.ColumnText[1] := FolderPath
+    Node.ColumnText[1] := Path
   else
   begin
     Node.ColumnText[1] := '<Failed to query>';
