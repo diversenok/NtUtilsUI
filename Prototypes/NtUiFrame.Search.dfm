@@ -7,6 +7,8 @@ inherited SearchFrame: TSearchFrame
   Constraints.MinHeight = 21
   Constraints.MinWidth = 240
   TabOrder = 0
+  DoubleBuffered = True
+  ParentDoubleBuffered = False
   object Splitter: TSplitter
     Left = 270
     Top = 0
@@ -25,10 +27,11 @@ inherited SearchFrame: TSearchFrame
     Align = alClient
     TabOrder = 0
     TextHint = 'Search'
-    OnChange = tbxSearchBoxChange
     OnKeyDown = tbxSearchBoxKeyDown
     OnKeyPress = tbxSearchBoxKeyPress
     OnRightButtonClick = tbxSearchBoxRightButtonClick
+    OnDelayedChange = tbxSearchBoxChange
+    OnTypingChange = tbxSearchBoxTypingChange
   end
   object cbxColumn: TComboBox
     Left = 276

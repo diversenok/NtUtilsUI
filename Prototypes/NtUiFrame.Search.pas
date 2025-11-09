@@ -26,10 +26,12 @@ type
     procedure tbxSearchBoxKeyDown(Sender: TObject; var Key: Word;
       Shift: TShiftState);
     procedure ActionSetFocusExecute(Sender: TObject);
+    procedure tbxSearchBoxTypingChange(Sender: TObject);
   private
     FTree: TDevirtualizedTree;
     FColumnIndexes: TArray<TColumnIndex>;
     FOnQueryChange: TNotifyEvent;
+    FSearchIconIndex, FSearchAltIconIndex: Integer;
     procedure UpdateColumns;
     function GetQueryText: String;
     function GetHasQueryText: Boolean;
@@ -37,8 +39,10 @@ type
     function GetQueryColumns: TArray<TColumnIndex>;
     procedure ColumnVisibilityChanged(const Sender: TBaseVirtualTree; const Column: TColumnIndex; Visible: Boolean);
     procedure LeftButtonIconChanged(ImageList: TImageList; ImageIndex: Integer);
+    procedure LeftButtonAltIconChanged(ImageList: TImageList; ImageIndex: Integer);
     procedure RightButtonIconChanged(ImageList: TImageList; ImageIndex: Integer);
     procedure SetActive(Active: Boolean);
+    procedure RefreshSearchIcon;
   protected
     procedure LoadedOnce; override;
   public
@@ -210,11 +214,20 @@ begin
   Result := tbxSearchBox.Text;
 end;
 
+procedure TSearchFrame.LeftButtonAltIconChanged;
+begin
+  FSearchAltIconIndex := ImageIndex;
+  tbxSearchBox.Images := ImageList;
+  tbxSearchBox.LeftButton.Visible := Assigned(ImageList);
+  RefreshSearchIcon;
+end;
+
 procedure TSearchFrame.LeftButtonIconChanged;
 begin
+  FSearchIconIndex := ImageIndex;
   tbxSearchBox.Images := ImageList;
-  tbxSearchBox.LeftButton.ImageIndex := ImageIndex;
   tbxSearchBox.LeftButton.Visible := Assigned(ImageList);
+  RefreshSearchIcon;
 end;
 
 procedure TSearchFrame.LoadedOnce;
@@ -222,6 +235,15 @@ begin
   inherited;
   RegisterResourceIcon('SearchBox.Search', LeftButtonIconChanged);
   RegisterResourceIcon('SearchBox.Clear', RightButtonIconChanged);
+  RegisterResourceIcon('SearchBox.Typing', LeftButtonAltIconChanged);
+end;
+
+procedure TSearchFrame.RefreshSearchIcon;
+begin
+  if tbxSearchBox.Typing then
+    tbxSearchBox.LeftButton.ImageIndex := FSearchAltIconIndex
+  else
+    tbxSearchBox.LeftButton.ImageIndex := FSearchIconIndex;
 end;
 
 procedure TSearchFrame.RightButtonIconChanged;
@@ -256,9 +278,13 @@ end;
 
 procedure TSearchFrame.tbxSearchBoxKeyPress;
 begin
-  if (Key = Chr(VK_ESCAPE)) and HasQueryText then
+  if Key = Chr(VK_ESCAPE) then
   begin
-    ClearQuery;
+    if HasQueryText then
+      ClearQuery
+    else if Assigned(FTree) then
+      FTree.SetFocus;
+
     Key := #0;
   end;
 end;
@@ -266,6 +292,11 @@ end;
 procedure TSearchFrame.tbxSearchBoxRightButtonClick;
 begin
   ClearQuery;
+end;
+
+procedure TSearchFrame.tbxSearchBoxTypingChange;
+begin
+  RefreshSearchIcon;
 end;
 
 procedure TSearchFrame.UpdateColumns;
