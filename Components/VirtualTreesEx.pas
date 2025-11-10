@@ -67,7 +67,7 @@ procedure Register;
 implementation
 
 uses
-  System.SysUtils, Winapi.ShLwApi;
+  System.SysUtils, Winapi.ShLwApi, Vcl.Themes;
 
 procedure Register;
 begin
@@ -240,7 +240,8 @@ var
 begin
   if (VisibleCount = 0) and (Length(FNoItemsTextLines) > 0) then
   begin
-    Canvas.Font.Color := clGrayText;
+    Canvas.Brush.Style := bsClear;
+    Canvas.Font.Color := StyleServices.GetStyleFontColor(sfListItemTextDisabled);
 
     // Compute the sizes of each line
     SetLength(Sizes, Length(FNoItemsTextLines));
