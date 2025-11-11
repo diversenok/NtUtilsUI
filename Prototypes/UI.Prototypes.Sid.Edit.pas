@@ -60,7 +60,9 @@ uses
 
 procedure TSidEditor.btnCheatsheetClick;
 begin
-  tbxSid.SetFocus;
+  if tbxSid.CanFocus then
+    tbxSid.SetFocus;
+
   NtUiLibHostFrameShow(
     function (AOwner: TComponent): TFrame
     begin
@@ -89,7 +91,9 @@ end;
 
 procedure TSidEditor.btnDsPickerClick;
 begin
-  tbxSid.SetFocus;
+  if tbxSid.CanFocus then
+    tbxSid.SetFocus;
+
   tbxSid.Text := NtUiLibSelectDsObject(Handle);
 end;
 

@@ -272,7 +272,8 @@ end;
 
 procedure TSearchFrame.tbxSearchBoxKeyDown;
 begin
-  if Assigned(FTree) and ((Key = VK_UP) or (Key = VK_DOWN)) then
+  if (Key in [VK_UP, VK_DOWN, VK_PRIOR, VK_NEXT]) and
+    Assigned(FTree) and FTree.CanFocus then
     FTree.SetFocus;
 end;
 
@@ -282,7 +283,7 @@ begin
   begin
     if HasQueryText then
       ClearQuery
-    else if Assigned(FTree) then
+    else if Assigned(FTree) and FTree.CanFocus then
       FTree.SetFocus;
 
     Key := #0;
