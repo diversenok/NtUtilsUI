@@ -436,6 +436,7 @@ begin
   Group.UseMaskHint := True;
   Group.IsDefault := False;
   Group.CheckBoxType := ctCheckBox;
+  Group.Size := isCardinal;
 
   // Add groups of rights
   Group.Name := 'Read';
