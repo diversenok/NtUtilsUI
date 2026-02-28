@@ -1,14 +1,17 @@
-unit DevirtualizedTree;
+unit NtUtilsUI.DevirtualizedTree;
 
 {
-  This module offers a devirtualized tree view based on the virtual tree view
-  where each node has a dedicated provider that customizes its appearance.
+  This module provides a full runtime definition for a devirtualized tree view
+  based on the virtual tree view where each node has a dedicated provider that
+  customizes its appearance.
+
+  NOTE: Keep the published interface in sync with the design-time definition!
 }
 
 interface
 
 uses
-  VirtualTrees, VirtualTreesEx, Vcl.Graphics, Vcl.Controls,
+  VirtualTrees, NtUtilsUI.VirtualTreeEx, Vcl.Graphics, Vcl.Controls,
   System.Classes, System.Types;
 
 type
@@ -106,17 +109,10 @@ function CollectNodeProviders(
   const ProviderId: TGuid
 ): TArray<INodeProvider>;
 
-procedure Register;
-
 implementation
 
 uses
   Winapi.Windows, System.SysUtils;
-
-procedure Register;
-begin
-  RegisterComponents('Virtual Controls', [TDevirtualizedTree]);
-end;
 
 { TVirtualNodeHelper }
 

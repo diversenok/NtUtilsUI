@@ -1,4 +1,4 @@
-unit DevirtualizedTree.Provider;
+unit NtUtilsUI.DevirtualizedTree.Provider;
 
 {
   This module defined the base class for creating node state providers for the
@@ -8,7 +8,7 @@ unit DevirtualizedTree.Provider;
 interface
 
 uses
-  VirtualTrees, DevirtualizedTree, Vcl.Graphics, Vcl.Controls;
+  VirtualTrees, NtUtilsUI.DevirtualizedTree, Vcl.Graphics, Vcl.Controls;
 
 type
   TDVTChangeEvent = procedure(

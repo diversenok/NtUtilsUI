@@ -7,7 +7,7 @@ unit NtUiBackend.Sids.Capabilities;
 interface
 
 uses
-  DevirtualizedTree, NtUtils;
+  NtUtilsUI.DevirtualizedTree, NtUtils;
 
 const
   colName = 0;
@@ -57,7 +57,7 @@ function UiLibMakeCapabilityNodes(
 implementation
 
 uses
-  NtUtils.SysUtils, NtUtils.Packages, DevirtualizedTree.Provider,
+  NtUtils.SysUtils, NtUtils.Packages, NtUtilsUI.DevirtualizedTree.Provider,
   NtUtils.Security.Sid, NtUtils.Security.AppContainer, DelphiUtils.Arrays,
   DelphiUiLib.Strings, NtUiLib.AutoCompletion.Sid.Capabilities,
   Vcl.Graphics, NtUiCommon.Colors;

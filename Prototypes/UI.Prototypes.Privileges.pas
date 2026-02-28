@@ -5,8 +5,9 @@ interface
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes,
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, VirtualTrees,
-  DevirtualizedTree, DevirtualizedTree.Provider, Ntapi.WinNt, Ntapi.ntseapi,
-  NtUtils, NtUtils.Lsa, DelphiUtils.Arrays, VirtualTreesEx;
+  NtUtilsUI.DevirtualizedTree, NtUtilsUI.DevirtualizedTree.Provider,
+  Ntapi.WinNt, Ntapi.ntseapi, NtUtils, NtUtils.Lsa,
+  DelphiUtils.Arrays, NtUtilsUI.VirtualTreeEx;
 
 const
   colFriendly = 0;

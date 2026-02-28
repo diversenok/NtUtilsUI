@@ -3,7 +3,8 @@ unit NtUiBackend.Sids.Logon;
 interface
 
 uses
-  Ntapi.WinNt, Ntapi.NtSecApi, NtUtils, NtUiBackend.Sids, DevirtualizedTree;
+  Ntapi.WinNt, Ntapi.NtSecApi, NtUtils, NtUiBackend.Sids,
+  NtUtilsUI.DevirtualizedTree;
 
 type
   ILogonSessionErrorNode = interface (INodeProvider)
@@ -30,7 +31,7 @@ implementation
 
 uses
   NtUtils.Security.Sid, NtUtils.Lsa.Sid, NtUtils.Lsa.Logon, NtUtils.Errors,
-  NtUiLib.Errors, DevirtualizedTree.Provider, DelphiUtils.Arrays,
+  NtUiLib.Errors, NtUtilsUI.DevirtualizedTree.Provider, DelphiUtils.Arrays,
   DelphiUiLib.Strings, DelphiUiLib.LiteReflection, NtUiCommon.Colors;
 
 {$BOOLEVAL OFF}

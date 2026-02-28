@@ -7,7 +7,7 @@ unit NtUiBackend.Sids.Hierarchy;
 interface
 
 uses
-  NtUtils, DevirtualizedTree, NtUiBackend.Sids, NtUiCommon.Interfaces;
+  NtUtils, NtUtilsUI.DevirtualizedTree, NtUiBackend.Sids, NtUiCommon.Interfaces;
 
 type
   TSidHierarchyPlaceholder = (
@@ -42,7 +42,7 @@ implementation
 uses
   Ntapi.WinNt, Ntapi.ntpebteb, NtUtils.Security.Sid, NtUtils.Lsa.Sid,
   DelphiUiLib.LiteReflection, DelphiUiLib.Strings, VirtualTrees,
-  DevirtualizedTree.Provider, NtUiCommon.Helpers, System.UITypes,
+  NtUtilsUI.DevirtualizedTree.Provider, NtUiCommon.Helpers, System.UITypes,
   NtUiCommon.Colors;
 
 type

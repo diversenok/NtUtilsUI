@@ -7,7 +7,7 @@ unit NtUiBackend.AppContainers;
 interface
 
 uses
-  DevirtualizedTree, NtUtils.Security.AppContainer, NtUtils;
+  NtUtilsUI.DevirtualizedTree, NtUtils.Security.AppContainer, NtUtils;
 
 const
   colFriendlyName = 0;
@@ -68,8 +68,8 @@ implementation
 uses
   Ntapi.ntseapi, DelphiApi.Reflection, NtUtils.SysUtils, NtUtils.Security.Sid,
   NtUtils.Tokens, NtUtils.Tokens.Info, NtUtils.Packages, NtUtils.Profiles,
-  Vcl.Graphics, Vcl.Controls, DevirtualizedTree.Provider, NtUiLib.Errors,
-  DelphiUiLib.Strings, NtUiCommon.Colors, NtUiCommon.Helpers,
+  Vcl.Graphics, Vcl.Controls, NtUtilsUI.DevirtualizedTree.Provider,
+  NtUiLib.Errors, DelphiUiLib.Strings, NtUiCommon.Colors, NtUiCommon.Helpers,
   NtUiCommon.Prototypes, NtUtils.Profiles.AppContainer;
 
 {$BOOLEVAL OFF}

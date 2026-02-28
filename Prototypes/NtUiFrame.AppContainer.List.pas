@@ -7,9 +7,10 @@ unit NtUiFrame.AppContainer.List;
 interface
 
 uses
-  Vcl.Controls, System.Classes, Vcl.Forms, VirtualTrees, VirtualTreesEx,
-  DevirtualizedTree, NtUiFrame.Search, NtUtils, NtUiCommon.Interfaces,
-  NtUiBackend.AppContainers, Vcl.Menus, NtUiFrame;
+  Vcl.Controls, System.Classes, Vcl.Forms, VirtualTrees,
+  NtUtilsUI.VirtualTreeEx, NtUtilsUI.DevirtualizedTree, NtUiFrame.Search,
+  NtUtils, NtUiCommon.Interfaces, NtUiBackend.AppContainers, Vcl.Menus,
+  NtUiFrame;
 
 type
   TAppContainerListFrame = class (TFrame, ICanConsumeEscape,

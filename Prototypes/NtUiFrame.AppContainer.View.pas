@@ -8,8 +8,9 @@ interface
 
 uses
   Winapi.Windows, System.SysUtils, System.Classes, Vcl.Graphics, Vcl.Controls,
-  Vcl.Forms, Vcl.Dialogs, VirtualTrees, VirtualTreesEx, DevirtualizedTree,
-  NtUiBackend.AppContainers, NtUiCommon.Interfaces;
+  Vcl.Forms, Vcl.Dialogs, VirtualTrees, NtUtilsUI.VirtualTreeEx,
+  NtUtilsUI.DevirtualizedTree, NtUiBackend.AppContainers,
+  NtUiCommon.Interfaces;
 
 type
   TAppContainerViewFrame = class(TFrame, IHasDefaultCaption)

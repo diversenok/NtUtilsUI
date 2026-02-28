@@ -1,4 +1,4 @@
-unit VirtualTreesEx.DefaultMenu;
+unit NtUtilsUI.VirtualTreeEx.DefaultMenu;
 
 {
   This module provides the default popup menu for the VirtualTreeView for
@@ -55,7 +55,7 @@ type
 implementation
 
 uses
-  Winapi.Windows, Vcl.Clipbrd, System.SysUtils, VirtualTreesEx;
+  Winapi.Windows, Vcl.Clipbrd, System.SysUtils, NtUtilsUI.VirtualTreeEx;
 
 { TMenuShortCut }
 

@@ -1,17 +1,20 @@
-unit VirtualTreesEx;
+unit NtUtilsUI.VirtualTreeEx;
 
 {
-  This module provides a slightly improved virtual tree view.
+  This module contains a full runtime definition of the TVirtualStringTreeEx
+  component - a slightly improved virtual tree view.
+
+  NOTE: Keep the published interface in sync with the design-time definition!
 }
 
 interface
 
 uses
   System.Classes, System.Types, Vcl.Menus, Vcl.Graphics, VirtualTrees,
-  VirtualTrees.Types, VirtualTrees.Header, VirtualTreesEx.DefaultMenu;
+  VirtualTrees.Types, VirtualTrees.Header, NtUtilsUI.VirtualTreeEx.DefaultMenu;
 
 type
-  TNodeEvent = VirtualTreesEx.DefaultMenu.TNodeEvent;
+  TNodeEvent = NtUtilsUI.VirtualTreeEx.DefaultMenu.TNodeEvent;
 
   TVTVirtualNodeEnumerationHelper = record helper for TVTVirtualNodeEnumeration
     function ToArray: TArray<PVirtualNode>;
@@ -62,17 +65,10 @@ type
     property NoItemsText: String read FNoItemsText write SetNoItemsText;
   end;
 
-procedure Register;
-
 implementation
 
 uses
   System.SysUtils, Winapi.ShLwApi, Vcl.Themes;
-
-procedure Register;
-begin
-  RegisterComponents('Virtual Controls', [TVirtualStringTreeEx]);
-end;
 
 { TVTVirtualNodeEnumerationHelper }
 
@@ -238,6 +234,7 @@ var
   TotalHeight, Offset: Integer;
   i: Integer;
 begin
+  // Draw the no-items text
   if (VisibleCount = 0) and (Length(FNoItemsTextLines) > 0) then
   begin
     Canvas.Brush.Style := bsClear;

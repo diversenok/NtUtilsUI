@@ -9,8 +9,8 @@ interface
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes,
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, VirtualTrees,
-  VirtualTreesEx, DevirtualizedTree, NtUiFrame, NtUiFrame.Search,
-  NtUiCommon.Interfaces, NtUiBackend.Sids.WellKnown;
+  NtUtilsUI.VirtualTreeEx, NtUtilsUI.DevirtualizedTree, NtUiFrame,
+  NtUiFrame.Search, NtUiCommon.Interfaces, NtUiBackend.Sids.WellKnown;
 
 type
   TWellKnownSidsFrame = class(TBaseFrame, ICanConsumeEscape, IObservesActivation,

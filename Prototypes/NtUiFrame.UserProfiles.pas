@@ -8,8 +8,9 @@ interface
 
 uses
   System.SysUtils, System.Classes, Vcl.Graphics, Vcl.Controls, Vcl.Forms,
-  Vcl.Dialogs, VirtualTrees, VirtualTreesEx, DevirtualizedTree,
-  NtUiFrame.Search, NtUiCommon.Interfaces, NtUiBackend.UserProfiles, NtUiFrame;
+  Vcl.Dialogs, VirtualTrees, NtUtilsUI.VirtualTreeEx,
+  NtUtilsUI.DevirtualizedTree, NtUiFrame.Search, NtUiCommon.Interfaces,
+  NtUiBackend.UserProfiles, NtUiFrame;
 
 type
   TUserProfilesFrame = class(TFrame, ICanConsumeEscape, IObservesActivation,

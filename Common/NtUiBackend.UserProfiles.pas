@@ -7,7 +7,8 @@ unit NtUiBackend.UserProfiles;
 interface
 
 uses
-  DevirtualizedTree, NtUtils.Profiles, NtUtils, NtUiCommon.Prototypes;
+  NtUtilsUI.DevirtualizedTree, NtUtils.Profiles, NtUtils,
+  NtUiCommon.Prototypes;
 
 const
   colUserName = 0;
@@ -32,7 +33,7 @@ function UiLibEnumerateProfiles(
 implementation
 
 uses
-  DelphiApi.Reflection, DevirtualizedTree.Provider, NtUtils.Security.Sid,
+  DelphiApi.Reflection, NtUtilsUI.DevirtualizedTree.Provider, NtUtils.Security.Sid,
   DelphiUiLib.LiteReflection, DelphiUiLib.Strings, NtUiCommon.Colors,
   NtUtils.SysUtils;
 

@@ -9,7 +9,7 @@ interface
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes,
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls,
-  Vcl.ExtCtrls, VirtualTrees, DevirtualizedTree, NtUiFrame,
+  Vcl.ExtCtrls, VirtualTrees, NtUtilsUI.DevirtualizedTree, NtUiFrame,
   NtUiCommon.Interfaces, System.Actions, Vcl.ActnList, VclEx.Edit;
 
 type
@@ -60,7 +60,7 @@ type
 implementation
 
 uses
-  VirtualTreesEx, NtUiCommon.Helpers, NtUtils.SysUtils;
+  NtUtilsUI.VirtualTreeEx, NtUiCommon.Helpers, NtUtils.SysUtils;
 
 {$R *.dfm}
 {$R '..\Icons\SearchBox.res'}

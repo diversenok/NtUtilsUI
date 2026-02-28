@@ -7,7 +7,7 @@ unit NtUiBackend.Bits;
 interface
 
 uses
-  Ntapi.WinNt, NtUtils.SysUtils, DevirtualizedTree;
+  Ntapi.WinNt, NtUtils.SysUtils, NtUtilsUI.DevirtualizedTree;
 
 type
   IFlagNode = interface (INodeProvider)
@@ -42,8 +42,8 @@ implementation
 
 uses
   DelphiApi.Reflection, DelphiUtils.Arrays, DelphiUiLib.Strings,
-  DevirtualizedTree.Provider, NtUiCommon.Helpers, VirtualTrees.Types,
-  DelphiUtils.LiteRTTI, System.SysUtils;
+  NtUtilsUI.DevirtualizedTree.Provider, NtUiCommon.Helpers,
+  VirtualTrees.Types, DelphiUtils.LiteRTTI, System.SysUtils;
 
 type
   TNodeGroup = record

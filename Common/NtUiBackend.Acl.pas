@@ -7,7 +7,7 @@ unit NtUiBackend.Acl;
 interface
 
 uses
-  Ntapi.WinNt, DevirtualizedTree, NtUtils, NtUtils.Security.Acl;
+  Ntapi.WinNt, NtUtilsUI.DevirtualizedTree, NtUtils, NtUtils.Security.Acl;
 
 type
   IAceNode = interface (INodeProvider)
@@ -64,9 +64,9 @@ implementation
 
 uses
   NtUtils.Security.Sid, NtUtils.Security, NtUtils.SysUtils, NtUiLib.Errors,
-  VirtualTrees, DevirtualizedTree.Provider, DelphiUiLib.LiteReflection,
-  DelphiUiLib.Strings, NtUiCommon.Colors, NtUiCommon.Helpers,
-  VirtualTrees.Types;
+  VirtualTrees, NtUtilsUI.DevirtualizedTree.Provider,
+  DelphiUiLib.LiteReflection, DelphiUiLib.Strings, NtUiCommon.Colors,
+  NtUiCommon.Helpers, VirtualTrees.Types;
 
 const
   colUse = 0;

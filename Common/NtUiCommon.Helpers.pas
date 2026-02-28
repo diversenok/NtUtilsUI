@@ -3,8 +3,8 @@ unit NtUiCommon.Helpers;
 interface
 
 uses
-  VirtualTrees, VirtualTreesEx, Vcl.StdCtrls, Vcl.Menus, System.Classes,
-  NtUtils, DelphiUtils.Arrays;
+  VirtualTrees, NtUtilsUI.VirtualTreeEx, Vcl.StdCtrls, Vcl.Menus,
+  System.Classes, NtUtils, DelphiUtils.Arrays;
 
 type
   TCollectionHelper = class helper for TCollection

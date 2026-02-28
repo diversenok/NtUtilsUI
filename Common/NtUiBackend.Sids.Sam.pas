@@ -7,7 +7,8 @@ unit NtUiBackend.Sids.Sam;
 interface
 
 uses
-  NtUtils, DevirtualizedTree, NtUiBackend.Sids, DelphiApi.Reflection;
+  NtUtils, NtUtilsUI.DevirtualizedTree, NtUiBackend.Sids,
+  DelphiApi.Reflection;
 
 type
   [NamingStyle(nsCamelCase, 'sn'), MinValue(1)]
@@ -53,7 +54,7 @@ implementation
 uses
   Ntapi.ntsam, NtUtils.Sam, NtUtils.SysUtils, NtUtils.Security.Sid,
   NtUtils.Lsa.Sid, NtUtils.Errors, NtUiLib.Errors, DelphiUiLib.LiteReflection,
-  DelphiUiLib.Strings, DevirtualizedTree.Provider, NtUiCommon.Colors;
+  DelphiUiLib.Strings, NtUtilsUI.DevirtualizedTree.Provider, NtUiCommon.Colors;
 
 const
   colName = 0;

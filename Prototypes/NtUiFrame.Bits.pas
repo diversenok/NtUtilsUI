@@ -9,9 +9,9 @@ interface
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes,
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, VirtualTrees,
-  VirtualTreesEx, DevirtualizedTree, Vcl.StdCtrls, Vcl.ExtCtrls, Ntapi.WinNt,
-  DelphiUtils.AutoObjects, NtUiCommon.Interfaces, NtUiBackend.Bits,
-  NtUtils.SysUtils;
+  NtUtilsUI.VirtualTreeEx, NtUtilsUI.DevirtualizedTree, Vcl.StdCtrls,
+  Vcl.ExtCtrls, Ntapi.WinNt, DelphiUtils.AutoObjects, NtUiCommon.Interfaces,
+  NtUiBackend.Bits, NtUtils.SysUtils;
 
 type
   TBitsFrame = class(TFrame, IHasDefaultCaption)

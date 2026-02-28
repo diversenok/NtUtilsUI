@@ -6,8 +6,8 @@ uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes,
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, VirtualTrees,
   VirtualTrees.Types, NtUiCommon.Helpers, NtUtils, NtUtils.Lsa.Sid, Vcl.Menus,
-  DelphiUtils.Arrays, Ntapi.ntseapi, DevirtualizedTree,
-  DevirtualizedTree.Provider, VirtualTreesEx;
+  DelphiUtils.Arrays, Ntapi.ntseapi, NtUtilsUI.DevirtualizedTree,
+  NtUtilsUI.DevirtualizedTree.Provider, NtUtilsUI.VirtualTreeEx;
 
 const
   colFriendly = 0;

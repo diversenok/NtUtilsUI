@@ -5,8 +5,8 @@ interface
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes,
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, VirtualTrees,
-  VirtualTreesEx, DevirtualizedTree, NtUiFrame, NtUiFrame.Search,
-  NtUiCommon.Interfaces;
+  NtUtilsUI.VirtualTreeEx, NtUtilsUI.DevirtualizedTree, NtUiFrame,
+  NtUiFrame.Search, NtUiCommon.Interfaces;
 
 type
   TSamSidsFrame = class(TBaseFrame, ICanConsumeEscape, IObservesActivation,

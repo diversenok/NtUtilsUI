@@ -23,7 +23,7 @@ function NtUiLibMakeWellKnownSidNodes(
 implementation
 
 uses
-  DevirtualizedTree.Provider, NtUtils.Security.Sid, NtUtils.Lsa.Sid,
+  NtUtilsUI.DevirtualizedTree.Provider, NtUtils.Security.Sid, NtUtils.Lsa.Sid,
   DelphiUiLib.Strings, DelphiUiLib.LiteReflection, System.SysUtils;
 
 const

@@ -24,7 +24,8 @@ implementation
 
 uses
   NtUtils.Security.Sid, NtUtils.Lsa.Sid, DelphiUiLib.LiteReflection,
-  DelphiUiLib.Strings, DevirtualizedTree.Provider, DevirtualizedTree;
+  DelphiUiLib.Strings, NtUtilsUI.DevirtualizedTree.Provider,
+  NtUtilsUI.DevirtualizedTree;
 
 const
   colSddl = 0;

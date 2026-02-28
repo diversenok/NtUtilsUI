@@ -7,8 +7,8 @@ unit NtUiCommon.Interfaces;
 interface
 
 uses
-  DevirtualizedTree, VirtualTrees, System.Classes, DelphiUtils.AutoObjects,
-  NtUtils;
+  NtUtilsUI.DevirtualizedTree, VirtualTrees, System.Classes,
+  DelphiUtils.AutoObjects, NtUtils;
 
 type
   { Common interfaces }

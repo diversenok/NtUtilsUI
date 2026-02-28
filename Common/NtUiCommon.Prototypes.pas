@@ -9,7 +9,7 @@ interface
 uses
   Ntapi.WinNt, Ntapi.ntseapi, Ntapi.WinUser, NtUtils, NtUtils.Profiles,
   NtUtils.Objects, NtUtils.Security.AppContainer, NtUtils.Security,
-  NtUtils.Security.Acl, DevirtualizedTree, NtUiDialog.FrameHost,
+  NtUtils.Security.Acl, NtUtilsUI.DevirtualizedTree, NtUiDialog.FrameHost,
   System.Classes, Vcl.Forms;
 
 type

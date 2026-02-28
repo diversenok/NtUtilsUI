@@ -1,4 +1,4 @@
-package VirtualTreesExtension;
+package NtUtilsUI.DesignTime;
 
 {$R *.res}
 {$IFDEF IMPLICITBUILDING This IFDEF should not be used by users}
@@ -25,17 +25,17 @@ package VirtualTreesExtension;
 {$IMAGEBASE $400000}
 {$DEFINE RELEASE}
 {$ENDIF IMPLICITBUILDING}
+{$DESCRIPTION 'Visual Components for NtUtilsUI'}
+{$DESIGNONLY}
 {$IMPLICITBUILD ON}
 
 requires
   rtl,
-  vcl,
-  VirtualTreesDR;
+  VirtualTreesDD,
+  vcl;
 
 contains
-  VirtualTreesEx.DefaultMenu in 'VirtualTreesEx.DefaultMenu.pas',
-  VirtualTreesEx in 'VirtualTreesEx.pas',
-  DevirtualizedTree.Provider in 'DevirtualizedTree.Provider.pas',
-  DevirtualizedTree in 'DevirtualizedTree.pas';
+  NtUtilsUI.VirtualTreeEx in 'NtUtilsUI.VirtualTreeEx.pas',
+  NtUtilsUI.DevirtualizedTree in 'NtUtilsUI.DevirtualizedTree.pas';
 
 end.
