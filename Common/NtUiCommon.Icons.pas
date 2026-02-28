@@ -25,7 +25,8 @@ implementation
 
 uses
   Vcl.ImgList, Vcl.Graphics, Ntapi.WinUser, Ntapi.ShellApi, Ntapi.WinNt,
-  Ntapi.ntpebteb, NtUtils, NtUtils.Files, NtUtils.Processes.Info;
+  Ntapi.ntpebteb, NtUtils, NtUtils.Files, NtUtils.Processes.Info,
+  NtUtils.SysUtils;
 
 { TProcessIcons }
 
@@ -38,7 +39,7 @@ begin
   Images.AllocBy := 32;
 
   // Add default fallback icon
-  GetIcon(USER_SHARED_DATA.NtSystemRoot + '\system32\user32.dll');
+  GetIcon(RtlxGetNtSystemRoot + '\system32\user32.dll');
 end;
 
 class destructor TProcessIcons.Destroy;
