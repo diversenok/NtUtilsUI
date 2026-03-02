@@ -36,6 +36,8 @@ requires
 
 contains
   NtUtilsUI.VirtualTreeEx in 'NtUtilsUI.VirtualTreeEx.pas',
-  NtUtilsUI.DevirtualizedTree in 'NtUtilsUI.DevirtualizedTree.pas';
+  NtUtilsUI.DevirtualizedTree in 'NtUtilsUI.DevirtualizedTree.pas',
+  NtUtilsUI.Edit in 'NtUtilsUI.Edit.pas',
+  NtUtilsUI.ListView in 'NtUtilsUI.ListView.pas';
 
 end.

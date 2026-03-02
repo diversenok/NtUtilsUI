@@ -8,7 +8,7 @@ interface
 
 uses
   Winapi.Windows, System.Classes, Vcl.Controls, Vcl.Forms,
-  DelphiUtils.AutoObjects, DelphiUtils.AutoEvents, VclEx.Form;
+  DelphiUtils.AutoObjects, DelphiUtils.AutoEvents, NtUtilsUI.Form;
 
 type
   TMainForm = class abstract (TFormEx)

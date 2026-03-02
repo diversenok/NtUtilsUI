@@ -10,7 +10,7 @@ uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes,
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls,
   Vcl.ExtCtrls, VirtualTrees, NtUtilsUI.DevirtualizedTree, NtUiFrame,
-  NtUiCommon.Interfaces, System.Actions, Vcl.ActnList, VclEx.Edit;
+  NtUiCommon.Interfaces, System.Actions, Vcl.ActnList, NtUtilsUI.Edit;
 
 type
   TSearchFrame = class(TBaseFrame, ICanConsumeEscape, IObservesActivation)

@@ -3,7 +3,7 @@
         <ProjectGuid>{97AF5A77-3F79-4507-81D5-68CA7F2EBCA4}</ProjectGuid>
         <MainSource>NtUtilsUI.DesignTime.dpk</MainSource>
         <ProjectVersion>20.1</ProjectVersion>
-        <FrameworkType>None</FrameworkType>
+        <FrameworkType>VCL</FrameworkType>
         <Base>True</Base>
         <Config Condition="'$(Config)'==''">Release</Config>
         <Platform Condition="'$(Platform)'==''">Win32</Platform>
@@ -61,7 +61,7 @@
         <DCC_K>false</DCC_K>
         <GenDll>true</GenDll>
         <GenPackage>true</GenPackage>
-        <DCC_Namespace>System;Xml;Data;Datasnap;Web;Soap;$(DCC_Namespace)</DCC_Namespace>
+        <DCC_Namespace>System;Xml;Data;Datasnap;Web;Soap;Vcl;Vcl.Imaging;Vcl.Touch;Vcl.Samples;Vcl.Shell;$(DCC_Namespace)</DCC_Namespace>
         <DCC_CBuilderOutput>All</DCC_CBuilderOutput>
         <SanitizedProjectName>NtUtilsUI_DesignTime</SanitizedProjectName>
         <VerInfo_Locale>1049</VerInfo_Locale>
@@ -120,6 +120,8 @@
         <DCCReference Include="vcl.dcp"/>
         <DCCReference Include="NtUtilsUI.VirtualTreeEx.pas"/>
         <DCCReference Include="NtUtilsUI.DevirtualizedTree.pas"/>
+        <DCCReference Include="NtUtilsUI.Edit.pas"/>
+        <DCCReference Include="NtUtilsUI.ListView.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>
