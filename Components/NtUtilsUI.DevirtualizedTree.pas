@@ -103,6 +103,190 @@ type
     function InsertNodeEx(Node: PVirtualNode; Mode: TVTNodeAttachMode; const Provider: INodeProvider): INodeProvider;
   end;
 
+  TNodeProvider = class (TInterfacedObject, INodeProvider)
+  protected
+    FInitialized: Boolean;
+    FHasColor: Boolean;
+    FHasFontColor: Boolean;
+    FHasFontStyle: Boolean;
+    FHasCursor: Boolean;
+    FEnabledMainActionMenu: Boolean;
+    FFirstExpandingCalled: Boolean;
+    FTree: TDevirtualizedTree;
+    FNode: PVirtualNode;
+    FColumnText: TArray<String>;
+    FHint: String;
+    FColor: TColor;
+    FFontColor: TColor;
+    FHasFontColorForColumn: TArray<Boolean>;
+    FFontColorForColumn: TArray<TColor>;
+    FFontStyle: TFontStyles;
+    FHasFontStyleForColumn: TArray<Boolean>;
+    FFontStyleForColumn: TArray<TFontStyles>;
+    FCursor: TCursor;
+
+    function Attached: Boolean; virtual;
+    procedure Attach(Value: PVirtualNode); virtual;
+    procedure Detach; virtual;
+    procedure Initialize; virtual;
+    function InitializeChildren: Boolean; virtual;
+    procedure Invalidate; virtual;
+    procedure NotifyChecked; virtual;
+    procedure NotifySelected; virtual;
+    procedure NotifyExpanding(var HasChildren: Boolean); virtual;
+    procedure NotifyCollapsing(var HasChildren: Boolean); virtual;
+    procedure NotifyFirstExpanding; virtual;
+    function SearchExpression(const UpcasedExpression: String; Column: TColumnIndex): Boolean; virtual;
+    function SearchNumber(const Value: UInt64; Signed: Boolean; Column: TColumnIndex): Boolean; virtual;
+
+    function GetTree: TBaseVirtualTree; virtual;
+    function GetNode: PVirtualNode; virtual;
+    function GetColumnText(Column: TColumnIndex): String; virtual;
+    function GetHint: String; virtual;
+    function GetHasColor: Boolean; virtual;
+    function GetColor: TColor; virtual;
+    function GetHasFontColor: Boolean; virtual;
+    function GetFontColor: TColor; virtual;
+    function GetHasFontColorForColumn(Column: TColumnIndex): Boolean; virtual;
+    function GetFontColorForColumn(Column: TColumnIndex): TColor; virtual;
+    function GetHasFontStyle: Boolean; virtual;
+    function GetFontStyle: TFontStyles; virtual;
+    function GetHasFontStyleForColumn(Column: TColumnIndex): Boolean; virtual;
+    function GetFontStyleForColumn(Column: TColumnIndex): TFontStyles; virtual;
+    function GetHasCursor: Boolean; virtual;
+    function GetCursor: TCursor; virtual;
+    function GetEnabledMainActionMenu: Boolean; virtual;
+
+    procedure SetColumnText(Column: TColumnIndex; const Value: String); virtual;
+    procedure SetHint(const Value: String); virtual;
+    procedure SetColor(Value: TColor); virtual;
+    procedure SetFontColor(Value: TColor); virtual;
+    procedure SetFontColorForColumn(Column: TColumnIndex; Value: TColor); virtual;
+    procedure SetFontStyle(Value: TFontStyles); virtual;
+    procedure SetFontStyleForColumn(Column: TColumnIndex; Value: TFontStyles); virtual;
+    procedure SetEnabledMainActionMenu(Value: Boolean); virtual;
+    procedure SetCursor(Value: TCursor); virtual;
+
+    procedure ResetColor; virtual;
+    procedure ResetFontColor; virtual;
+    procedure ResetFontColorForColumn(Column: TColumnIndex); virtual;
+    procedure ResetFontStyle; virtual;
+    procedure ResetFontStyleForColumn(Column: TColumnIndex); virtual;
+    procedure ResetCursor; virtual;
+  public
+    constructor Create(InitialColumnCount: Integer = 1);
+  end;
+
+  TDVTChangeEvent = procedure(
+    Sender: TDevirtualizedTree;
+    Node: PVirtualNode
+  ) of object;
+
+  IEditableNodeProvider = interface (INodeProvider)
+    ['{2C3C26E6-6820-416D-BD44-AFE0D3AD7DC8}']
+
+    procedure SetColumnText(Column: TColumnIndex; const Value: String);
+    procedure SetHint(const Value: String);
+    procedure SetColor(Value: TColor);
+    procedure SetFontColor(Value: TColor);
+    procedure SetFontColorForColumn(Column: TColumnIndex; Value: TColor);
+    procedure SetFontStyle(Value: TFontStyles);
+    procedure SetFontStyleForColumn(Column: TColumnIndex; Value: TFontStyles);
+    procedure SetEnabledMainActionMenu(Value: Boolean);
+    procedure SetCursor(Value: TCursor);
+
+    procedure ResetColor;
+    procedure ResetFontColor;
+    procedure ResetFontColorForColumn(Column: TColumnIndex);
+    procedure ResetFontStyle;
+    procedure ResetFontStyleForColumn(Column: TColumnIndex);
+    procedure ResetCursor;
+
+    function GetOnInitialize: TDVTChangeEvent;
+    function GetOnInitializeChildren: TDVTChangeEvent;
+    function GetOnAttach: TDVTChangeEvent;
+    function GetOnDetach: TDVTChangeEvent;
+    function GetOnChecked: TDVTChangeEvent;
+    function GetOnSelected: TDVTChangeEvent;
+    function GetOnExpanding: TDVTChangeEvent;
+    function GetOnFirstExpanding: TDVTChangeEvent;
+    function GetOnCollapsing: TDVTChangeEvent;
+    procedure SetOnInitialize(Value: TDVTChangeEvent);
+    procedure SetOnInitializeChildren(Value: TDVTChangeEvent);
+    procedure SetOnAttach(Value: TDVTChangeEvent);
+    procedure SetOnDetach(Value: TDVTChangeEvent);
+    procedure SetOnChecked(Value: TDVTChangeEvent);
+    procedure SetOnSelected(Value: TDVTChangeEvent);
+    procedure SetOnExpanding(Value: TDVTChangeEvent);
+    procedure SetOnFirstExpanding(Value: TDVTChangeEvent);
+    procedure SetOnCollapsing(Value: TDVTChangeEvent);
+
+    property Tree: TBaseVirtualTree read GetTree;
+    property Node: PVirtualNode read GetNode;
+    property ColumnText[Column: TColumnIndex]: String read GetColumnText write SetColumnText;
+    property Hint: String read GetHint write SetHint;
+    property HasColor: Boolean read GetHasColor;
+    property Color: TColor read GetColor write SetColor;
+    property HasFontColor: Boolean read GetHasFontColor;
+    property FontColor: TColor read GetFontColor write SetFontColor;
+    property HasFontColorForColumn[Column: TColumnIndex]: Boolean read GetHasFontColorForColumn;
+    property FontColorForColumn[Column: TColumnIndex]: TColor read GetFontColorForColumn write SetFontColorForColumn;
+    property HasFontStyle: Boolean read GetHasFontStyle;
+    property FontStyle: TFontStyles read GetFontStyle write SetFontStyle;
+    property HasFontStyleForColumn[Column: TColumnIndex]: Boolean read GetHasFontStyleForColumn;
+    property FontStyleForColumn[Column: TColumnIndex]: TFontStyles read GetFontStyleForColumn write SetFontStyleForColumn;
+    property HasCursor: Boolean read GetHasCursor;
+    property Cursor: TCursor read GetCursor write SetCursor;
+    property EnabledMainActionMenu: Boolean read GetEnabledMainActionMenu write SetEnabledMainActionMenu;
+    property OnInitialize: TDVTChangeEvent read GetOnInitialize write SetOnInitialize;
+    property OnInitializeChildren: TDVTChangeEvent read GetOnInitializeChildren write SetOnInitializeChildren;
+    property OnAttach: TDVTChangeEvent read GetOnAttach write SetOnAttach;
+    property OnDetach: TDVTChangeEvent read GetOnDetach write SetOnDetach;
+    property OnChecked: TDVTChangeEvent read GetOnChecked write SetOnChecked;
+    property OnSelected: TDVTChangeEvent read GetOnSelected write SetOnSelected;
+    property OnExpanding: TDVTChangeEvent read GetOnExpanding write SetOnExpanding;
+    property OnFirstExpanding: TDVTChangeEvent read GetOnFirstExpanding write SetOnFirstExpanding;
+    property OnCollapsing: TDVTChangeEvent read GetOnCollapsing write SetOnCollapsing;
+  end;
+
+  TEditableNodeProvider = class (TNodeProvider, IEditableNodeProvider)
+  protected
+    FOnInitialize: TDVTChangeEvent;
+    FOnInitializeChildren: TDVTChangeEvent;
+    FOnAttach: TDVTChangeEvent;
+    FOnDetach: TDVTChangeEvent;
+    FOnChecked: TDVTChangeEvent;
+    FOnSelected: TDVTChangeEvent;
+    FOnExpanding, FOnFitstExpanding, FOnCollapsing: TDVTChangeEvent;
+    FPreviouslySelected, FPreviouslySelectedValid: Boolean;
+
+    function GetOnInitialize: TDVTChangeEvent;
+    function GetOnInitializeChildren: TDVTChangeEvent;
+    function GetOnAttach: TDVTChangeEvent; virtual;
+    function GetOnDetach: TDVTChangeEvent; virtual;
+    function GetOnChecked: TDVTChangeEvent; virtual;
+    function GetOnSelected: TDVTChangeEvent; virtual;
+    function GetOnExpanding: TDVTChangeEvent; virtual;
+    function GetOnFirstExpanding: TDVTChangeEvent;
+    function GetOnCollapsing: TDVTChangeEvent; virtual;
+    procedure SetOnInitialize(Value: TDVTChangeEvent);
+    procedure SetOnInitializeChildren(Value: TDVTChangeEvent);
+    procedure SetOnAttach(Value: TDVTChangeEvent); virtual;
+    procedure SetOnDetach(Value: TDVTChangeEvent); virtual;
+    procedure SetOnChecked(Value: TDVTChangeEvent); virtual;
+    procedure SetOnSelected(Value: TDVTChangeEvent); virtual;
+    procedure SetOnExpanding(Value: TDVTChangeEvent); virtual;
+    procedure SetOnFirstExpanding(Value: TDVTChangeEvent);
+    procedure SetOnCollapsing(Value: TDVTChangeEvent); virtual;
+
+    procedure Attach(Value: PVirtualNode); override;
+    procedure Detach; override;
+    procedure NotifyChecked; override;
+    procedure NotifySelected; override;
+    procedure NotifyExpanding(var HasChildren: Boolean); override;
+    procedure NotifyCollapsing(var HasChildren: Boolean); override;
+  end;
+
 // Collect node providers from node enumerator
 function CollectNodeProviders(
   const NodeEnumeration: TVTVirtualNodeEnumeration;
@@ -112,7 +296,7 @@ function CollectNodeProviders(
 implementation
 
 uses
-  Winapi.Windows, System.SysUtils;
+  Winapi.Windows, System.SysUtils, NtUtils.SysUtils;
 
 { TVirtualNodeHelper }
 
@@ -391,6 +575,533 @@ begin
       Result[Count] := Provider;
       Inc(Count);
     end;
+end;
+
+{ TNodeProvider }
+
+procedure TNodeProvider.Attach;
+var
+  FBaseTree: TBaseVirtualTree;
+begin
+  FNode := Value;
+
+  if Assigned(Value) then
+  begin
+    FBaseTree := TreeFromNode(Value);
+
+    if FBaseTree is TDevirtualizedTree then
+      FTree :=  TDevirtualizedTree(FBaseTree);
+  end
+  else
+    FTree := nil;
+end;
+
+function TNodeProvider.Attached;
+begin
+  Result := Assigned(FTree) and Assigned(FNode);
+end;
+
+constructor TNodeProvider.Create;
+begin
+  inherited Create;
+  SetLength(FColumnText, InitialColumnCount);
+  FEnabledMainActionMenu := True;
+end;
+
+procedure TNodeProvider.Detach;
+begin
+  FNode := nil;
+  FTree := nil;
+end;
+
+function TNodeProvider.GetColor;
+begin
+  Result := FColor;
+end;
+
+function TNodeProvider.GetColumnText;
+begin
+  if (Column >= Low(FColumnText)) and (Column <= High(FColumnText)) then
+    Result := FColumnText[Column]
+  else
+    Result := '';
+end;
+
+function TNodeProvider.GetCursor;
+begin
+  Result := FCursor;
+end;
+
+function TNodeProvider.GetEnabledMainActionMenu;
+begin
+  Result := FEnabledMainActionMenu;
+end;
+
+function TNodeProvider.GetFontColor;
+begin
+  Result := FFontColor;
+end;
+
+function TNodeProvider.GetFontColorForColumn;
+begin
+  if (Column >= Low(FFontColorForColumn)) and
+    (Column <= High(FFontColorForColumn)) then
+    Result := FFontColorForColumn[Column]
+  else
+    Result := clBlack;
+end;
+
+function TNodeProvider.GetFontStyle;
+begin
+  Result := FFontStyle;
+end;
+
+function TNodeProvider.GetFontStyleForColumn;
+begin
+  if (Column >= Low(FFontStyleForColumn)) and
+    (Column <= High(FFontStyleForColumn)) then
+    Result := FFontStyleForColumn[Column]
+  else
+    Result := [];
+end;
+
+function TNodeProvider.GetHasColor;
+begin
+  Result := FHasColor;
+end;
+
+function TNodeProvider.GetHasCursor;
+begin
+  Result := FHasCursor;
+end;
+
+function TNodeProvider.GetHasFontColor;
+begin
+  Result := FHasFontColor;
+end;
+
+function TNodeProvider.GetHasFontColorForColumn;
+begin
+  Result := (Column >= Low(FHasFontColorForColumn)) and
+    (Column <= High(FHasFontColorForColumn)) and FHasFontColorForColumn[Column];
+end;
+
+function TNodeProvider.GetHasFontStyle;
+begin
+  Result := FHasFontStyle;
+end;
+
+function TNodeProvider.GetHasFontStyleForColumn;
+begin
+  Result := (Column >= Low(FHasFontStyleForColumn)) and
+    (Column <= High(FHasFontStyleForColumn)) and FHasFontStyleForColumn[Column];
+end;
+
+function TNodeProvider.GetHint;
+begin
+  Result := FHint;
+end;
+
+function TNodeProvider.GetNode;
+begin
+  Result := FNode;
+end;
+
+function TNodeProvider.GetTree;
+begin
+  Result := FTree;
+end;
+
+procedure TNodeProvider.Initialize;
+begin
+  FInitialized := True;
+end;
+
+function TNodeProvider.InitializeChildren;
+begin
+  Result := False;
+end;
+
+procedure TNodeProvider.Invalidate;
+begin
+  if Attached then
+    FTree.InvalidateNode(FNode);
+end;
+
+procedure TNodeProvider.NotifyChecked;
+begin
+end;
+
+procedure TNodeProvider.NotifyCollapsing;
+begin
+end;
+
+procedure TNodeProvider.NotifyExpanding;
+begin
+  if not FFirstExpandingCalled then
+  begin
+    FFirstExpandingCalled := True;
+    NotifyFirstExpanding;
+    HasChildren := FNode.ChildCount > 0;
+  end;
+end;
+
+procedure TNodeProvider.NotifyFirstExpanding;
+begin
+end;
+
+procedure TNodeProvider.NotifySelected;
+begin
+end;
+
+procedure TNodeProvider.ResetColor;
+begin
+  if not FHasColor then
+    Exit;
+
+  FHasColor := False;
+  Invalidate;
+end;
+
+procedure TNodeProvider.ResetCursor;
+begin
+  if not FHasCursor then
+    Exit;
+
+  FHasCursor := False;
+  Invalidate;
+end;
+
+procedure TNodeProvider.ResetFontColor;
+begin
+  if not FHasFontColor then
+    Exit;
+
+  FHasFontColor := False;
+  Invalidate;
+end;
+
+procedure TNodeProvider.ResetFontColorForColumn;
+begin
+  if (Column < Low(FHasFontColorForColumn)) or
+    not GetHasFontColorForColumn(Column) then
+    Exit;
+
+  if Column > High(FHasFontColorForColumn) then
+    SetLength(FHasFontColorForColumn, Column + 1);
+
+  FHasFontColorForColumn[Column] := False;
+  Invalidate;
+end;
+
+procedure TNodeProvider.ResetFontStyle;
+begin
+  if not FHasFontStyle then
+    Exit;
+
+  FHasFontStyle := False;
+  Invalidate;
+end;
+
+procedure TNodeProvider.ResetFontStyleForColumn;
+begin
+  if (Column < Low(FHasFontStyleForColumn)) or
+    not GetHasFontColorForColumn(Column) then
+    Exit;
+
+  if Column > High(FHasFontStyleForColumn) then
+    SetLength(FHasFontStyleForColumn, Column + 1);
+
+  FHasFontStyleForColumn[Column] := False;
+  Invalidate;
+end;
+
+function TNodeProvider.SearchExpression;
+var
+  i: TVirtualTreeColumn;
+begin
+  if UpcasedExpression = '' then
+    Exit(True);
+
+  // Single-column queries
+  if Column >= 0 then
+  begin
+    Result := RtlxIsNameInExpression(UpcasedExpression, GetColumnText(Column),
+      False, False);
+    Exit;
+  end;
+
+  // Multi-column queries require at least one visible column to match
+  if Attached then
+    for i in FTree.Header.Columns.GetVisibleColumns do
+      if RtlxIsNameInExpression(UpcasedExpression, GetColumnText(i.Index),
+        False, False) then
+        Exit(True);
+
+  Result := False;
+end;
+
+function TNodeProvider.SearchNumber;
+begin
+  // There is no generic number search but descendants can implement it
+  Result := False;
+end;
+
+procedure TNodeProvider.SetColor;
+begin
+  if FHasColor and (FColor = Value) then
+    Exit;
+
+  FHasColor := True;
+  FColor := Value;
+  Invalidate;
+end;
+
+procedure TNodeProvider.SetColumnText;
+begin
+  if (Column < Low(FColumnText)) or (GetColumnText(Column) = Value) then
+    Exit;
+
+  if Column > High(FColumnText) then
+    SetLength(FColumnText, Column + 1);
+
+  FColumnText[Column] := Value;
+  Invalidate;
+end;
+
+procedure TNodeProvider.SetCursor;
+begin
+  if FHasCursor and (FCursor = Value) then
+    Exit;
+
+  FHasCursor := True;
+  FCursor := Value;
+  Invalidate;
+end;
+
+procedure TNodeProvider.SetEnabledMainActionMenu;
+begin
+  FEnabledMainActionMenu := Value;
+end;
+
+procedure TNodeProvider.SetFontColor;
+begin
+  if FHasFontColor and (FFontColor = Value) then
+    Exit;
+
+  FHasFontColor := True;
+  FFontColor := Value;
+  Invalidate;
+end;
+
+procedure TNodeProvider.SetFontColorForColumn;
+begin
+  if Column < Low(FFontColorForColumn) then
+    Exit;
+
+  if GetHasFontColorForColumn(Column) and
+    (GetFontColorForColumn(Column) = Value) then
+    Exit;
+
+  if Column > High(FHasFontColorForColumn) then
+    SetLength(FHasFontColorForColumn, Column + 1);
+
+  if Column > High(FFontColorForColumn) then
+    SetLength(FFontColorForColumn, Column + 1);
+
+  FHasFontColorForColumn[Column] := True;
+  FFontColorForColumn[Column] := Value;
+  Invalidate;
+end;
+
+procedure TNodeProvider.SetFontStyle;
+begin
+  if FHasFontStyle and (FFontStyle = Value) then
+    Exit;
+
+  FHasFontStyle := True;
+  FFontStyle := Value;
+  Invalidate;
+end;
+
+procedure TNodeProvider.SetFontStyleForColumn;
+begin
+    if Column < Low(FFontStyleForColumn) then
+    Exit;
+
+  if GetHasFontStyleForColumn(Column) and
+    (GetFontStyleForColumn(Column) = Value) then
+    Exit;
+
+  if Column > High(FHasFontStyleForColumn) then
+    SetLength(FHasFontStyleForColumn, Column + 1);
+
+  if Column > High(FFontStyleForColumn) then
+    SetLength(FFontStyleForColumn, Column + 1);
+
+  FHasFontStyleForColumn[Column] := True;
+  FFontStyleForColumn[Column] := Value;
+  Invalidate;
+end;
+
+procedure TNodeProvider.SetHint;
+begin
+  if FHint = Value then
+    Exit;
+
+  FHint := Value;
+  Invalidate;
+end;
+
+{ TEditableNodeProvider }
+
+procedure TEditableNodeProvider.Attach;
+begin
+  inherited;
+
+  if Assigned(FOnAttach) and Attached then
+    FOnAttach(FTree, FNode);
+end;
+
+procedure TEditableNodeProvider.Detach;
+begin
+  if Assigned(FOnDetach) and Attached then
+    FOnDetach(FTree, FNode);
+
+  inherited;
+end;
+
+function TEditableNodeProvider.GetOnAttach;
+begin
+  Result := FOnAttach;
+end;
+
+function TEditableNodeProvider.GetOnChecked;
+begin
+  Result := FOnChecked;
+end;
+
+function TEditableNodeProvider.GetOnCollapsing;
+begin
+  Result := FOnCollapsing;
+end;
+
+function TEditableNodeProvider.GetOnDetach;
+begin
+  Result := FOnDetach;
+end;
+
+function TEditableNodeProvider.GetOnExpanding;
+begin
+  Result := FOnExpanding;
+end;
+
+function TEditableNodeProvider.GetOnFirstExpanding;
+begin
+  Result := FOnFitstExpanding;
+end;
+
+function TEditableNodeProvider.GetOnInitialize;
+begin
+  Result := FOnInitialize;
+end;
+
+function TEditableNodeProvider.GetOnInitializeChildren;
+begin
+  Result := FOnInitializeChildren;
+end;
+
+function TEditableNodeProvider.GetOnSelected;
+begin
+  Result := FOnSelected;
+end;
+
+procedure TEditableNodeProvider.NotifyChecked;
+begin
+  inherited;
+
+  if Assigned(FOnChecked) and Attached then
+    FOnChecked(FTree, FNode);
+end;
+
+procedure TEditableNodeProvider.NotifyCollapsing;
+begin
+  inherited;
+
+  if Assigned(FOnCollapsing) and Attached then
+    FOnCollapsing(FTree, FNode);
+end;
+
+procedure TEditableNodeProvider.NotifyExpanding;
+begin
+  inherited;
+
+  if Assigned(FOnExpanding) and Attached then
+    FOnExpanding(FTree, FNode);
+end;
+
+procedure TEditableNodeProvider.NotifySelected;
+begin
+  inherited;
+
+  if not Attached then
+    Exit;
+
+  // Check if selection actually changed
+  if FPreviouslySelectedValid and
+    not (FPreviouslySelected xor (vsSelected in FNode.States)) then
+    Exit;
+
+  FPreviouslySelectedValid := Assigned(FOnSelected);
+  FPreviouslySelected := vsSelected in FNode.States;
+
+  if Assigned(FOnSelected) then
+    FOnSelected(FTree, FNode);
+end;
+
+procedure TEditableNodeProvider.SetOnAttach;
+begin
+  FOnAttach := Value;
+end;
+
+procedure TEditableNodeProvider.SetOnChecked;
+begin
+  FOnChecked := Value;
+end;
+
+procedure TEditableNodeProvider.SetOnCollapsing;
+begin
+  FOnCollapsing := Value;
+end;
+
+procedure TEditableNodeProvider.SetOnDetach;
+begin
+  FOnDetach := Value;
+end;
+
+procedure TEditableNodeProvider.SetOnExpanding;
+begin
+  FOnExpanding := Value;
+end;
+
+procedure TEditableNodeProvider.SetOnFirstExpanding;
+begin
+  FOnFitstExpanding := Value;
+end;
+
+procedure TEditableNodeProvider.SetOnInitialize;
+begin
+  FOnInitialize := Value;
+end;
+
+procedure TEditableNodeProvider.SetOnInitializeChildren;
+begin
+  FOnInitializeChildren := Value;
+end;
+
+procedure TEditableNodeProvider.SetOnSelected;
+begin
+  FOnSelected := Value;
 end;
 
 end.

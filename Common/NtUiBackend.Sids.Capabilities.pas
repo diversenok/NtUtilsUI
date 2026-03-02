@@ -57,10 +57,9 @@ function UiLibMakeCapabilityNodes(
 implementation
 
 uses
-  NtUtils.SysUtils, NtUtils.Packages, NtUtilsUI.DevirtualizedTree.Provider,
-  NtUtils.Security.Sid, NtUtils.Security.AppContainer, DelphiUtils.Arrays,
-  DelphiUiLib.Strings, NtUiLib.AutoCompletion.Sid.Capabilities,
-  Vcl.Graphics, NtUiCommon.Colors;
+  NtUtils.SysUtils, NtUtils.Packages, NtUtils.Security.Sid,
+  NtUtils.Security.AppContainer, DelphiUtils.Arrays, DelphiUiLib.Strings,
+  NtUiLib.AutoCompletion.Sid.Capabilities, Vcl.Graphics, NtUiCommon.Colors;
 
 {$BOOLEVAL OFF}
 {$IFOPT R+}{$DEFINE R+}{$ENDIF}

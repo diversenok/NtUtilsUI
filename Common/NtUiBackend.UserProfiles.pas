@@ -33,9 +33,8 @@ function UiLibEnumerateProfiles(
 implementation
 
 uses
-  DelphiApi.Reflection, NtUtilsUI.DevirtualizedTree.Provider, NtUtils.Security.Sid,
-  DelphiUiLib.LiteReflection, DelphiUiLib.Strings, NtUiCommon.Colors,
-  NtUtils.SysUtils;
+  DelphiApi.Reflection, NtUtils.Security.Sid, DelphiUiLib.LiteReflection,
+  DelphiUiLib.Strings, NtUiCommon.Colors, NtUtils.SysUtils;
 
 {$BOOLEVAL OFF}
 {$IFOPT R+}{$DEFINE R+}{$ENDIF}

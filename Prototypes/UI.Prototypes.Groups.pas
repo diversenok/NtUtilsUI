@@ -7,7 +7,7 @@ uses
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, VirtualTrees,
   VirtualTrees.Types, NtUiCommon.Helpers, NtUtils, NtUtils.Lsa.Sid, Vcl.Menus,
   DelphiUtils.Arrays, Ntapi.ntseapi, NtUtilsUI.DevirtualizedTree,
-  NtUtilsUI.DevirtualizedTree.Provider, NtUtilsUI.VirtualTreeEx;
+  NtUtilsUI.VirtualTreeEx;
 
 const
   colFriendly = 0;

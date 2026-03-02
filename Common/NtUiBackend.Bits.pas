@@ -42,8 +42,7 @@ implementation
 
 uses
   DelphiApi.Reflection, DelphiUtils.Arrays, DelphiUiLib.Strings,
-  NtUtilsUI.DevirtualizedTree.Provider, NtUiCommon.Helpers,
-  VirtualTrees.Types, DelphiUtils.LiteRTTI, System.SysUtils;
+  NtUiCommon.Helpers, VirtualTrees.Types, DelphiUtils.LiteRTTI, System.SysUtils;
 
 type
   TNodeGroup = record

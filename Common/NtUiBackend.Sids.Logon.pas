@@ -31,8 +31,8 @@ implementation
 
 uses
   NtUtils.Security.Sid, NtUtils.Lsa.Sid, NtUtils.Lsa.Logon, NtUtils.Errors,
-  NtUiLib.Errors, NtUtilsUI.DevirtualizedTree.Provider, DelphiUtils.Arrays,
-  DelphiUiLib.Strings, DelphiUiLib.LiteReflection, NtUiCommon.Colors;
+  NtUiLib.Errors, DelphiUtils.Arrays, DelphiUiLib.Strings,
+  DelphiUiLib.LiteReflection, NtUiCommon.Colors;
 
 {$BOOLEVAL OFF}
 {$IFOPT R+}{$DEFINE R+}{$ENDIF}
