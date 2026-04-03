@@ -21,12 +21,12 @@ type
     procedure DefaultActionChosen(const Node: INodeProvider);
     procedure btnSelectClick(Sender: TObject);
   private
-    FFrame: TFrame;
+    FFrame: TWinControl;
     FFrameRef: IUnknown;
     FFrameModalResult: IInterface;
     procedure FrameModalResultChanged(Sender: TObject);
   protected
-    procedure AddFrame(Frame: TFrame; AllowModal: Boolean);
+    procedure AddFrame(Frame: TWinControl; AllowModal: Boolean);
   public
     function PickModal: IInterface;
     class function Pick(AOwner: TComponent; Initializer: TFrameInitializer): IInterface; static;
