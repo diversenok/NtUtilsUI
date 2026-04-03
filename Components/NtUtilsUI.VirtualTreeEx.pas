@@ -11,13 +11,17 @@ interface
 
 uses
   System.Classes, System.Types, Vcl.Menus, Vcl.Graphics, VirtualTrees,
-  VirtualTrees.Types, VirtualTrees.Header;
+  VirtualTrees.Types, VirtualTrees.Header, NtUtils, DelphiUtils.Arrays;
 
 type
   TNodeEvent = procedure (Node: PVirtualNode) of object;
 
   TVTVirtualNodeEnumerationHelper = record helper for TVTVirtualNodeEnumeration
     function ToArray: TArray<PVirtualNode>;
+  end;
+
+  TVirtualTreeColumnsHelper = class helper for TVirtualTreeColumns
+    function BeginUpdateAuto: IAutoReleasable;
   end;
 
   // A structure for capturing keyboard shortcuts of a popup menu
@@ -93,6 +97,8 @@ type
     function CanMoveSelectedNodesDown: Boolean;
     function MoveSelectedNodesUp: Boolean;
     function MoveSelectedNodesDown: Boolean;
+    function BeginUpdateAuto: IAutoReleasable;
+    function BackupSelectionAuto(Comparer: TMapRoutine<PVirtualNode, TCondition<PVirtualNode>>): IDeferredOperation;
   published
     property DrawSelectionMode default smBlendedRectangle;
     property HintMode default hmHint;
@@ -128,6 +134,20 @@ begin
     Result[Count] := Node;
     Inc(Count);
   end;
+end;
+
+{ TVirtualTreeColumnsHelper }
+
+function TVirtualTreeColumnsHelper.BeginUpdateAuto;
+begin
+  BeginUpdate;
+
+  Result := Auto.Defer(
+    procedure
+    begin
+      EndUpdate;
+    end
+  );
 end;
 
 { TMenuShortCut }
@@ -325,6 +345,64 @@ begin
 end;
 
 { TVirtualStringTreeEx }
+
+function TVirtualStringTreeEx.BackupSelectionAuto;
+var
+  SelectionConditions: TArray<TCondition<PVirtualNode>>;
+  FocusCondition: TCondition<PVirtualNode>;
+begin
+  // For each selected node, capture necessary data for later comparison
+  SelectionConditions := TArray.Map<PVirtualNode, TCondition<PVirtualNode>>(
+    SelectedNodes.ToArray, Comparer);
+
+  // Same for the focused node
+  if Assigned(FocusedNode) then
+    FocusCondition := Comparer(FocusedNode)
+  else
+    FocusCondition := nil;
+
+  // Restore selection afterward
+  Result := Auto.Defer(
+    procedure
+    var
+      SelectionCondition: TCondition<PVirtualNode>;
+      Node: PVirtualNode;
+      UpdateReleaser: IAutoReleasable;
+    begin
+      UpdateReleaser := BeginUpdateAuto;
+
+      // Check if each new node matches any conditions for selection
+      for Node in Nodes do
+      begin
+        for SelectionCondition in SelectionConditions do
+          if Assigned(SelectionCondition) and SelectionCondition(Node) then
+          begin
+            Selected[Node] := True;
+            Break;
+          end;
+
+        // Same for the focus
+        if Assigned(FocusCondition) and FocusCondition(Node) then
+          FocusedNode := Node;
+      end;
+
+      // Re-apply sorting
+      Sort(RootNode, Header.SortColumn, Header.SortDirection);
+    end
+  );
+end;
+
+function TVirtualStringTreeEx.BeginUpdateAuto;
+begin
+  BeginUpdate;
+
+  Result := Auto.Defer(
+    procedure
+    begin
+      EndUpdate;
+    end
+  );
+end;
 
 function TVirtualStringTreeEx.CanMoveSelectedNodesDown;
 var
