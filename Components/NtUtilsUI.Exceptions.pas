@@ -1,4 +1,4 @@
-unit NtUiCommon.Exceptions;
+unit NtUtilsUI.Exceptions;
 
 {
   This module allows configuring default exception handling for UI applications

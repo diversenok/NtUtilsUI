@@ -1,13 +1,14 @@
-unit NtUtilsUI.Form;
+unit NtUtilsUI.Forms;
 
 {
-  This module introduces improvement to the form component.
+  This module introduces improved base classes for forms.
 }
 
 interface
 
 uses
-  Winapi.Windows, Winapi.Messages, System.SysUtils, Vcl.Controls, Vcl.Forms;
+  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes,
+  Vcl.Controls, Vcl.Forms, NtUtils, DelphiUtils.AutoEvents;
 
 type
   TFormEx = class abstract (TForm)
@@ -22,6 +23,35 @@ type
     procedure DoShow; override;
   public
     function ShowModal: Integer; override;
+  end;
+
+  TMainForm = class abstract (TFormEx)
+  private
+    class var FInstance: TMainForm;
+  public
+    constructor Create(AOwner: TComponent); override;
+    destructor Destroy; override;
+    class property Instance: TMainForm read FInstance;
+    class var OnMainFormClose: TAutoEvent;
+  end;
+
+  TChildFormMode = (
+    cfmNormal,      // No taskbar; overlaps the owner
+    cfmApplication, // No taskbar; side-by-side with the owner; use with modal
+    cfmDesktop      // Visible on taskbar; side-by-side with the owner
+  );
+
+  TChildForm = class abstract (TFormEx)
+  private
+    FChildMode: TChildFormMode;
+    FMainFormCloseSubscription: IAutoReleasable;
+  protected
+    procedure CreateParams(var Params: TCreateParams); override;
+    procedure DoCreate; override;
+    procedure DoShow; override;
+  public
+    constructor Create(AOwner: TComponent; Mode: TChildFormMode); reintroduce;
+    property ChildMode: TChildFormMode read FChildMode;
   end;
 
 function IsWindowTopmost(Handle: HWND): Boolean;
@@ -125,6 +155,61 @@ begin
       SetWindowPos(Application.Handle, HWND_TOPMOST, 0, 0, 0, 0,
         SWP_NOMOVE or SWP_NOSIZE or SWP_NOACTIVATE or SWP_NOOWNERZORDER);
   end;
+end;
+
+{ TMainForm }
+
+constructor TMainForm.Create;
+begin
+  inherited Create(AOwner);
+  Assert(not Assigned(FInstance), 'Created multiple main forms.');
+  FInstance := Self;
+end;
+
+destructor TMainForm.Destroy;
+begin
+  if FInstance = Self then
+    FInstance := nil;
+
+  inherited;
+end;
+
+{ TChildForm }
+
+constructor TChildForm.Create;
+begin
+  FChildMode := Mode;
+  inherited Create(AOwner);
+
+  if FChildMode <> cfmDesktop then
+    BorderIcons := BorderIcons - [biMinimize];
+end;
+
+procedure TChildForm.CreateParams;
+begin
+  inherited;
+
+  case FChildMode of
+    cfmApplication: Params.WndParent := Application.Handle;
+    cfmDesktop:     Params.WndParent := HWND_DESKTOP
+  end;
+end;
+
+procedure TChildForm.DoCreate;
+begin
+  inherited;
+  FMainFormCloseSubscription := TMainForm.OnMainFormClose.Subscribe(Close);
+end;
+
+procedure TChildForm.DoShow;
+begin
+  // Our parent class makes us inherit stay-on-top from the owner
+  inherited;
+
+  // If there is no owner, inherit it from the main form
+  if not Assigned(Owner) and Assigned(TMainForm.Instance) and
+    (TMainForm.Instance.FormStyle = fsStayOnTop) and (FormStyle = fsNormal) then
+    FormStyle := fsStayOnTop;
 end;
 
 end.
