@@ -10,7 +10,7 @@ uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes,
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, VirtualTrees,
   NtUtilsUI.VirtualTreeEx, NtUtilsUI.DevirtualizedTree, NtUiFrame,
-  NtUiFrame.Search, NtUiCommon.Interfaces;
+  NtUiFrame.Search, NtUiCommon.Interfaces, NtUtilsUI;
 
 type
   TSidAbbreviationFrame = class(TBaseFrame, ICanConsumeEscape, IObservesActivation,

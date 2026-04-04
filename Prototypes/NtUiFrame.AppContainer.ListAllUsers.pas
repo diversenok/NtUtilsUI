@@ -9,7 +9,7 @@ interface
 uses
   System.SysUtils, System.Classes, Vcl.Graphics, Vcl.Controls, Vcl.Forms,
   Vcl.Dialogs, Vcl.StdCtrls, NtUtils, NtUiFrame.AppContainer.List,
-  NtUiCommon.Interfaces;
+  NtUiCommon.Interfaces, NtUtilsUI;
 
 type
   TAppContainerListAllUsersFrame = class (TFrame, ICanConsumeEscape,

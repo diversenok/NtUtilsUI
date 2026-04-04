@@ -9,7 +9,7 @@ interface
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes,
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls,
-  Vcl.ComCtrls, Ntapi.WinNt, NtUtils, NtUiCommon.Interfaces;
+  Vcl.ComCtrls, Ntapi.WinNt, NtUtils, NtUiCommon.Interfaces, NtUtilsUI;
 
 type
   TFrameTrustSid = class(TFrame, ICanConsumeEscape, IHasDefaultCaption,

@@ -11,7 +11,7 @@ uses
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, VirtualTrees,
   NtUtilsUI.VirtualTreeEx, NtUtilsUI.DevirtualizedTree, NtUtils, Vcl.StdCtrls,
   NtUiFrame, Ntapi.WinNt, Vcl.Menus, System.Actions, Vcl.ActnList, Vcl.ExtCtrls,
-  NtUiFrame.Search, NtUiCommon.Interfaces, NtUtils.Security.Acl;
+  NtUiFrame.Search, NtUiCommon.Interfaces, NtUtils.Security.Acl, NtUtilsUI;
 
 type
   TAclFrame = class(TBaseFrame, ICanConsumeEscape, ICanShowEmptyMessage,

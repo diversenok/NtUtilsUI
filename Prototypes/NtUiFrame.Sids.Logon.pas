@@ -6,7 +6,7 @@ uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes,
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, NtUiFrame,
   NtUiFrame.Search, VirtualTrees, NtUtilsUI.VirtualTreeEx,
-  NtUtilsUI.DevirtualizedTree, NtUiCommon.Interfaces;
+  NtUtilsUI.DevirtualizedTree, NtUiCommon.Interfaces, NtUtilsUI;
 
 type
   TLogonSidsFrame = class(TBaseFrame, ICanConsumeEscape, IObservesActivation,

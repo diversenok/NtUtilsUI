@@ -9,7 +9,8 @@ interface
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes,
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.ComCtrls,
-  NtUiCommon.Prototypes, NtUiCommon.Interfaces, System.Actions, Vcl.ActnList;
+  NtUiCommon.Prototypes, NtUiCommon.Interfaces, System.Actions, Vcl.ActnList,
+  NtUtilsUI;
 
 type
   TFramePages = class(TFrame, ICanConsumeEscape, IHasDefaultCaption)

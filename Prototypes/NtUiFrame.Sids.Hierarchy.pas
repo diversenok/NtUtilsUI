@@ -11,7 +11,7 @@ uses
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, VirtualTrees,
   NtUtilsUI.VirtualTreeEx, NtUtilsUI.DevirtualizedTree,
   NtUiBackend.Sids.Hierarchy, NtUiFrame, NtUiFrame.Search,
-  NtUiCommon.Interfaces;
+  NtUiCommon.Interfaces, NtUtilsUI;
 
 type
   TSidHierarchyFrame = class(TBaseFrame, ICanConsumeEscape, IObservesActivation,

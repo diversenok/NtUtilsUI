@@ -10,7 +10,7 @@ uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes,
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, NtUiFrame,
   NtUiFrame.Acl, Ntapi.WinNt, NtUtils, NtUiCommon.Prototypes, System.Actions,
-  Vcl.ActnList, NtUiCommon.Interfaces, NtUtils.Security.Acl;
+  Vcl.ActnList, NtUiCommon.Interfaces, NtUtils.Security.Acl, NtUtilsUI;
 
 type
   TAclType = (aiDacl, aiLabel, aiTrust, aiSacl, aiAttribute, aiScope, aiFilter);

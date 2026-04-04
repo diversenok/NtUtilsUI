@@ -9,7 +9,8 @@ interface
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes,
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.ComCtrls,
-  Vcl.StdCtrls, NtUiCommon.Interfaces, Ntapi.WinNt, Ntapi.ntseapi, NtUtils;
+  Vcl.StdCtrls, NtUiCommon.Interfaces, Ntapi.WinNt, Ntapi.ntseapi, NtUtils,
+  NtUtilsUI;
 
 type
   TFrameIntegrity = class(TFrame, ICanConsumeEscape, IHasDefaultCaption,

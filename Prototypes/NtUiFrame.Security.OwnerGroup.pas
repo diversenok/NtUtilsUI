@@ -11,7 +11,7 @@ uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes,
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, NtUiFrame,
   UI.Prototypes.Sid.Edit, Vcl.StdCtrls, System.Actions, Vcl.ActnList,
-  NtUiCommon.Interfaces, NtUiCommon.Prototypes, NtUtils;
+  NtUiCommon.Interfaces, NtUiCommon.Prototypes, NtUtils, NtUtilsUI;
 
 type
   TDescriptorSidType = (dsOwner, dsPrimaryGroup);
