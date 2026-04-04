@@ -11,7 +11,7 @@ interface
 
 uses
   System.SysUtils, System.Classes, Vcl.Controls, Vcl.StdCtrls, Vcl.ExtCtrls,
-  Winapi.Messages;
+  Winapi.Windows, Winapi.Messages;
 
 type
   TUiLibEdit = class(TEdit)
@@ -21,6 +21,7 @@ type
     FDelayedChangeTimeout: Cardinal;
     FTyping: Boolean;
     procedure SetTyping(Value: Boolean);
+    function GetText: String;
   protected
     procedure WMTimer(var Message: TWMTimer); message WM_TIMER;
     procedure WMKeyDown(var Message: TWMKeyDown); message WM_KEYDOWN;
@@ -44,6 +45,7 @@ type
     FDelayedChangeTimeout: Cardinal;
     FTyping: Boolean;
     procedure SetTyping(Value: Boolean);
+    function GetText: String;
   protected
     procedure WMTimer(var Message: TWMTimer); message WM_TIMER;
     procedure WMKeyDown(var Message: TWMKeyDown); message WM_KEYDOWN;
@@ -60,10 +62,16 @@ type
     property OnTypingChange: TNotifyEvent read FOnTypingChange write FOnTypingChange;
   end;
 
-implementation
+  TUiLibComboBox = class(TComboBox)
+  private
+    function GetText: String;
+  protected
+    procedure CreateWnd; override;
+    procedure ComboWndProc(var Message: TMessage; ComboWnd: HWnd; ComboProc: TWindowProcPtr); override;
+    procedure KeyPress(var Key: Char); override;
+  end;
 
-uses
-  Winapi.Windows;
+implementation
 
 var
   SuppressLeftMove: Boolean;
@@ -180,8 +188,12 @@ begin
   end;
 end;
 
+type
+  TTextQueryMethod = function: String of object;
+
 function HandleCtrlBackspace(
-  Edit: TCustomEdit;
+  Handle: HWND;
+  TextQueryMethod: TTextQueryMethod;
   var Message: TWMKeyDown
 ): Boolean;
 var
@@ -192,18 +204,19 @@ begin
   // Handle Ctrl+Backspace to erase the word on the left
   if (GetKeyState(VK_CONTROL) < 0) and (Message.CharCode = VK_BACK) then
   begin
-    SendMessageW(Edit.Handle, EM_GETSEL, WPARAM(@SelStart), LPARAM(@SelEnd));
+    // Query the selection range
+    SendMessageW(Handle, EM_GETSEL, WPARAM(@SelStart), LPARAM(@SelEnd));
 
     // Only if nothing is selected
     if SelStart = SelEnd then
     begin
       // Identify where the word starts
-      SelStart := EditWordBreakProc(PWideChar(Edit.Text), SelStart,
+      SelStart := EditWordBreakProc(PWideChar(TextQueryMethod), SelStart,
         SelStart + 1, WB_LEFT);
 
       // Select and erase it
-      SendMessageW(Edit.Handle, EM_SETSEL, WPARAM(SelStart), LPARAM(SelEnd));
-      SendMessageW(Edit.Handle, EM_REPLACESEL, 1, LPARAM(nil));
+      SendMessageW(Handle, EM_SETSEL, WPARAM(SelStart), LPARAM(SelEnd));
+      SendMessageW(Handle, EM_REPLACESEL, 1, LPARAM(nil));
       Result := True;
     end;
   end;
@@ -254,6 +267,11 @@ begin
     FOnDelayedChange(Self);
 end;
 
+function TUiLibEdit.GetText;
+begin
+  Result := Text;
+end;
+
 procedure TUiLibEdit.KeyPress;
 begin
   // Avoid adding the DEL character on Crtl+Backspace
@@ -276,7 +294,7 @@ end;
 
 procedure TUiLibEdit.WMKeyDown;
 begin
-  if not HandleCtrlBackspace(Self, Message) then
+  if not HandleCtrlBackspace(Handle, GetText, Message) then
     inherited;
 end;
 
@@ -335,6 +353,11 @@ begin
     FOnDelayedChange(Self);
 end;
 
+function TUiLibButtonedEdit.GetText;
+begin
+  Result := Text;
+end;
+
 procedure TUiLibButtonedEdit.KeyPress;
 begin
   // Avoid adding the DEL character on Crtl+Backspace
@@ -357,7 +380,7 @@ end;
 
 procedure TUiLibButtonedEdit.WMKeyDown;
 begin
-  if not HandleCtrlBackspace(Self, Message) then
+  if not HandleCtrlBackspace(Handle, GetText, Message) then
     inherited;
 end;
 
@@ -372,6 +395,37 @@ begin
   end
   else
     inherited;
+end;
+
+{ TUiLibComboBox }
+
+procedure TUiLibComboBox.ComboWndProc;
+begin
+  if (Message.Msg <> WM_KEYDOWN) or (EditHandle = 0) or
+    not HandleCtrlBackspace(EditHandle, GetText, TWMKeyDown(Message)) then
+    inherited;
+end;
+
+procedure TUiLibComboBox.CreateWnd;
+begin
+  inherited;
+
+  if EditHandle <> 0 then
+    SendMessageW(EditHandle, EM_SETWORDBREAKPROC, 0, LPARAM(@EditWordBreakProc));
+end;
+
+function TUiLibComboBox.GetText;
+begin
+  Result := Text;
+end;
+
+procedure TUiLibComboBox.KeyPress;
+begin
+  // Avoid adding the DEL character on Crtl+Backspace
+  if (GetKeyState(VK_CONTROL) < 0) and (Key = #$7F) then
+    Key := #0;
+
+  inherited;
 end;
 
 end.

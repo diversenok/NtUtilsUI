@@ -39,13 +39,17 @@ type
     property OnTypingChange: TNotifyEvent read FOnTypingChange write FOnTypingChange;
   end;
 
+  TUiLibComboBox = class(TComboBox)
+  end;
+
 procedure Register;
 
 implementation
 
 procedure Register;
 begin
-  RegisterComponents('NtUtilsUI', [TUiLibEdit, TUiLibButtonedEdit]);
+  RegisterComponents('NtUtilsUI', [TUiLibEdit, TUiLibButtonedEdit,
+    TUiLibComboBox]);
 end;
 
 { TUiLibEdit }
