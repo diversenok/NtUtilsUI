@@ -38,6 +38,7 @@ contains
   NtUtilsUI.VirtualTreeEx in 'NtUtilsUI.VirtualTreeEx.pas',
   NtUtilsUI.DevirtualizedTree in 'NtUtilsUI.DevirtualizedTree.pas',
   NtUtilsUI.Edit in 'NtUtilsUI.Edit.pas',
-  NtUtilsUI.ListView in 'NtUtilsUI.ListView.pas';
+  NtUtilsUI.ListView in 'NtUtilsUI.ListView.pas',
+  NtUtilsUI in 'NtUtilsUI.pas';
 
 end.

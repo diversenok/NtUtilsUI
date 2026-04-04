@@ -1,26 +1,15 @@
 unit NtUtilsUI;
 
 {
-  This module provides base NtUtilsUI types.
-  
-  NOTE: Keep the published interface in sync with the design-time definitions!
+  This module contains (stripped down) design-time component base definitions.
+
+  NOTE: Keep the published interface in sync with the runtime definitions!
 }
 
 interface
 
 uses
-  Winapi.Messages, Vcl.Controls, NtUtilsUI.Forms;
-
-type
-  // Forward base form classes
-  TUiLibMainForm = NtUtilsUI.Forms.TUiLibMainForm;
-  TUiLibChildForm = NtUtilsUI.Forms.TUiLibChildForm;
-
-const
-  // Forward child form modes
-  cfmNormal = NtUtilsUI.Forms.cfmNormal;
-  cfmApplication = NtUtilsUI.Forms.cfmApplication;
-  cfmDesktop = NtUtilsUI.Forms.cfmDesktop;
+  Winapi.Messages, Vcl.Controls;
 
 type
   // A base class for composite visual controls
@@ -42,9 +31,6 @@ type
 
 implementation
 
-uses
-  NtUtilsUI.Exceptions;
-  
 { TUiLibControl }
 
 procedure TUiLibControl.CMEnabledChanged;
