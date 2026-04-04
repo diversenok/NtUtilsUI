@@ -11,7 +11,7 @@ interface
 
 uses
   System.SysUtils, System.Classes, Vcl.Controls, Vcl.StdCtrls, Vcl.ExtCtrls,
-  Winapi.Windows, Winapi.Messages;
+  Winapi.Windows, Winapi.Messages, NtUtilsUI;
 
 type
   TUiLibEdit = class(TEdit)
@@ -62,9 +62,10 @@ type
     property OnTypingChange: TNotifyEvent read FOnTypingChange write FOnTypingChange;
   end;
 
-  TUiLibComboBox = class(TComboBox)
+  TUiLibComboBox = class(TComboBox, ICanConsumeEscape)
   private
     function GetText: String;
+    function ConsumesEscape: Boolean;
   protected
     procedure CreateWnd; override;
     procedure ComboWndProc(var Message: TMessage; ComboWnd: HWnd; ComboProc: TWindowProcPtr); override;
@@ -404,6 +405,11 @@ begin
   if (Message.Msg <> WM_KEYDOWN) or (EditHandle = 0) or
     not HandleCtrlBackspace(EditHandle, GetText, TWMKeyDown(Message)) then
     inherited;
+end;
+
+function TUiLibComboBox.ConsumesEscape;
+begin
+  Result := DroppedDown;
 end;
 
 procedure TUiLibComboBox.CreateWnd;
