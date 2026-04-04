@@ -11,7 +11,7 @@ uses
   Vcl.Controls, Vcl.Forms, NtUtils, DelphiUtils.AutoEvents;
 
 type
-  TFormEx = class abstract (TForm)
+  TUiLibForm = class abstract (TForm)
   private
     const idOnTop = 10001;
     procedure WMSysCommand(var Message: TWMSysCommand); message WM_SYSCOMMAND;
@@ -25,33 +25,33 @@ type
     function ShowModal: Integer; override;
   end;
 
-  TMainForm = class abstract (TFormEx)
+  TUiLibMainForm = class abstract (TUiLibForm)
   private
-    class var FInstance: TMainForm;
+    class var FInstance: TUiLibMainForm;
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
-    class property Instance: TMainForm read FInstance;
+    class property Instance: TUiLibMainForm read FInstance;
     class var OnMainFormClose: TAutoEvent;
   end;
 
-  TChildFormMode = (
+  TUiLibChildFormMode = (
     cfmNormal,      // No taskbar; overlaps the owner
     cfmApplication, // No taskbar; side-by-side with the owner; use with modal
     cfmDesktop      // Visible on taskbar; side-by-side with the owner
   );
 
-  TChildForm = class abstract (TFormEx)
+  TUiLibChildForm = class abstract (TUiLibForm)
   private
-    FChildMode: TChildFormMode;
+    FChildMode: TUiLibChildFormMode;
     FMainFormCloseSubscription: IAutoReleasable;
   protected
     procedure CreateParams(var Params: TCreateParams); override;
     procedure DoCreate; override;
     procedure DoShow; override;
   public
-    constructor Create(AOwner: TComponent; Mode: TChildFormMode); reintroduce;
-    property ChildMode: TChildFormMode read FChildMode;
+    constructor Create(AOwner: TComponent; Mode: TUiLibChildFormMode); reintroduce;
+    property ChildMode: TUiLibChildFormMode read FChildMode;
   end;
 
 function IsWindowTopmost(Handle: HWND): Boolean;
@@ -63,15 +63,15 @@ begin
   Result := GetWindowLongPtrW(Handle, GWL_EXSTYLE) and WS_EX_TOPMOST <> 0
 end;
 
-{ TFormEx }
+{ TUiLibForm }
 
-procedure TFormEx.DoClose;
+procedure TUiLibForm.DoClose;
 begin
   Action := caFree;
   inherited;
 end;
 
-procedure TFormEx.DoCreate;
+procedure TUiLibForm.DoCreate;
 begin
   inherited;
 
@@ -81,7 +81,7 @@ begin
       'Stay On &Top');
 end;
 
-procedure TFormEx.DoShow;
+procedure TUiLibForm.DoShow;
 var
   Control: TWinControl;
 begin
@@ -100,7 +100,7 @@ begin
   end;
 end;
 
-function TFormEx.ShowModal;
+function TUiLibForm.ShowModal;
 begin
   Result := inherited;
 
@@ -108,7 +108,7 @@ begin
     Abort;
 end;
 
-procedure TFormEx.WMInitMenuPopup;
+procedure TUiLibForm.WMInitMenuPopup;
 const
   STATE: array [Boolean] of Cardinal = (MF_UNCHECKED, MF_CHECKED);
 begin
@@ -119,7 +119,7 @@ begin
   inherited;
 end;
 
-procedure TFormEx.WMSysCommand;
+procedure TUiLibForm.WMSysCommand;
 begin
   // Toggle the stay-on-top state from the menu
   if Message.CmdType = idOnTop then
@@ -131,7 +131,7 @@ begin
     inherited;
 end;
 
-procedure TFormEx.WMWindowPosChanged;
+procedure TUiLibForm.WMWindowPosChanged;
 begin
   inherited;
 
@@ -157,16 +157,16 @@ begin
   end;
 end;
 
-{ TMainForm }
+{ TUiLibMainForm }
 
-constructor TMainForm.Create;
+constructor TUiLibMainForm.Create;
 begin
   inherited Create(AOwner);
   Assert(not Assigned(FInstance), 'Created multiple main forms.');
   FInstance := Self;
 end;
 
-destructor TMainForm.Destroy;
+destructor TUiLibMainForm.Destroy;
 begin
   if FInstance = Self then
     FInstance := nil;
@@ -174,9 +174,9 @@ begin
   inherited;
 end;
 
-{ TChildForm }
+{ TUiLibChildForm }
 
-constructor TChildForm.Create;
+constructor TUiLibChildForm.Create;
 begin
   FChildMode := Mode;
   inherited Create(AOwner);
@@ -185,7 +185,7 @@ begin
     BorderIcons := BorderIcons - [biMinimize];
 end;
 
-procedure TChildForm.CreateParams;
+procedure TUiLibChildForm.CreateParams;
 begin
   inherited;
 
@@ -195,20 +195,20 @@ begin
   end;
 end;
 
-procedure TChildForm.DoCreate;
+procedure TUiLibChildForm.DoCreate;
 begin
   inherited;
-  FMainFormCloseSubscription := TMainForm.OnMainFormClose.Subscribe(Close);
+  FMainFormCloseSubscription := TUiLibMainForm.OnMainFormClose.Subscribe(Close);
 end;
 
-procedure TChildForm.DoShow;
+procedure TUiLibChildForm.DoShow;
 begin
   // Our parent class makes us inherit stay-on-top from the owner
   inherited;
 
   // If there is no owner, inherit it from the main form
-  if not Assigned(Owner) and Assigned(TMainForm.Instance) and
-    (TMainForm.Instance.FormStyle = fsStayOnTop) and (FormStyle = fsNormal) then
+  if not Assigned(Owner) and Assigned(TUiLibMainForm.Instance) and
+    (TUiLibMainForm.Instance.FormStyle = fsStayOnTop) and (FormStyle = fsNormal) then
     FormStyle := fsStayOnTop;
 end;
 

@@ -2,7 +2,7 @@ unit NtUtilsUI.Edit;
 
 {
   This module contains a (stripped down) design-time component definitions for
-  TEditEx and TButtonedEditEx.
+  the improved edit controls.
 
   NOTE: Keep the published interface in sync with the runtime definitions!
 }
@@ -13,7 +13,7 @@ uses
   System.Classes, Vcl.StdCtrls, Vcl.ExtCtrls;
 
 type
-  TEditEx = class(TEdit)
+  TUiLibEdit = class(TEdit)
   private
     FOnDelayedChange: TNotifyEvent;
     FOnTypingChange: TNotifyEvent;
@@ -26,7 +26,7 @@ type
     property OnTypingChange: TNotifyEvent read FOnTypingChange write FOnTypingChange;
   end;
 
-  TButtonedEditEx = class(TButtonedEdit)
+  TUiLibButtonedEdit = class(TButtonedEdit)
   private
     FOnDelayedChange: TNotifyEvent;
     FOnTypingChange: TNotifyEvent;
@@ -45,20 +45,20 @@ implementation
 
 procedure Register;
 begin
-  RegisterComponents('NtUtilsUI', [TEditEx, TButtonedEditEx]);
+  RegisterComponents('NtUtilsUI', [TUiLibEdit, TUiLibButtonedEdit]);
 end;
 
-{ TEditEx }
+{ TUiLibEdit }
 
-constructor TEditEx.Create;
+constructor TUiLibEdit.Create;
 begin
   inherited;
   FDelayedChangeTimeout := 500;
 end;
 
-{ TButtonedEditEx }
+{ TUiLibButtonedEdit }
 
-constructor TButtonedEditEx.Create;
+constructor TUiLibButtonedEdit.Create;
 begin
   inherited;
   FDelayedChangeTimeout := 500;

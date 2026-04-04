@@ -1,8 +1,8 @@
 unit NtUtilsUI.Edit;
 
 {
-  This module contains the full runtime component definitions for
-  TEditEx and TButtonedEditEx.
+  This module contains the full runtime component definitions for the improved
+  edit controls.
 
   NOTE: Keep the published interface in sync with the design-time definitions!
 }
@@ -14,7 +14,7 @@ uses
   Winapi.Messages;
 
 type
-  TEditEx = class(TEdit)
+  TUiLibEdit = class(TEdit)
   private
     FOnDelayedChange: TNotifyEvent;
     FOnTypingChange: TNotifyEvent;
@@ -37,7 +37,7 @@ type
     property OnTypingChange: TNotifyEvent read FOnTypingChange write FOnTypingChange;
   end;
 
-  TButtonedEditEx = class(TButtonedEdit)
+  TUiLibButtonedEdit = class(TButtonedEdit)
   private
     FOnDelayedChange: TNotifyEvent;
     FOnTypingChange: TNotifyEvent;
@@ -198,8 +198,8 @@ begin
     if SelStart = SelEnd then
     begin
       // Identify where the word starts
-      SelStart := EditWordBreakProc(PWideChar(Edit.Text), SelStart, SelStart + 1,
-        WB_LEFT);
+      SelStart := EditWordBreakProc(PWideChar(Edit.Text), SelStart,
+        SelStart + 1, WB_LEFT);
 
       // Select and erase it
       SendMessageW(Edit.Handle, EM_SETSEL, WPARAM(SelStart), LPARAM(SelEnd));
@@ -209,12 +209,12 @@ begin
   end;
 end;
 
-{ TEditEx }
+{ TUiLibEdit }
 
 const
   DELAYED_CHANGE_TIMER_ID = $DE7A4D1;
 
-procedure TEditEx.Change;
+procedure TUiLibEdit.Change;
 begin
   inherited;
 
@@ -236,25 +236,25 @@ begin
   end;
 end;
 
-constructor TEditEx.Create;
+constructor TUiLibEdit.Create;
 begin
   inherited;
   FDelayedChangeTimeout := 500;
 end;
 
-procedure TEditEx.CreateWindowHandle;
+procedure TUiLibEdit.CreateWindowHandle;
 begin
   inherited;
   SendMessageW(Handle, EM_SETWORDBREAKPROC, 0, LPARAM(@EditWordBreakProc));
 end;
 
-procedure TEditEx.DelayedChange;
+procedure TUiLibEdit.DelayedChange;
 begin
   if Assigned(FOnDelayedChange) then
     FOnDelayedChange(Self);
 end;
 
-procedure TEditEx.KeyPress;
+procedure TUiLibEdit.KeyPress;
 begin
   // Avoid adding the DEL character on Crtl+Backspace
   if (GetKeyState(VK_CONTROL) < 0) and (Key = #$7F) then
@@ -263,7 +263,7 @@ begin
   inherited;
 end;
 
-procedure TEditEx.SetTyping;
+procedure TUiLibEdit.SetTyping;
 begin
   if Value <> FTyping then
   begin
@@ -274,13 +274,13 @@ begin
   end;
 end;
 
-procedure TEditEx.WMKeyDown;
+procedure TUiLibEdit.WMKeyDown;
 begin
   if not HandleCtrlBackspace(Self, Message) then
     inherited;
 end;
 
-procedure TEditEx.WMTimer;
+procedure TUiLibEdit.WMTimer;
 begin
   if Message.TimerID = DELAYED_CHANGE_TIMER_ID then
   begin
@@ -293,9 +293,9 @@ begin
     inherited;
 end;
 
-{ TButtonedEditEx }
+{ TUiLibButtonedEdit }
 
-procedure TButtonedEditEx.Change;
+procedure TUiLibButtonedEdit.Change;
 begin
   inherited;
 
@@ -317,25 +317,25 @@ begin
   end;
 end;
 
-constructor TButtonedEditEx.Create;
+constructor TUiLibButtonedEdit.Create;
 begin
   inherited;
   FDelayedChangeTimeout := 500;
 end;
 
-procedure TButtonedEditEx.CreateWindowHandle;
+procedure TUiLibButtonedEdit.CreateWindowHandle;
 begin
   inherited;
   SendMessageW(Handle, EM_SETWORDBREAKPROC, 0, LPARAM(@EditWordBreakProc));
 end;
 
-procedure TButtonedEditEx.DelayedChange;
+procedure TUiLibButtonedEdit.DelayedChange;
 begin
   if Assigned(FOnDelayedChange) then
     FOnDelayedChange(Self);
 end;
 
-procedure TButtonedEditEx.KeyPress;
+procedure TUiLibButtonedEdit.KeyPress;
 begin
   // Avoid adding the DEL character on Crtl+Backspace
   if (GetKeyState(VK_CONTROL) < 0) and (Key = #$7F) then
@@ -344,7 +344,7 @@ begin
   inherited;
 end;
 
-procedure TButtonedEditEx.SetTyping;
+procedure TUiLibButtonedEdit.SetTyping;
 begin
   if Value <> FTyping then
   begin
@@ -355,13 +355,13 @@ begin
   end;
 end;
 
-procedure TButtonedEditEx.WMKeyDown;
+procedure TUiLibButtonedEdit.WMKeyDown;
 begin
   if not HandleCtrlBackspace(Self, Message) then
     inherited;
 end;
 
-procedure TButtonedEditEx.WMTimer;
+procedure TUiLibButtonedEdit.WMTimer;
 begin
   if Message.TimerID = DELAYED_CHANGE_TIMER_ID then
   begin

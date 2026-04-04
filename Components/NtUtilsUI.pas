@@ -10,8 +10,8 @@ uses
   NtUtilsUI.Forms;
 
 type
-  TMainForm = NtUtilsUI.Forms.TMainForm;
-  TChildForm = NtUtilsUI.Forms.TChildForm;
+  TUiLibMainForm = NtUtilsUI.Forms.TUiLibMainForm;
+  TUiLibChildForm = NtUtilsUI.Forms.TUiLibChildForm;
 
 const
   cfmNormal = NtUtilsUI.Forms.cfmNormal;

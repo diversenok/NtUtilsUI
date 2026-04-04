@@ -13,7 +13,7 @@ uses
 type
   TFrameInitializer = reference to function (AOwner: TComponent): TFrame;
 
-  TFrameHostDialog = class(TChildForm)
+  TFrameHostDialog = class(TUiLibChildForm)
     btnClose: TButton;
     btnSelect: TButton;
     procedure FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);

@@ -70,7 +70,7 @@ inherited SidHierarchyFrame: TSidHierarchyFrame
     inherited Splitter: TSplitter
       Left = 474
     end
-    inherited tbxSearchBox: TButtonedEditEx
+    inherited tbxSearchBox: TUiLibButtonedEdit
       Width = 474
     end
     inherited cbxColumn: TComboBox

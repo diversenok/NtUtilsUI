@@ -14,7 +14,7 @@ uses
 
 type
   TSearchFrame = class(TBaseFrame, ICanConsumeEscape, IObservesActivation)
-    tbxSearchBox: TButtonedEditEx;
+    tbxSearchBox: TUiLibButtonedEdit;
     cbxColumn: TComboBox;
     Splitter: TSplitter;
     ActionList: TActionList;

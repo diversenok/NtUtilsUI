@@ -83,7 +83,7 @@ object UserProfilesFrame: TUserProfilesFrame
     inherited Splitter: TSplitter
       Left = 534
     end
-    inherited tbxSearchBox: TButtonedEditEx
+    inherited tbxSearchBox: TUiLibButtonedEdit
       Width = 534
     end
     inherited cbxColumn: TComboBox
