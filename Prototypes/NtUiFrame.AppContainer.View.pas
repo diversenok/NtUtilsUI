@@ -59,9 +59,9 @@ end;
 
 { Integration }
 
-function Initializer(const Info: TRtlxAppContainerInfo): TFrameInitializer;
+function Initializer(const Info: TRtlxAppContainerInfo): TWinControlFactory;
 begin
-  Result := function (AOwner: TComponent): TFrame
+  Result := function (AOwner: TComponent): TWinControl
     var
       Frame: TAppContainerViewFrame absolute Result;
     begin

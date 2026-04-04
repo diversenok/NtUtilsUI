@@ -11,8 +11,6 @@ uses
   Vcl.Dialogs, Vcl.StdCtrls, NtUtilsUI.DevirtualizedTree, NtUtilsUI;
 
 type
-  TFrameInitializer = reference to function (AOwner: TComponent): TFrame;
-
   TFrameHostDialog = class(TUiLibChildForm)
     btnClose: TButton;
     btnSelect: TButton;
@@ -29,8 +27,8 @@ type
     procedure AddFrame(Frame: TWinControl; AllowModal: Boolean);
   public
     function PickModal: IInterface;
-    class function Pick(AOwner: TComponent; Initializer: TFrameInitializer): IInterface; static;
-    class procedure Display(Initializer: TFrameInitializer); static;
+    class function Pick(AOwner: TComponent; Factory: TWinControlFactory): IInterface; static;
+    class procedure Display(Factory: TWinControlFactory); static;
   end;
 
 implementation
@@ -147,7 +145,7 @@ begin
   Form := TFrameHostDialog.Create(nil, cfmDesktop);
 
   try
-    Form.AddFrame(Initializer(Form), False);
+    Form.AddFrame(Factory(Form), False);
   except
     Form.Free;
     raise;
@@ -185,7 +183,7 @@ begin
   Form := TFrameHostDialog.Create(AOwner, cfmApplication);
 
   try
-    Form.AddFrame(Initializer(Form), True);
+    Form.AddFrame(Factory(Form), True);
   except
     Form.Free;
     raise;

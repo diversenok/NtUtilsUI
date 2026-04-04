@@ -90,9 +90,9 @@ end;
 
 { Integration }
 
-function Initializer([opt] const DefaultUser: ISid): TFrameInitializer;
+function Initializer([opt] const DefaultUser: ISid): TWinControlFactory;
 begin
-  Result := function (AOwner: TComponent): TFrame
+  Result := function (AOwner: TComponent): TWinControl
     var
       Frame: TAppContainerListAllUsersFrame absolute Result;
     begin

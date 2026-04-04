@@ -127,9 +127,9 @@ end;
 
 { Integration }
 
-function Initializer(const User: ISid): TFrameInitializer;
+function Initializer(const User: ISid): TWinControlFactory;
 begin
-  Result := function (AOwner: TComponent): TFrame
+  Result := function (AOwner: TComponent): TWinControl
     var
       Frame: TAppContainerListFrame absolute Result;
     begin

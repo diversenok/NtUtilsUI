@@ -19,7 +19,7 @@ type
     procedure PageControlChange(Sender: TObject);
   private
     FTabs: TArray<TTabSheet>;
-    FFrames: TArray<TFrame>;
+    FFrames: TArray<TWinControl>;
     FActions: TArray<TAction>;
     FDelayLoaded: TArray<Boolean>;
     FDefaultCaption: String;
@@ -31,7 +31,7 @@ type
     procedure FrameEnabledChanged(var Message: TMessage); message CM_ENABLEDCHANGED;
   public
     procedure LoadPages(
-      const Frames: TArray<TFrameInitializer>;
+      const Frames: TArray<TWinControlFactory>;
       const DefaultCaption: String
     );
   end;
@@ -182,7 +182,7 @@ end;
 
 function NtUiLibHostPages(
   AOwner: TComponent;
-  Pages: TArray<TFrameInitializer>;
+  Pages: TArray<TWinControlFactory>;
   const DefaultCaption: String
 ): TFrame;
 var

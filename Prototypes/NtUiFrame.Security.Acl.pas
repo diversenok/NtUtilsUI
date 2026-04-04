@@ -59,7 +59,7 @@ type
 function NtUiLibAclSecurityFrameInitializer(
   AclType: TAclType;
   const Context: TNtUiLibSecurityContext
-): TFrameInitializer;
+): TWinControlFactory;
 
 implementation
 
@@ -342,7 +342,7 @@ end;
 
 function NtUiLibAclSecurityFrameInitializer;
 begin
-  Result := function (AOwner: TComponent): TFrame
+  Result := function (AOwner: TComponent): TWinControl
     var
       Frame: TAclSecurityFrame absolute Result;
     begin

@@ -100,9 +100,9 @@ begin
   BackendRef := Backend; // Make an owning reference
 end;
 
-function Initializer(ShowCheckboxes: Boolean): TFrameInitializer;
+function Initializer(ShowCheckboxes: Boolean): TWinControlFactory;
 begin
-  Result := function (AOwner: TComponent): TFrame
+  Result := function (AOwner: TComponent): TWinControl
     var
       Frame: TCapabilityListFrame absolute Result;
     begin

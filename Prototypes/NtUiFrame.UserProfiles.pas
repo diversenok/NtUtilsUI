@@ -75,7 +75,7 @@ end;
 
 { Integration }
 
-function Initializer(AOwner: TComponent): TFrame;
+function Initializer(AOwner: TComponent): TWinControl;
 var
   Frame: TUserProfilesFrame absolute Result;
 begin

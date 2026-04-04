@@ -302,9 +302,9 @@ function Initializer(
   AccessMaskType: Pointer;
   const GenericMapping: TGenericMapping;
   DefaultAceType: TAceType
-): TFrameInitializer;
+): TWinControlFactory;
 begin
-  Result := function (AOwner: TComponent): TFrame
+  Result := function (AOwner: TComponent): TWinControl
     var
       Frame: TAceFrame absolute Result;
     begin
@@ -322,9 +322,9 @@ function InitializerEx(
   AccessMaskType: Pointer;
   const GenericMapping: TGenericMapping;
   const Ace: TAceData
-): TFrameInitializer;
+): TWinControlFactory;
 begin
-  Result := function (AOwner: TComponent): TFrame
+  Result := function (AOwner: TComponent): TWinControl
     var
       Frame: TAceFrame absolute Result;
     begin

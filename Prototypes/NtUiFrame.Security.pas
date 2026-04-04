@@ -7,25 +7,25 @@ unit NtUiFrame.Security;
 interface
 
 uses
-  NtUiCommon.Prototypes;
+  NtUiCommon.Prototypes, NtUtilsUI;
 
 // Make an initializer for a security descriptor viewer frame
 function NtUiLibMakeSecurityFrame(
   const Context: TNtUiLibSecurityContext
-): TFrameInitializer;
+): TWinControlFactory;
 
 implementation
 
 uses
   NtUiFrame.Security.Acl, NtUiFrame.Security.OwnerGroup,
-  System.SysUtils, System.Classes, Vcl.Forms;
+  System.SysUtils, System.Classes, Vcl.Forms, Vcl.Controls;
 
 function NtUiLibMakeSecurityFrame;
 begin
   if not Assigned(NtUiLibHostPages) then
     raise ENotSupportedException.Create('Page Host frame not available.');
 
-  Result := function (AOwner: TComponent): TFrame
+  Result := function (AOwner: TComponent): TWinControl
     begin
       // Make a multi-page frame with ACLs and SIDs from the security descriptor
       Result := NtUiLibHostPages(AOwner, [

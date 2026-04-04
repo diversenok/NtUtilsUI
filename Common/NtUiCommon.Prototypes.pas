@@ -10,11 +10,9 @@ uses
   Ntapi.WinNt, Ntapi.ntseapi, Ntapi.WinUser, NtUtils, NtUtils.Profiles,
   NtUtils.Objects, NtUtils.Security.AppContainer, NtUtils.Security,
   NtUtils.Security.Acl, NtUtilsUI.DevirtualizedTree, NtUiDialog.FrameHost,
-  System.Classes, Vcl.Forms;
+  System.Classes, Vcl.Forms, NtUtilsUI;
 
 type
-  TFrameInitializer = NtUiDialog.FrameHost.TFrameInitializer;
-
   TSecurityAccessMaskLookup = reference to function (
     Info: TSecurityInformation
   ): TAccessMask;
@@ -23,17 +21,17 @@ var
   { Common: Frame Hosting }
 
   NtUiLibHostFrameShow: procedure (
-    Initializer: TFrameInitializer
+    Initializer: TWinControlFactory
   );
 
   NtUiLibHostFramePick: function (
     AOwner: TComponent;
-    Initializer: TFrameInitializer
+    Initializer: TWinControlFactory
   ): IInterface;
 
   NtUiLibHostPages: function (
     AOwner: TComponent;
-    Pages: TArray<TFrameInitializer>;
+    Pages: TArray<TWinControlFactory>;
     const DefaultCaption: String
   ): TFrame;
 

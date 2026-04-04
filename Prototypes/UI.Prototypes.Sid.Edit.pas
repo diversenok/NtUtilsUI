@@ -63,7 +63,7 @@ begin
     tbxSid.SetFocus;
 
   NtUiLibHostFrameShow(
-    function (AOwner: TComponent): TFrame
+    function (AOwner: TComponent): TWinControl
     begin
       Result := TSidAbbreviationFrame.Create(AOwner);
     end

@@ -46,7 +46,7 @@ type
 function NtUiLibSidSecurityFrameInitializer(
   SidType: TDescriptorSidType;
   const Context: TNtUiLibSecurityContext
-): TFrameInitializer;
+): TWinControlFactory;
 
 implementation
 
@@ -211,7 +211,7 @@ end;
 
 function NtUiLibSidSecurityFrameInitializer;
 begin
-  Result := function (AOwner: TComponent): TFrame
+  Result := function (AOwner: TComponent): TWinControl
     var
       Frame: TOwnerGroupSecurityFrame absolute Result;
     begin

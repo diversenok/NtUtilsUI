@@ -172,7 +172,7 @@ begin
     raise ENotSupportedException.Create('Frame host not available');
 
   Selection := NtUiLibHostFramePick(Owner,
-    function (AOwner: TComponent): TFrame
+    function (AOwner: TComponent): TWinControl
     var
       Frame: TFrameIntegrity absolute Result;
     begin

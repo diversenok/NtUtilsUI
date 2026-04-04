@@ -23,6 +23,9 @@ const
   cfmDesktop = NtUtilsUI.Forms.cfmDesktop;
 
 type
+  // An anonymous function that can instantiate visual controls
+  TWinControlFactory = reference to function (AOwner: TComponent): TWinControl;
+
   // Indicates a component that can prevent Escape from closing the dialog
   ICanConsumeEscape = interface
     ['{4280FDBC-97C0-41DC-9C96-98142BCABADF}']
