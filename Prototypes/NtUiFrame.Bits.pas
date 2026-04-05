@@ -225,10 +225,7 @@ procedure NtUiLibShowBitMask(
   ATypeInfo: Pointer
 );
 begin
-  if not Assigned(NtUiLibHostFrameShow) then
-    raise ENotSupportedException.Create('Frame host not available');
-
-  NtUiLibHostFrameShow(
+  UiLibShow(
     function (AOwner: TComponent): TWinControl
     var
       Frame: TBitsFrame absolute Result;
@@ -252,10 +249,7 @@ procedure NtUiLibShowAccessMask(
   const GenericMapping: TGenericMapping
 );
 begin
-  if not Assigned(NtUiLibHostFrameShow) then
-    raise ENotSupportedException.Create('Frame host not available');
-
-  NtUiLibHostFrameShow(
+  UiLibShow(
     function (AOwner: TComponent): TWinControl
     var
       Frame: TBitsFrame absolute Result;

@@ -10,7 +10,13 @@ interface
 
 uses
   Winapi.Messages, System.Classes, Vcl.Controls, NtUtilsUI.Forms,
-  NtUtilsUI.Interfaces;
+  NtUtilsUI.Interfaces, NtUtilsUI.Components;
+
+const
+  // Forward child form modes
+  cfmNormal = NtUtilsUI.Forms.cfmNormal;
+  cfmApplication = NtUtilsUI.Forms.cfmApplication;
+  cfmDesktop = NtUtilsUI.Forms.cfmDesktop;
 
 type
   // Forward base form classes
@@ -23,15 +29,8 @@ type
   IHasModalResult = NtUtilsUI.Interfaces.IHasModalResult;
   IHasModalResultObservation = NtUtilsUI.Interfaces.IHasModalResultObservation;
 
-const
-  // Forward child form modes
-  cfmNormal = NtUtilsUI.Forms.cfmNormal;
-  cfmApplication = NtUtilsUI.Forms.cfmApplication;
-  cfmDesktop = NtUtilsUI.Forms.cfmDesktop;
-
-type
-  // An anonymous function that can instantiate visual controls
-  TWinControlFactory = reference to function (AOwner: TComponent): TWinControl;
+  // Forward control factory
+  TWinControlFactory = NtUtilsUI.Components.TWinControlFactory;
 
   // A base class for composite visual controls
   TUiLibControl = class abstract (TWinControl)
@@ -45,6 +44,17 @@ type
     property TabStop;
     property Visible;
   end;
+
+// Show a control in a dialog
+procedure UiLibShow(
+  ControlFactory: TWinControlFactory
+);
+
+// Show a control in a modal dialog and return its modal result
+function UiLibPick(
+  AOwner: TComponent;
+  ControlFactory: TWinControlFactory
+): IInterface;
 
 implementation
 
@@ -63,6 +73,24 @@ begin
   for i := 0 to ControlCount - 1 do
     if (Controls[i].Owner = Self) and (Controls[i] is TWinControl) then
       TWinControl(Controls[i]).Enabled := Enabled;
+end;
+
+{ Functions }
+
+procedure UiLibShow(ControlFactory: TWinControlFactory);
+begin
+  if Assigned(UiLibHostShow) then
+    UiLibHostShow(ControlFactory)
+  else
+    raise EClassNotFound.Create('The host dialog is not registered');
+end;
+
+function UiLibPick;
+begin
+  if Assigned(UiLibHostPick) then
+    Result := UiLibHostPick(AOwner, ControlFactory)
+  else
+    raise EClassNotFound.Create('The host dialog is not registered');
 end;
 
 end.

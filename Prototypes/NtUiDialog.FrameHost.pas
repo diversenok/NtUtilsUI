@@ -34,7 +34,8 @@ type
 implementation
 
 uses
-  Winapi.Windows, NtUiCommon.Prototypes, NtUiCommon.Interfaces, NtUtils.Errors;
+  Winapi.Windows, NtUiCommon.Prototypes, NtUiCommon.Interfaces, NtUtils.Errors,
+  NtUtilsUI.Components;
 
 {$BOOLEVAL OFF}
 {$IFOPT R+}{$DEFINE R+}{$ENDIF}
@@ -206,6 +207,6 @@ begin
 end;
 
 initialization
-  NtUiLibHostFrameShow := TFrameHostDialog.Display;
-  NtUiLibHostFramePick := TFrameHostDialog.Pick;
+  UiLibHostShow := TFrameHostDialog.Display;
+  UiLibHostPick := TFrameHostDialog.Pick;
 end.

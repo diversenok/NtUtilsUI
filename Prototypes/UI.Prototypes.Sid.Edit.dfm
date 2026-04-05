@@ -2,8 +2,8 @@ inherited SidEditor: TSidEditor
   Width = 600
   Height = 25
   Anchors = [akLeft, akTop, akRight]
-  ParentShowHint = False
-  ShowHint = True
+  ExplicitWidth = 600
+  ExplicitHeight = 25
   object tbxSid: TEdit
     AlignWithMargins = True
     Left = 0

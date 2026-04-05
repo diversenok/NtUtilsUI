@@ -115,10 +115,7 @@ function NtUiLibSelectCapabilities(
   Owner: TComponent
 ): TArray<TNtUiLibCapability>;
 begin
-  if not Assigned(NtUiLibHostFramePick) then
-    raise ENotSupportedException.Create('Frame host not available');
-
-  Result := TArray<TNtUiLibCapability>((NtUiLibHostFramePick(Owner,
+  Result := TArray<TNtUiLibCapability>((UiLibPick(Owner,
     Initializer(True)) as IMemory).Data^);
 end;
 

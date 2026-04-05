@@ -348,10 +348,7 @@ function NtUiLibCreateAce(
 var
   ModalResult: IInterface;
 begin
-  if not Assigned(NtUiLibHostFramePick) then
-    raise ENotSupportedException.Create('Frame host not available');
-
-  ModalResult := NtUiLibHostFramePick(Owner, Initializer(AccessMaskType,
+  ModalResult := UiLibPick(Owner, Initializer(AccessMaskType,
     GenericMapping, DefaultAceType));
 
   Result := TAceData((ModalResult as IMemory).Data^);
@@ -366,10 +363,7 @@ function NtUiLibEditAce(
 var
   ModalResult: IInterface;
 begin
-  if not Assigned(NtUiLibHostFramePick) then
-    raise ENotSupportedException.Create('Frame host not available');
-
-  ModalResult := NtUiLibHostFramePick(Owner, InitializerEx(AccessMaskType,
+  ModalResult := UiLibPick(Owner, InitializerEx(AccessMaskType,
     GenericMapping, Ace));
 
   Result := TAceData((ModalResult as IMemory).Data^);

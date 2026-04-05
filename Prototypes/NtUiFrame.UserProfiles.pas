@@ -90,20 +90,14 @@ end;
 
 procedure NtUiLibShowUserProfiles;
 begin
-  if not Assigned(NtUiLibHostFrameShow) then
-    raise ENotSupportedException.Create('Frame host not available');
-
-  NtUiLibHostFrameShow(Initializer);
+  UiLibShow(Initializer);
 end;
 
 function NtUiLibSelectUserProfile(Owner: TComponent): TNtUiLibProfileInfo;
 var
   ProfileNode: IProfileNode;
 begin
-  if not Assigned(NtUiLibHostFramePick) then
-    raise ENotSupportedException.Create('Frame host not available');
-
-  Profilenode := NtUiLibHostFramePick(Owner, Initializer) as IProfileNode;
+  Profilenode := UiLibPick(Owner, Initializer) as IProfileNode;
   Result := ProfileNode.Info;
 end;
 

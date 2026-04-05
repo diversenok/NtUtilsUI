@@ -250,10 +250,7 @@ function NtUiLibSelectTrust(
 var
   Selection: IInterface;
 begin
-  if not Assigned(NtUiLibHostFramePick) then
-    raise ENotSupportedException.Create('Frame host not available');
-
-  Selection := NtUiLibHostFramePick(Owner,
+  Selection := UiLibPick(Owner,
     function (AOwner: TComponent): TWinControl
     var
       Frame: TFrameTrustSid absolute Result;

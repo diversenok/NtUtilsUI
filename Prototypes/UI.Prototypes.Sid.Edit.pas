@@ -51,7 +51,8 @@ implementation
 uses
   Ntapi.ntstatus, Ntapi.WinNt, NtUtils.Lsa.Sid, NtUiLib.AutoCompletion.Sid,
   NtUtils.Security.Sid, Resources.Icon.Catalogue, Resources.Icon.UserPicker,
-  Resources.Icon.Choose, NtUiCommon.Prototypes, NtUiFrame.Sids.Abbreviations;
+  Resources.Icon.Choose, NtUiCommon.Prototypes, NtUiFrame.Sids.Abbreviations,
+  NtUtilsUI;
 
 {$R *.dfm}
 
@@ -62,7 +63,7 @@ begin
   if tbxSid.CanFocus then
     tbxSid.SetFocus;
 
-  NtUiLibHostFrameShow(
+  UiLibShow(
     function (AOwner: TComponent): TWinControl
     begin
       Result := TSidAbbreviationFrame.Create(AOwner);

@@ -46,10 +46,7 @@ procedure NtUiLibShowSecurity(
   const Context: TNtUiLibSecurityContext
 );
 begin
-  if not Assigned(NtUiLibHostFrameShow) then
-    raise ENotSupportedException.Create('Frame host not available');
-
-  NtUiLibHostFrameShow(NtUiLibMakeSecurityFrame(Context));
+  UiLibShow(NtUiLibMakeSecurityFrame(Context));
 end;
 
 initialization

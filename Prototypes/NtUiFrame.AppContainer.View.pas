@@ -77,10 +77,7 @@ end;
 
 procedure NtUiLibShowAppContainer(const Info: TRtlxAppContainerInfo);
 begin
-  if not Assigned(NtUiLibHostFramePick) then
-    raise ENotSupportedException.Create('Frame host not available');
-
-  NtUiLibHostFrameShow(Initializer(Info));
+  UiLibShow(Initializer(Info));
 end;
 
 initialization

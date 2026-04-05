@@ -10,7 +10,7 @@ uses
   Ntapi.WinNt, Ntapi.ntseapi, Ntapi.WinUser, NtUtils, NtUtils.Profiles,
   NtUtils.Objects, NtUtils.Security.AppContainer, NtUtils.Security,
   NtUtils.Security.Acl, NtUtilsUI.DevirtualizedTree, NtUiDialog.FrameHost,
-  System.Classes, Vcl.Forms, NtUtilsUI;
+  System.Classes, Vcl.Forms, NtUtilsUI, NtUtilsUI.Components;
 
 type
   TSecurityAccessMaskLookup = reference to function (
@@ -19,15 +19,6 @@ type
 
 var
   { Common: Frame Hosting }
-
-  NtUiLibHostFrameShow: procedure (
-    Initializer: TWinControlFactory
-  );
-
-  NtUiLibHostFramePick: function (
-    AOwner: TComponent;
-    Initializer: TWinControlFactory
-  ): IInterface;
 
   NtUiLibHostPages: function (
     AOwner: TComponent;

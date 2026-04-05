@@ -110,10 +110,7 @@ procedure NtUiLibShowAppContainersAllUsers(
   const User: ISid
 );
 begin
-  if not Assigned(NtUiLibHostFrameShow) then
-    raise ENotSupportedException.Create('Frame host not available');
-
-  NtUiLibHostFrameShow(Initializer(User));
+  UiLibShow(Initializer(User));
 end;
 
 function NtUiLibSelectAppContainerAllUsers(
@@ -123,10 +120,7 @@ function NtUiLibSelectAppContainerAllUsers(
 var
   ProfileNode: IAppContainerNode;
 begin
-  if not Assigned(NtUiLibHostFramePick) then
-    raise ENotSupportedException.Create('Frame host not available');
-
-  ProfileNode := NtUiLibHostFramePick(Owner,
+  ProfileNode := UiLibPick(Owner,
     Initializer(DefaultUser)) as IAppContainerNode;
 
   Result := ProfileNode.Info;
