@@ -114,11 +114,6 @@ var
 
   { SIDs }
 
-  NtUiLibSelectIntegrity: function (
-    Owner: TComponent;
-    [opt] const DefaultSid: ISid = nil
-  ): ISid;
-
   NtUiLibSelectTrust: function (
     Owner: TComponent;
     [opt] const DefaultSid: ISid = nil

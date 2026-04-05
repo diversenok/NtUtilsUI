@@ -7,7 +7,7 @@ unit NtUtilsUI.Components;
 interface
 
 uses
-  System.Classes, Vcl.Controls;
+  System.Classes, Vcl.Controls, NtUtils;
 
 type
   // An anonymous function that can instantiate visual controls
@@ -25,6 +25,31 @@ var
     ControlFactory: TWinControlFactory
   ): IInterface;
 
+  { SIDs }
+
+  // A host for selecting an integrity SID
+  UiLibHostPickIntegritySid: function (
+    Owner: TComponent;
+    [opt] const InitialChoice: ISid = nil
+  ): ISid;
+
+// Show a modal dialog to choose an integrity SID
+function UiLibPickIntegritySid(
+  Owner: TComponent;
+  [opt] const InitialChoice: ISid = nil
+): ISid;
+
 implementation
+
+const
+  MSG_E_NO_COMPONENT = 'The required component is not registered';
+
+function UiLibPickIntegritySid;
+begin
+  if Assigned(UiLibHostPickIntegritySid) then
+    Result := UiLibHostPickIntegritySid(Owner, InitialChoice)
+  else
+    raise EClassNotFound.Create(MSG_E_NO_COMPONENT);
+end;
 
 end.

@@ -123,6 +123,7 @@
         <DCCReference Include="NtUtilsUI.Edit.pas"/>
         <DCCReference Include="NtUtilsUI.ListView.pas"/>
         <DCCReference Include="NtUtilsUI.pas"/>
+        <DCCReference Include="NtUtilsUI.Sid.Integrity.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>
@@ -1030,6 +1031,7 @@
                 <Platform value="Win64">True</Platform>
                 <Platform value="Win64x">False</Platform>
             </Platforms>
+            <ModelSupport>False</ModelSupport>
         </BorlandProject>
         <ProjectFileVersion>12</ProjectFileVersion>
     </ProjectExtensions>

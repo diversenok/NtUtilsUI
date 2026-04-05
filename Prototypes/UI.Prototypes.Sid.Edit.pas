@@ -52,7 +52,7 @@ uses
   Ntapi.ntstatus, Ntapi.WinNt, NtUtils.Lsa.Sid, NtUiLib.AutoCompletion.Sid,
   NtUtils.Security.Sid, Resources.Icon.Catalogue, Resources.Icon.UserPicker,
   Resources.Icon.Choose, NtUiCommon.Prototypes, NtUiFrame.Sids.Abbreviations,
-  NtUtilsUI;
+  NtUtilsUI, NtUtilsUI.Components;
 
 {$R *.dfm}
 
@@ -80,8 +80,7 @@ begin
 
   case FSidChoice of
     scIntegrity:
-      if Assigned(NtUiLibSelectIntegrity) then
-        Sid := NtUiLibSelectIntegrity(Self, Current);
+      Sid := UiLibPickIntegritySid(Self, Current);
 
     scTrust:
       if Assigned(NtUiLibSelectTrust) then
@@ -167,7 +166,7 @@ begin
   case Value of
     scIntegrity:
     begin
-      btnChoice.Visible := Assigned(NtUiLibSelectIntegrity);
+      btnChoice.Visible := Assigned(UiLibHostPickIntegritySid);
       btnChoice.Hint := 'Choose Integrity Level';
     end;
 

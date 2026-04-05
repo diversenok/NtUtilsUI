@@ -39,6 +39,7 @@ contains
   NtUtilsUI.DevirtualizedTree in 'NtUtilsUI.DevirtualizedTree.pas',
   NtUtilsUI.Edit in 'NtUtilsUI.Edit.pas',
   NtUtilsUI.ListView in 'NtUtilsUI.ListView.pas',
-  NtUtilsUI in 'NtUtilsUI.pas';
+  NtUtilsUI in 'NtUtilsUI.pas',
+  NtUtilsUI.Sid.Integrity in 'NtUtilsUI.Sid.Integrity.pas';
 
 end.
