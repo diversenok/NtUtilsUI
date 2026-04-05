@@ -11,7 +11,7 @@ interface
 
 uses
   System.SysUtils, System.Classes, Vcl.Controls, Vcl.StdCtrls, Vcl.ExtCtrls,
-  Winapi.Windows, Winapi.Messages, NtUtilsUI;
+  Winapi.Windows, Winapi.Messages, NtUtilsUI.Interfaces;
 
 type
   TUiLibEdit = class(TEdit)
