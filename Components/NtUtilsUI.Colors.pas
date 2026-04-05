@@ -1,4 +1,8 @@
-unit NtUiCommon.Colors;
+unit NtUtilsUI.Colors;
+
+{
+  This module provides settings for custom UI element colors.
+}
 
 interface
 
@@ -26,9 +30,10 @@ type
     clForegroundInactive: TColor;
     clForegroundLink: TColor;
   end;
+  PColorSettings = ^TColorSettings;
 
 var
-  ColorSettings: TColorSettings = (
+  DefaultColorSettings: TColorSettings = (
     clBackgroundAllow: $E0F0E0;                // Light green
     clBackgroundAllowAccent: $C0F0C0;          // Medium-light green
     clBackgroundDeny: $E0E0F0;                 // Light red

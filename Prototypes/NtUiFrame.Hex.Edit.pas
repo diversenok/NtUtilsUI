@@ -32,7 +32,7 @@ type
 implementation
 
 uses
-  NtUiBackend.HexView, NtUiCommon.Colors, DelphiUiLib.Strings;
+  NtUiBackend.HexView, NtUtilsUI, DelphiUiLib.Strings;
 
 {$R *.dfm}
 

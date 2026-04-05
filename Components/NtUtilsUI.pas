@@ -10,13 +10,17 @@ interface
 
 uses
   Winapi.Messages, System.Classes, Vcl.Controls, NtUtilsUI.Forms,
-  NtUtilsUI.Interfaces, NtUtilsUI.Components;
+  NtUtilsUI.Interfaces, NtUtilsUI.Components, NtUtilsUI.Colors;
 
 const
   // Forward child form modes
   cfmNormal = NtUtilsUI.Forms.cfmNormal;
   cfmApplication = NtUtilsUI.Forms.cfmApplication;
   cfmDesktop = NtUtilsUI.Forms.cfmDesktop;
+
+var
+  // Choose the default color settings
+  ColorSettings: PColorSettings = @DefaultColorSettings;
 
 type
   // Forward base form classes

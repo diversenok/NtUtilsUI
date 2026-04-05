@@ -59,7 +59,7 @@ implementation
 uses
   NtUtils.SysUtils, NtUtils.Packages, NtUtils.Security.Sid,
   NtUtils.Security.AppContainer, DelphiUtils.Arrays, DelphiUiLib.Strings,
-  NtUiLib.AutoCompletion.Sid.Capabilities, Vcl.Graphics, NtUiCommon.Colors;
+  NtUiLib.AutoCompletion.Sid.Capabilities, Vcl.Graphics, NtUtilsUI;
 
 {$BOOLEVAL OFF}
 {$IFOPT R+}{$DEFINE R+}{$ENDIF}

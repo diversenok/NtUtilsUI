@@ -82,7 +82,7 @@ implementation
 uses
   Ntapi.WinNt, Ntapi.ntlsa, DelphiApi.Reflection, NtUtils.Security.Sid,
   NtUtils.Lsa, NtUtils.SysUtils, DelphiUiLib.Strings,
-  DelphiUiLib.LiteReflection, NtUiCommon.Colors;
+  DelphiUiLib.LiteReflection, NtUtilsUI;
 
 {$R *.dfm}
 

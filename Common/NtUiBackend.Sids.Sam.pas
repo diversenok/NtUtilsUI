@@ -54,7 +54,7 @@ implementation
 uses
   Ntapi.ntsam, NtUtils.Sam, NtUtils.SysUtils, NtUtils.Security.Sid,
   NtUtils.Lsa.Sid, NtUtils.Errors, NtUiLib.Errors, DelphiUiLib.LiteReflection,
-  DelphiUiLib.Strings, NtUiCommon.Colors;
+  DelphiUiLib.Strings, NtUtilsUI;
 
 const
   colName = 0;

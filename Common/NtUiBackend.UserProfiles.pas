@@ -34,7 +34,7 @@ implementation
 
 uses
   DelphiApi.Reflection, NtUtils.Security.Sid, DelphiUiLib.LiteReflection,
-  DelphiUiLib.Strings, NtUiCommon.Colors, NtUtils.SysUtils;
+  DelphiUiLib.Strings, NtUtilsUI, NtUtils.SysUtils;
 
 {$BOOLEVAL OFF}
 {$IFOPT R+}{$DEFINE R+}{$ENDIF}
