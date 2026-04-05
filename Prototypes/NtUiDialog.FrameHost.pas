@@ -20,7 +20,7 @@ type
     procedure btnSelectClick(Sender: TObject);
   private
     FFrame: TWinControl;
-    FFrameRef: IUnknown;
+    [Weak] FFrameRef: IUnknown;
     FFrameModalResult: IInterface;
     procedure FrameModalResultChanged(Sender: TObject);
   protected
