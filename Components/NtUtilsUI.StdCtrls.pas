@@ -83,6 +83,10 @@ type
     property ImageResource: String read FImageResource write SetImageResource;
   end;
 
+  TUiLibImageListHelper = class helper for TCustomImageList
+    function AddIconFromResource(Instance: THandle; const ResourceName: String): Integer;
+  end;
+
 implementation
 
 uses
@@ -460,8 +464,6 @@ begin
 end;
 
 procedure TUiLibButton.SetImageResource;
-var
-  Icon: TIcon;
 begin
   FImageResource := Value;
 
@@ -485,11 +487,20 @@ begin
   FImageList.Width := 16 * CurrentPPI div 96;
   FImageList.Height := FImageList.Width;
 
-  // Load the icon from the resource
+  // Load the resource
+  ImageIndex := FImageList.AddIconFromResource(HInstance, Value)
+end;
+
+{ TUiLibImageListHelper }
+
+function TUiLibImageListHelper.AddIconFromResource;
+var
+  Icon: TIcon;
+begin
   Icon := TIcon.Create;
   try
-    Icon.LoadFromResourceName(HInstance, Value);
-    ImageIndex := FImageList.AddIcon(Icon)
+    Icon.LoadFromResourceName(Instance, ResourceName);
+    Result := AddIcon(Icon);
   finally
     Icon.Free;
   end;
