@@ -10,7 +10,7 @@ unit NtUtilsUI.StdCtrls;
 interface
 
 uses
-  System.Classes, Vcl.Controls, Vcl.StdCtrls, Vcl.ExtCtrls,
+  System.Classes, Vcl.Controls, Vcl.StdCtrls, Vcl.ExtCtrls, Vcl.ImgList,
   Winapi.Windows, Winapi.Messages, NtUtilsUI.Interfaces;
 
 type
@@ -74,7 +74,7 @@ type
 
   TUiLibButton = class(TButton)
   private
-    FImageList: TImageList;
+    FImageList: TCustomImageList;
     FImageResource: String;
     procedure SetImageResource(Value: String);
   protected
@@ -86,7 +86,7 @@ type
 implementation
 
 uses
-  System.SysUtils, Vcl.Graphics, Vcl.ImgList;
+  System.SysUtils, Vcl.Graphics;
 
 var
   SuppressLeftMove: Boolean;
@@ -462,25 +462,22 @@ end;
 procedure TUiLibButton.SetImageResource;
 var
   Icon: TIcon;
-  IconIndex: Integer;
 begin
-  // Reset the selected image
-  Images := nil;
-  ImageIndex := -1;
-  FImageResource := '';
+  FImageResource := Value;
 
   if Value = '' then
   begin
-    // Remove an unused image list
-    FreeAndNil(FImageList);
+    ImageIndex := -1;
     Exit;
   end;
 
-  // Create the image list if necessary
+  // Create and select the image list if necessary
   if not Assigned(FImageList) then
   begin
-    FImageList := TImageList.Create(Self);
+    FImageList := TCustomImageList.Create(Self);
     FImageList.ColorDepth := cd32Bit;
+    ImageIndex := -1;
+    Images := FImageList;
   end;
 
   // Adjust the size to match the current DPI
@@ -492,15 +489,10 @@ begin
   Icon := TIcon.Create;
   try
     Icon.LoadFromResourceName(HInstance, Value);
-    IconIndex := FImageList.AddIcon(Icon)
+    ImageIndex := FImageList.AddIcon(Icon)
   finally
     Icon.Free;
   end;
-
-  // Select it on the button
-  Images := FImageList;
-  ImageIndex := IconIndex;
-  FImageResource := Value;
 end;
 
 end.
