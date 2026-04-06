@@ -11,17 +11,18 @@ uses
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, VirtualTrees,
   NtUtilsUI.VirtualTreeEx, NtUtilsUI.DevirtualizedTree, NtUtils, Vcl.StdCtrls,
   NtUiFrame, Ntapi.WinNt, Vcl.Menus, System.Actions, Vcl.ActnList, Vcl.ExtCtrls,
-  NtUiFrame.Search, NtUiCommon.Interfaces, NtUtils.Security.Acl, NtUtilsUI;
+  NtUiFrame.Search, NtUiCommon.Interfaces, NtUtils.Security.Acl, NtUtilsUI,
+  NtUtilsUI.StdCtrls;
 
 type
   TAclFrame = class(TBaseFrame, ICanConsumeEscape, ICanShowEmptyMessage,
     IObservesActivation)
     Tree: TDevirtualizedTree;
-    btnUp: TButton;
-    btnDown: TButton;
-    btnCanonicalize: TButton;
-    btnAdd: TButton;
-    btnDelete: TButton;
+    btnUp: TUiLibButton;
+    btnDown: TUiLibButton;
+    btnCanonicalize: TUiLibButton;
+    btnAdd: TUiLibButton;
+    btnDelete: TUiLibButton;
     PopupMenu: TPopupMenu;
     cmEdit: TMenuItem;
     cmDelete: TMenuItem;
@@ -49,11 +50,6 @@ type
     FOnAceChange: TNotifyEvent;
     FDefaultAceType: TAceType;
     procedure AclChanged;
-    procedure btnUpIconChanged(ImageList: TImageList; ImageIndex: Integer);
-    procedure btnAddIconChanged(ImageList: TImageList; ImageIndex: Integer);
-    procedure btnCanonicalizeIconChanged(ImageList: TImageList; ImageIndex: Integer);
-    procedure btnDeleteIconChanged(ImageList: TImageList; ImageIndex: Integer);
-    procedure btnDownIconChanged(ImageList: TImageList; ImageIndex: Integer);
     procedure SetActive(Active: Boolean);
     function GetAces: TArray<TAceData>;
     property SearchImpl: TSearchFrame read Search implements ICanConsumeEscape;
@@ -101,22 +97,10 @@ begin
   AclChanged;
 end;
 
-procedure TAclFrame.btnAddIconChanged;
-begin
-  btnAdd.Images := ImageList;
-  btnAdd.ImageIndex := ImageIndex;
-end;
-
 procedure TAclFrame.btnCanonicalizeClick;
 begin
   UiLibCanonicalizeAcl(Tree);
   AclChanged;
-end;
-
-procedure TAclFrame.btnCanonicalizeIconChanged;
-begin
-  btnCanonicalize.Images := ImageList;
-  btnCanonicalize.ImageIndex := ImageIndex;
 end;
 
 procedure TAclFrame.btnDeleteClick;
@@ -126,34 +110,16 @@ begin
   AclChanged;
 end;
 
-procedure TAclFrame.btnDeleteIconChanged;
-begin
-  btnDelete.Images := ImageList;
-  btnDelete.ImageIndex := ImageIndex;
-end;
-
 procedure TAclFrame.btnDownClick;
 begin
   Tree.MoveSelectedNodesDown;
   AclChanged;
 end;
 
-procedure TAclFrame.btnDownIconChanged;
-begin
-  btnDown.Images := ImageList;
-  btnDown.ImageIndex := ImageIndex;
-end;
-
 procedure TAclFrame.btnUpClick;
 begin
   Tree.MoveSelectedNodesUp;
   AclChanged;
-end;
-
-procedure TAclFrame.btnUpIconChanged;
-begin
-  btnUp.Images := ImageList;
-  btnUp.ImageIndex := ImageIndex;
 end;
 
 procedure TAclFrame.cmEditClick;
@@ -187,11 +153,6 @@ end;
 procedure TAclFrame.LoadedOnce;
 begin
   inherited;
-  RegisterResourceIcon(RESOURCES_ICON_UP, btnUpIconChanged);
-  RegisterResourceIcon(RESOURCES_ICON_ADD, btnAddIconChanged);
-  RegisterResourceIcon(RESOURCES_ICON_VERIFY, btnCanonicalizeIconChanged);
-  RegisterResourceIcon(RESOURCES_ICON_DELETE, btnDeleteIconChanged);
-  RegisterResourceIcon(RESOURCES_ICON_DOWN, btnDownIconChanged);
   btnAdd.Enabled := Assigned(NtUiLibCreateAce);
   Search.AttachToTree(Tree);
 end;

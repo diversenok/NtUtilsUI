@@ -22,7 +22,7 @@ inherited AceConditionFrame: TAceConditionFrame
       'WINDIR%\*")'
     OnChange = tbxConditionChange
   end
-  object btnNormalize: TButton
+  object btnNormalize: TUiLibButton
     AlignWithMargins = True
     Left = 575
     Top = 0
@@ -37,5 +37,6 @@ inherited AceConditionFrame: TAceConditionFrame
     ImageAlignment = iaCenter
     TabOrder = 1
     OnClick = btnNormalizeClick
+    ImageResource = 'Resources.Icon.Verify'
   end
 end

@@ -21,7 +21,7 @@ inherited SidEditor: TSidEditor
     OnChange = tbxSidChange
     OnEnter = tbxSidEnter
   end
-  object btnDsPicker: TButton
+  object btnDsPicker: TUiLibButton
     AlignWithMargins = True
     Left = 575
     Top = 0
@@ -37,8 +37,9 @@ inherited SidEditor: TSidEditor
     ImageMargins.Left = 2
     TabOrder = 3
     OnClick = btnDsPickerClick
+    ImageResource = 'Resources.Icon.UserPicker'
   end
-  object btnCheatsheet: TButton
+  object btnCheatsheet: TUiLibButton
     AlignWithMargins = True
     Left = 546
     Top = 0
@@ -53,8 +54,9 @@ inherited SidEditor: TSidEditor
     ImageAlignment = iaCenter
     TabOrder = 2
     OnClick = btnCheatsheetClick
+    ImageResource = 'Resources.Icon.Catalogue'
   end
-  object btnChoice: TButton
+  object btnChoice: TUiLibButton
     AlignWithMargins = True
     Left = 517
     Top = 0
@@ -69,5 +71,6 @@ inherited SidEditor: TSidEditor
     TabOrder = 1
     Visible = False
     OnClick = btnChoiceClick
+    ImageResource = 'Resources.Icon.Choose'
   end
 end

@@ -9,12 +9,12 @@ interface
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes,
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, NtUtils,
-  NtUiFrame;
+  NtUiFrame, NtUtilsUI.StdCtrls;
 
 type
   TAceConditionFrame = class(TBaseFrame)
     tbxCondition: TEdit;
-    btnNormalize: TButton;
+    btnNormalize: TUiLibButton;
     procedure tbxConditionChange(Sender: TObject);
     procedure btnNormalizeClick(Sender: TObject);
   private
@@ -22,9 +22,7 @@ type
     FCondition: IMemory;
     function GetCondition: IMemory;
     procedure SetCondition(const Value: IMemory);
-    procedure NormalizeIconChanged(ImageList: TImageList; ImageIndex: Integer);
   protected
-    procedure LoadedOnce; override;
     procedure FrameEnabledChanged(var Message: TMessage); message CM_ENABLEDCHANGED;
   public
     function TryGetCondition([MayReturnNil] out Value: IMemory): TNtxStatus;
@@ -56,18 +54,6 @@ end;
 function TAceConditionFrame.GetCondition;
 begin
   TryGetCondition(Result).RaiseOnError;
-end;
-
-procedure TAceConditionFrame.LoadedOnce;
-begin
-  inherited;
-  RegisterResourceIcon(RESOURCES_ICON_VERIFY, NormalizeIconChanged);
-end;
-
-procedure TAceConditionFrame.NormalizeIconChanged;
-begin
-  btnNormalize.Images := ImageList;
-  btnNormalize.ImageIndex := ImageIndex;
 end;
 
 procedure TAceConditionFrame.SetCondition;

@@ -127,7 +127,7 @@ inherited AclFrame: TAclFrame
     BevelOuter = bvNone
     ShowCaption = False
     TabOrder = 1
-    object btnAdd: TButton
+    object btnAdd: TUiLibButton
       Left = 0
       Top = 48
       Width = 25
@@ -137,8 +137,9 @@ inherited AclFrame: TAclFrame
       ImageAlignment = iaCenter
       TabOrder = 1
       OnClick = btnAddClick
+      ImageResource = 'Resources.Icon.Add'
     end
-    object btnCanonicalize: TButton
+    object btnCanonicalize: TUiLibButton
       Left = 0
       Top = 90
       Width = 25
@@ -149,8 +150,9 @@ inherited AclFrame: TAclFrame
       ImageAlignment = iaCenter
       TabOrder = 2
       OnClick = btnCanonicalizeClick
+      ImageResource = 'Resources.Icon.Verify'
     end
-    object btnDelete: TButton
+    object btnDelete: TUiLibButton
       Left = 0
       Top = 132
       Width = 25
@@ -161,8 +163,9 @@ inherited AclFrame: TAclFrame
       ImageAlignment = iaCenter
       TabOrder = 3
       OnClick = btnDeleteClick
+      ImageResource = 'Resources.Icon.Delete'
     end
-    object btnDown: TButton
+    object btnDown: TUiLibButton
       Left = 0
       Top = 180
       Width = 25
@@ -173,8 +176,9 @@ inherited AclFrame: TAclFrame
       ImageAlignment = iaCenter
       TabOrder = 4
       OnClick = btnDownClick
+      ImageResource = 'Resources.Icon.Down'
     end
-    object btnUp: TButton
+    object btnUp: TUiLibButton
       Left = 0
       Top = 0
       Width = 25
@@ -185,6 +189,7 @@ inherited AclFrame: TAclFrame
       ImageAlignment = iaCenter
       TabOrder = 0
       OnClick = btnUpClick
+      ImageResource = 'Resources.Icon.Up'
     end
   end
   inline Search: TSearchFrame

@@ -5,7 +5,7 @@ interface
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes,
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls,
-  NtUtils, NtUiFrame, NtUiLib.AutoCompletion;
+  NtUtils, NtUiFrame, NtUiLib.AutoCompletion, NtUtilsUI.StdCtrls;
 
 type
   TSidChoice = (
@@ -16,9 +16,9 @@ type
 
   TSidEditor = class(TBaseFrame)
     tbxSid: TEdit;
-    btnDsPicker: TButton;
-    btnCheatsheet: TButton;
-    btnChoice: TButton;
+    btnDsPicker: TUiLibButton;
+    btnCheatsheet: TUiLibButton;
+    btnChoice: TUiLibButton;
     procedure btnCheatsheetClick(Sender: TObject);
     procedure btnDsPickerClick(Sender: TObject);
     procedure tbxSidChange(Sender: TObject);
@@ -31,9 +31,6 @@ type
     FSidChoice: TSidChoice;
     function GetSid: ISid;
     procedure SetSid(const Sid: ISid);
-    procedure DsPickerIconChanged(ImageList: TImageList; ImageIndex: Integer);
-    procedure CheatsheetIconChanged(ImageList: TImageList; ImageIndex: Integer);
-    procedure ChoiceIconChanged(ImageList: TImageList; ImageIndex: Integer);
     procedure SetSidChoice(const Value: TSidChoice);
   protected
     procedure LoadedOnce; override;
@@ -96,24 +93,6 @@ begin
   tbxSid.Text := NtUiLibSelectDsObject(Handle);
 end;
 
-procedure TSidEditor.CheatsheetIconChanged;
-begin
-  btnCheatsheet.Images := ImageList;
-  btnCheatsheet.ImageIndex := ImageIndex;
-end;
-
-procedure TSidEditor.ChoiceIconChanged;
-begin
-  btnChoice.Images := ImageList;
-  btnChoice.ImageIndex := ImageIndex;
-end;
-
-procedure TSidEditor.DsPickerIconChanged;
-begin
-  btnDsPicker.Images := ImageList;
-  btnDsPicker.ImageIndex := ImageIndex;
-end;
-
 procedure TSidEditor.FrameEnabledChanged;
 begin
   inherited;
@@ -130,9 +109,6 @@ end;
 procedure TSidEditor.LoadedOnce;
 begin
   inherited;
-  RegisterResourceIcon(RESOURCES_ICON_USER_PICKER, DsPickerIconChanged);
-  RegisterResourceIcon(RESOURCES_ICON_CATALOGUE, CheatsheetIconChanged);
-  RegisterResourceIcon(RESOURCES_ICON_CHOOSE, ChoiceIconChanged);
   btnDsPicker.Visible := Assigned(NtUiLibSelectDsObject);
 end;
 
