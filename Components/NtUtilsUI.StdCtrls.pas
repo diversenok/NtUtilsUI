@@ -90,7 +90,7 @@ type
 implementation
 
 uses
-  System.SysUtils, Vcl.Graphics;
+  System.SysUtils, Winapi.CommCtrl;
 
 var
   SuppressLeftMove: Boolean;
@@ -494,16 +494,9 @@ end;
 { TUiLibImageListHelper }
 
 function TUiLibImageListHelper.AddIconFromResource;
-var
-  Icon: TIcon;
 begin
-  Icon := TIcon.Create;
-  try
-    Icon.LoadFromResourceName(Instance, ResourceName);
-    Result := AddIcon(Icon);
-  finally
-    Icon.Free;
-  end;
+  Result := ImageList_AddIcon(Handle, LoadIcon(Instance, PChar(ResourceName)));
+  Change;
 end;
 
 end.
