@@ -1,8 +1,8 @@
-unit NtUtilsUI.Edit;
+unit NtUtilsUI.StdCtrls;
 
 {
   This module contains the full runtime component definitions for the improved
-  edit controls.
+  standard controls.
 
   NOTE: Keep the published interface in sync with the design-time definitions!
 }
@@ -10,7 +10,7 @@ unit NtUtilsUI.Edit;
 interface
 
 uses
-  System.SysUtils, System.Classes, Vcl.Controls, Vcl.StdCtrls, Vcl.ExtCtrls,
+  System.Classes, Vcl.Controls, Vcl.StdCtrls, Vcl.ExtCtrls,
   Winapi.Windows, Winapi.Messages, NtUtilsUI.Interfaces;
 
 type
@@ -72,7 +72,21 @@ type
     procedure KeyPress(var Key: Char); override;
   end;
 
+  TUiLibButton = class(TButton)
+  private
+    FImageList: TImageList;
+    FImageResource: String;
+    procedure SetImageResource(Value: String);
+  protected
+    procedure ChangeScale(M, D: Integer; isDpiChange: Boolean); override;
+  published
+    property ImageResource: String read FImageResource write SetImageResource;
+  end;
+
 implementation
+
+uses
+  System.SysUtils, Vcl.Graphics, Vcl.ImgList;
 
 var
   SuppressLeftMove: Boolean;
@@ -432,6 +446,61 @@ begin
     Key := #0;
 
   inherited;
+end;
+
+{ TUiLibButton }
+
+procedure TUiLibButton.ChangeScale(M, D: Integer; isDpiChange: Boolean);
+begin
+  inherited;
+
+  // Reload the icon on DPI change
+  if isDpiChange and (FImageResource <> '') then
+    SetImageResource(FImageResource);
+end;
+
+procedure TUiLibButton.SetImageResource;
+var
+  Icon: TIcon;
+  IconIndex: Integer;
+begin
+  // Reset the selected image
+  Images := nil;
+  ImageIndex := -1;
+  FImageResource := '';
+
+  if Value = '' then
+  begin
+    // Remove an unused image list
+    FreeAndNil(FImageList);
+    Exit;
+  end;
+
+  // Create the image list if necessary
+  if not Assigned(FImageList) then
+  begin
+    FImageList := TImageList.Create(Self);
+    FImageList.ColorDepth := cd32Bit;
+  end;
+
+  // Adjust the size to match the current DPI
+  FImageList.Clear;
+  FImageList.Width := 16 * CurrentPPI div 96;
+  FImageList.Height := FImageList.Width;
+
+  // Load the icon from the resource
+  Icon := TIcon.Create;
+  try
+    Icon.LoadFromResourceName(HInstance, Value);
+    IconIndex := FImageList.AddIcon(Icon)
+  finally
+    Icon.Free;
+  end;
+
+  // Select it on the button
+  Images := FImageList;
+  ImageIndex := IconIndex;
+  FImageResource := Value;
 end;
 
 end.

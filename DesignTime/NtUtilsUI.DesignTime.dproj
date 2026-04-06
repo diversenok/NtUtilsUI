@@ -120,7 +120,7 @@
         <DCCReference Include="vcl.dcp"/>
         <DCCReference Include="NtUtilsUI.VirtualTreeEx.pas"/>
         <DCCReference Include="NtUtilsUI.DevirtualizedTree.pas"/>
-        <DCCReference Include="NtUtilsUI.Edit.pas"/>
+        <DCCReference Include="NtUtilsUI.StdCtrls.pas"/>
         <DCCReference Include="NtUtilsUI.ListView.pas"/>
         <DCCReference Include="NtUtilsUI.pas"/>
         <DCCReference Include="NtUtilsUI.Sid.Integrity.pas"/>

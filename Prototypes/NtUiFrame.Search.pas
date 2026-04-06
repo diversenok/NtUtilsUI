@@ -11,7 +11,7 @@ uses
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls,
   Vcl.ExtCtrls, VirtualTrees, NtUtilsUI.DevirtualizedTree, NtUiFrame,
   NtUiCommon.Interfaces, System.Actions, Vcl.ActnList, NtUtilsUI,
-  NtUtilsUI.Edit;
+  NtUtilsUI.StdCtrls;
 
 type
   TSearchFrame = class(TBaseFrame, ICanConsumeEscape, IObservesActivation)

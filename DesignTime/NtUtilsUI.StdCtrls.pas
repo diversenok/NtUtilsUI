@@ -1,8 +1,8 @@
-unit NtUtilsUI.Edit;
+unit NtUtilsUI.StdCtrls;
 
 {
   This module contains a (stripped down) design-time component definitions for
-  the improved edit controls.
+  the improved standard controls.
 
   NOTE: Keep the published interface in sync with the runtime definitions!
 }
@@ -42,6 +42,13 @@ type
   TUiLibComboBox = class(TComboBox)
   end;
 
+  TUiLibButton = class(TButton)
+  private
+    FImageResource: String;
+  published
+    property ImageResource: String read FImageResource write FImageResource;
+  end;
+
 procedure Register;
 
 implementation
@@ -49,7 +56,7 @@ implementation
 procedure Register;
 begin
   RegisterComponents('NtUtilsUI', [TUiLibEdit, TUiLibButtonedEdit,
-    TUiLibComboBox]);
+    TUiLibComboBox, TUiLibButton]);
 end;
 
 { TUiLibEdit }
@@ -69,4 +76,3 @@ begin
 end;
 
 end.
-

@@ -37,7 +37,7 @@ requires
 contains
   NtUtilsUI.VirtualTreeEx in 'NtUtilsUI.VirtualTreeEx.pas',
   NtUtilsUI.DevirtualizedTree in 'NtUtilsUI.DevirtualizedTree.pas',
-  NtUtilsUI.Edit in 'NtUtilsUI.Edit.pas',
+  NtUtilsUI.StdCtrls in 'NtUtilsUI.StdCtrls.pas',
   NtUtilsUI.ListView in 'NtUtilsUI.ListView.pas',
   NtUtilsUI in 'NtUtilsUI.pas',
   NtUtilsUI.Sid.Integrity in 'NtUtilsUI.Sid.Integrity.pas';
