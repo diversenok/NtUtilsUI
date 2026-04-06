@@ -11,6 +11,16 @@ uses
   Vcl.Controls, Vcl.Forms, NtUtils, DelphiUtils.AutoEvents;
 
 type
+  TUiLibShortCut = class (TComponent)
+  private
+    FShortCut: TShortCut;
+    FOnExecute: TNotifyEvent;
+  public
+    property ShortCut: TShortCut read FShortCut write FShortCut;
+    property OnExecute: TNotifyEvent read FOnExecute write FOnExecute;
+    procedure Invoke;
+  end;
+
   TUiLibForm = class abstract (TForm)
   private
     const idOnTop = 10001;
@@ -23,6 +33,7 @@ type
     procedure DoShow; override;
   public
     function ShowModal: Integer; override;
+    function IsShortCut(var Message: TWMKey): Boolean; override;
   end;
 
   TUiLibMainForm = class abstract (TUiLibForm)
@@ -58,9 +69,40 @@ function IsWindowTopmost(Handle: HWND): Boolean;
 
 implementation
 
+uses
+  Vcl.Menus;
+
 function IsWindowTopmost;
 begin
   Result := GetWindowLongPtrW(Handle, GWL_EXSTYLE) and WS_EX_TOPMOST <> 0
+end;
+
+procedure DispatchShortCut(const Owner: TComponent; ShortCut: TShortCut);
+var
+  i: Integer;
+  Component: TComponent;
+begin
+  // Always dispatch to all children
+  for i := 0 to Pred(Owner.ComponentCount) do
+  begin
+    Component := Owner.Components[i];
+
+    if Component is TUiLibShortCut then
+    begin
+      if TUiLibShortCut(Component).ShortCut = ShortCut then
+        TUiLibShortCut(Component).Invoke;
+    end
+    else
+      DispatchShortCut(Component, ShortCut);
+  end;
+end;
+
+{ TUiLibShortCut }
+
+procedure TUiLibShortCut.Invoke;
+begin
+  if Assigned(FOnExecute) then
+    FOnExecute(Self);
 end;
 
 { TUiLibForm }
@@ -98,6 +140,15 @@ begin
     if (Control is TForm) and IsWindowTopmost(Control.Handle) then
       FormStyle := fsStayOnTop;
   end;
+end;
+
+function TUiLibForm.IsShortCut;
+begin
+  Result := inherited;
+
+  if not Vcl.Menus.IsAltGRPressed then
+    DispatchShortCut(Self, Vcl.Menus.ShortCut(Message.CharCode,
+      KeyDataToShiftState(Message.KeyData)));
 end;
 
 function TUiLibForm.ShowModal;

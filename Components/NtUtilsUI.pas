@@ -23,9 +23,10 @@ var
   ColorSettings: PColorSettings = @DefaultColorSettings;
 
 type
-  // Forward base form classes
+  // Forward base form and shortcut classes
   TUiLibMainForm = NtUtilsUI.Forms.TUiLibMainForm;
   TUiLibChildForm = NtUtilsUI.Forms.TUiLibChildForm;
+  TUiLibShortCut = NtUtilsUI.Forms.TUiLibShortCut;
 
   // Forward known component interfaces
   ICanConsumeEscape = NtUtilsUI.Interfaces.ICanConsumeEscape;
