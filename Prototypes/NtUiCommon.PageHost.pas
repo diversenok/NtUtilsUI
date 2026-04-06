@@ -9,22 +9,20 @@ interface
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes,
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.ComCtrls,
-  NtUiCommon.Prototypes, NtUiCommon.Interfaces, System.Actions, Vcl.ActnList,
-  NtUtilsUI;
+  NtUiCommon.Prototypes, NtUiCommon.Interfaces, NtUtilsUI;
 
 type
   TFramePages = class(TFrame, ICanConsumeEscape, IHasDefaultCaption)
     PageControl: TPageControl;
-    ActionList: TActionList;
     procedure PageControlChange(Sender: TObject);
   private
     FTabs: TArray<TTabSheet>;
     FFrames: TArray<TWinControl>;
-    FActions: TArray<TAction>;
+    FShortCuts: TArray<TUiLibShortCut>;
     FDelayLoaded: TArray<Boolean>;
     FDefaultCaption: String;
     function ConsumesEscape: Boolean;
-    procedure SwitchToTabAction(Sender: TObject);
+    procedure OnTabShortCut(Sender: TUiLibShortCut; var Handled: Boolean);
     function GetDefaultCaption: String;
     procedure NotifyDelayedLoading(Index: Integer);
   protected
@@ -96,7 +94,7 @@ begin
   end;
 
   SetLength(FTabs, Length(Frames));
-  SetLength(FActions, Length(Frames));
+  SetLength(FShortCuts, Length(Frames));
   SetLength(FDelayLoaded, Length(Frames));
 
   for i := 0 to High(Frames) do
@@ -127,11 +125,9 @@ begin
     if i < 9 then
     begin
       // Handle page switching on Ctrl+<number>
-      FActions[i] := TAction.Create(ActionList);
-      FActions[i].ShortCut := scCtrl or (Ord('1') + i);
-      FActions[i].Tag := i;
-      FActions[i].OnExecute := SwitchToTabAction;
-      FActions[i].ActionList := ActionList;
+      FShortCuts[i] := TUiLibShortCut.Create(Self);
+      FShortCuts[i].ShortCut := scCtrl or (Ord('1') + i);
+      FShortCuts[i].OnExecute := OnTabShortCut;
     end;
   end;
 
@@ -154,28 +150,28 @@ begin
   end;
 end;
 
-procedure TFramePages.PageControlChange;
+procedure TFramePages.OnTabShortCut;
 var
-  Observer: IObservesActivation;
   i: Integer;
 begin
-  // Adjust active state for all frames to allow handling conflicting shortcuts
-  for i := 0 to High(FFrames) do
-    if IUnknown(FFrames[i]).QueryInterface(IObservesActivation,
-      Observer).IsSuccess then
-      Observer.SetActive((i = PageControl.ActivePageIndex) and Enabled);
+  if not CanFocus then
+    Exit;
 
-  // Initiate delayed loading for the newly visible frame
-  NotifyDelayedLoading(PageControl.ActivePageIndex);
+  for i := 0 to High(FShortCuts) do
+    if Sender = FShortCuts[i] then
+    begin
+      PageControl.ActivePageIndex := i;
+      PageControlChange(Sender);
+      Handled := True;
+      Break;
+    end;
 end;
 
-procedure TFramePages.SwitchToTabAction;
+
+procedure TFramePages.PageControlChange;
 begin
-  if Sender is TAction then
-  begin
-    PageControl.ActivePageIndex := Word(TAction(Sender).Tag);
-    PageControlChange(Sender);
-  end;
+  // Initiate delayed loading for the newly visible frame
+  NotifyDelayedLoading(PageControl.ActivePageIndex);
 end;
 
 { Integration }

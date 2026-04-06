@@ -9,15 +9,15 @@ uses
   NtUiFrame.Search, NtUiCommon.Interfaces, NtUtilsUI;
 
 type
-  TCapabilityListFrame = class(TFrame, ICanConsumeEscape, IObservesActivation,
-    IHasDefaultCaption, IHasModalResult, IDelayedLoad)
+  TCapabilityListFrame = class(TFrame, ICanConsumeEscape, IHasDefaultCaption,
+    IHasModalResult, IDelayedLoad)
     SearchBox: TSearchFrame;
     Tree: TDevirtualizedTree;
   private
     Backend: TTreeNodeInterfaceProvider;
     BackendRef: IUnknown;
     UseCheckboxes: Boolean;
-    property SearchImpl: TSearchFrame read SearchBox implements ICanConsumeEscape, IObservesActivation;
+    property SearchImpl: TSearchFrame read SearchBox implements ICanConsumeEscape;
     function GetDefaultCaption: String;
     function GetModalResult: IInterface;
   protected

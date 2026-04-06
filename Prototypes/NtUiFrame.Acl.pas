@@ -10,13 +10,11 @@ uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes,
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, VirtualTrees,
   NtUtilsUI.VirtualTreeEx, NtUtilsUI.DevirtualizedTree, NtUtils, Vcl.StdCtrls,
-  NtUiFrame, Ntapi.WinNt, Vcl.Menus, System.Actions, Vcl.ActnList, Vcl.ExtCtrls,
-  NtUiFrame.Search, NtUiCommon.Interfaces, NtUtils.Security.Acl, NtUtilsUI,
-  NtUtilsUI.StdCtrls;
+  NtUiFrame, Ntapi.WinNt, Vcl.Menus, Vcl.ExtCtrls, NtUiFrame.Search,
+  NtUiCommon.Interfaces, NtUtils.Security.Acl, NtUtilsUI, NtUtilsUI.StdCtrls;
 
 type
-  TAclFrame = class(TBaseFrame, ICanConsumeEscape, ICanShowEmptyMessage,
-    IObservesActivation)
+  TAclFrame = class(TBaseFrame, ICanConsumeEscape, ICanShowEmptyMessage)
     Tree: TDevirtualizedTree;
     btnUp: TUiLibButton;
     btnDown: TUiLibButton;
@@ -28,10 +26,6 @@ type
     cmDelete: TMenuItem;
     cmUp: TMenuItem;
     cmDown: TMenuItem;
-    ActionList: TActionList;
-    alxNew: TAction;
-    alxCanonicalize: TAction;
-    alxEdit: TAction;
     RightPanel: TPanel;
     Search: TSearchFrame;
     procedure btnCanonicalizeClick(Sender: TObject);
@@ -49,13 +43,17 @@ type
     FGenericMapping: TGenericMapping;
     FOnAceChange: TNotifyEvent;
     FDefaultAceType: TAceType;
+    FAddShortCut: TUiLibShortCut;
+    FEditShortCut: TUiLibShortCut;
     procedure AclChanged;
-    procedure SetActive(Active: Boolean);
     function GetAces: TArray<TAceData>;
     property SearchImpl: TSearchFrame read Search implements ICanConsumeEscape;
+    procedure OnAddShortCut(Sender: TUiLibShortCut; var Handled: Boolean);
+    procedure OnEditShortCut(Sender: TUiLibShortCut; var Handled: Boolean);
   protected
     procedure LoadedOnce; override;
   public
+    constructor Create(AOwner: TComponent); override;
     procedure SetEmptyMessage(const Value: String);
     procedure LoadAces(
       const Aces: TArray<TAceData>;
@@ -136,6 +134,19 @@ begin
   AclChanged;
 end;
 
+constructor TAclFrame.Create;
+begin
+  inherited;
+
+  FAddShortCut := TUiLibShortCut.Create(Self);
+  FAddShortCut.ShortCut := scCtrl or Ord('N');
+  FAddShortCut.OnExecute := OnAddShortCut;
+
+  FEditShortCut := TUiLibShortCut.Create(Self);
+  FEditShortCut.ShortCut := scCtrl or Ord('E');
+  FEditShortCut.OnExecute := OnEditShortCut;
+end;
+
 function TAclFrame.GetAces;
 begin
   Result := UiLibCollectAces(Tree);
@@ -157,21 +168,29 @@ begin
   Search.AttachToTree(Tree);
 end;
 
+procedure TAclFrame.OnAddShortCut;
+begin
+  if CanFocus then
+  begin
+    btnAddClick(Sender);
+    Handled := True;
+  end;
+end;
+
+procedure TAclFrame.OnEditShortCut;
+begin
+  if CanFocus then
+  begin
+    cmEditClick(Sender);
+    Handled := True;
+  end;
+end;
+
 procedure TAclFrame.SelectionChanged;
 begin
   btnUp.Enabled := Tree.CanMoveSelectedNodesUp;
   btnDelete.Enabled := Tree.SelectedCount > 0;
   btnDown.Enabled := Tree.CanMoveSelectedNodesDown;
-end;
-
-procedure TAclFrame.SetActive;
-begin
-  if Active then
-    ActionList.State := asNormal
-  else
-    ActionList.State := asSuspended;
-
-  (Search as IObservesActivation).SetActive(Active);
 end;
 
 procedure TAclFrame.SetEmptyMessage;

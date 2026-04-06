@@ -9,14 +9,14 @@ uses
   NtUiFrame.Search, NtUiCommon.Interfaces, NtUtilsUI;
 
 type
-  TSamSidsFrame = class(TBaseFrame, ICanConsumeEscape, IObservesActivation,
-    IHasDefaultCaption, IDelayedLoad)
+  TSamSidsFrame = class(TBaseFrame, ICanConsumeEscape, IHasDefaultCaption,
+    IDelayedLoad)
     Tree: TDevirtualizedTree;
     SearchBox: TSearchFrame;
   private
     Backend: TTreeNodeInterfaceProvider;
     BackendRef: IUnknown;
-    property SearchImpl: TSearchFrame read SearchBox implements ICanConsumeEscape, IObservesActivation;
+    property SearchImpl: TSearchFrame read SearchBox implements ICanConsumeEscape;
     function GetDefaultCaption: String;
   protected
     procedure LoadedOnce; override;

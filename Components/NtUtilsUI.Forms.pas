@@ -11,14 +11,17 @@ uses
   Vcl.Controls, Vcl.Forms, NtUtils, DelphiUtils.AutoEvents;
 
 type
+  TUiLibShortCut = class;
+  TUiLibShortCutEvent = procedure (Sender: TUiLibShortCut; var Handled: Boolean) of object;
+
   TUiLibShortCut = class (TComponent)
   private
     FShortCut: TShortCut;
-    FOnExecute: TNotifyEvent;
+    FOnExecute: TUiLibShortCutEvent;
   public
     property ShortCut: TShortCut read FShortCut write FShortCut;
-    property OnExecute: TNotifyEvent read FOnExecute write FOnExecute;
-    procedure Invoke;
+    property OnExecute: TUiLibShortCutEvent read FOnExecute write FOnExecute;
+    function Invoke: Boolean;
   end;
 
   TUiLibForm = class abstract (TForm)
@@ -77,12 +80,14 @@ begin
   Result := GetWindowLongPtrW(Handle, GWL_EXSTYLE) and WS_EX_TOPMOST <> 0
 end;
 
-procedure DispatchShortCut(const Owner: TComponent; ShortCut: TShortCut);
+function DispatchShortCut(const Owner: TComponent; ShortCut: TShortCut): Boolean;
 var
   i: Integer;
   Component: TComponent;
 begin
-  // Always dispatch to all children
+  Result := False;
+
+  // Dispatch to children until one marks the event as handled
   for i := 0 to Pred(Owner.ComponentCount) do
   begin
     Component := Owner.Components[i];
@@ -90,19 +95,24 @@ begin
     if Component is TUiLibShortCut then
     begin
       if TUiLibShortCut(Component).ShortCut = ShortCut then
-        TUiLibShortCut(Component).Invoke;
+        Result := TUiLibShortCut(Component).Invoke;
     end
     else
-      DispatchShortCut(Component, ShortCut);
+      Result := DispatchShortCut(Component, ShortCut);
+
+    if Result then
+      Break;
   end;
 end;
 
 { TUiLibShortCut }
 
-procedure TUiLibShortCut.Invoke;
+function TUiLibShortCut.Invoke;
 begin
+  Result := False;
+
   if Assigned(FOnExecute) then
-    FOnExecute(Self);
+    FOnExecute(Self, Result);
 end;
 
 { TUiLibForm }
@@ -147,8 +157,8 @@ begin
   Result := inherited;
 
   if not Vcl.Menus.IsAltGRPressed then
-    DispatchShortCut(Self, Vcl.Menus.ShortCut(Message.CharCode,
-      KeyDataToShiftState(Message.KeyData)));
+    Result := DispatchShortCut(Self, Vcl.Menus.ShortCut(Message.CharCode,
+      KeyDataToShiftState(Message.KeyData))) or Result;
 end;
 
 function TUiLibForm.ShowModal;

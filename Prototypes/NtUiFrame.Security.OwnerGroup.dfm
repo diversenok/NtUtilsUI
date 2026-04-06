@@ -53,13 +53,4 @@ object OwnerGroupSecurityFrame: TOwnerGroupSecurityFrame
     TabOrder = 3
     OnClick = btnApplyClick
   end
-  object ActionList: TActionList
-    Left = 312
-    Top = 24
-    object ActionRefresh: TAction
-      Caption = 'ActionRefresh'
-      ShortCut = 116
-      OnExecute = btnRefreshClick
-    end
-  end
 end

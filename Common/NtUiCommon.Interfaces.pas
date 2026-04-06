@@ -19,13 +19,6 @@ type
     procedure SetEmptyMessage(const Value: String);
   end;
 
-  // Indicates a control that can be activated/disactivated (such as disabling
-  // shortcuts when hidden)
-  IObservesActivation = interface
-    ['{1BE74A0E-C934-4315-A9F0-A7E3C281487E}']
-    procedure SetActive(Active: Boolean);
-  end;
-
   // Indicates a control that can delay initialization until unhidden
   IDelayedLoad = interface
     ['{B095F57F-79C5-4205-B9F8-5EE3618AD8CA}']

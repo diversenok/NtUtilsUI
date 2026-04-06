@@ -13,7 +13,7 @@ uses
 
 type
   TAppContainerListAllUsersFrame = class (TFrame, ICanConsumeEscape,
-    IObservesActivation, IHasDefaultCaption, IAllowsDefaultNodeAction,
+    IHasDefaultCaption, IAllowsDefaultNodeAction,
     IHasModalResult, IHasModalResultObservation)
   published
     lblUsers: TLabel;
@@ -26,9 +26,7 @@ type
     function GetCanConsumeEscapeImpl: ICanConsumeEscape;
     function GetNodeDefaultActionImpl: IAllowsDefaultNodeAction;
     function GetModalResultObservation: IHasModalResultObservation;
-    function GetObservesActivationImpl: IObservesActivation;
     property CanConsumeEscapeImpl: ICanConsumeEscape read GetCanConsumeEscapeImpl implements ICanConsumeEscape;
-    property ObservesActivationImpl: IObservesActivation read GetObservesActivationImpl implements IObservesActivation;
     property NodeDefaultActionImpl: IAllowsDefaultNodeAction read GetNodeDefaultActionImpl implements IAllowsDefaultNodeAction;
     property ModalResultObservationImpl: IHasModalResultObservation read GetModalResultObservation implements IHasModalResult, IHasModalResultObservation;
     property Impl: TAppContainerListFrame read AppContainersFrame implements IHasDefaultCaption;
@@ -64,11 +62,6 @@ begin
 end;
 
 function TAppContainerListAllUsersFrame.GetNodeDefaultActionImpl;
-begin
-  Result := AppContainersFrame;
-end;
-
-function TAppContainerListAllUsersFrame.GetObservesActivationImpl;
 begin
   Result := AppContainersFrame;
 end;

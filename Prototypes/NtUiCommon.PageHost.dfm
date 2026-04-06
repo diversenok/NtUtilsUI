@@ -16,8 +16,4 @@ object FramePages: TFramePages
     TabOrder = 0
     OnChange = PageControlChange
   end
-  object ActionList: TActionList
-    Left = 112
-    Top = 96
-  end
 end

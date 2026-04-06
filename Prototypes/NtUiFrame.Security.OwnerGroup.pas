@@ -10,32 +10,31 @@ interface
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes,
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, NtUiFrame,
-  UI.Prototypes.Sid.Edit, Vcl.StdCtrls, System.Actions, Vcl.ActnList,
-  NtUiCommon.Interfaces, NtUiCommon.Prototypes, NtUtils, NtUtilsUI;
+  UI.Prototypes.Sid.Edit, Vcl.StdCtrls, NtUiCommon.Interfaces,
+  NtUiCommon.Prototypes, NtUtils, NtUtilsUI;
 
 type
   TDescriptorSidType = (dsOwner, dsPrimaryGroup);
 
-  TOwnerGroupSecurityFrame = class(TFrame, IHasDefaultCaption,
-    IObservesActivation, IDelayedLoad)
+  TOwnerGroupSecurityFrame = class(TFrame, IHasDefaultCaption, IDelayedLoad)
     SidEditor: TSidEditor;
     GroupBox: TGroupBox;
     cbxDefaulted: TCheckBox;
     btnRefresh: TButton;
     btnApply: TButton;
-    ActionList: TActionList;
-    ActionRefresh: TAction;
     procedure btnRefreshClick(Sender: TObject);
     procedure btnApplyClick(Sender: TObject);
   private
     FSidType: TDescriptorSidType;
     FContext: TNtUiLibSecurityContext;
+    FRefreshShortcut: TUiLibShortCut;
     function Refresh: TNtxStatus;
     function Apply: TNtxStatus;
     function GetDefaultCaption: String;
-    procedure SetActive(Active: Boolean);
     procedure DelayedLoad;
+    procedure OnRefreshShortCut(Sender: TUiLibShortCut; var Handled: Boolean);
   public
+    constructor Create(AOwner: TComponent); override;
     procedure LoadFor(
       SidType: TDescriptorSidType;
       const Context: TNtUiLibSecurityContext
@@ -130,6 +129,14 @@ begin
   Refresh.RaiseOnError;
 end;
 
+constructor TOwnerGroupSecurityFrame.Create;
+begin
+  inherited;
+  FRefreshShortcut := TUiLibShortCut.Create(Self);
+  FRefreshShortcut.ShortCut := VK_F5;
+  FRefreshShortcut.OnExecute := OnRefreshShortCut;
+end;
+
 procedure TOwnerGroupSecurityFrame.DelayedLoad;
 begin
   Refresh;
@@ -147,6 +154,15 @@ begin
 
   FSidType := SidType;
   FContext := Context;
+end;
+
+procedure TOwnerGroupSecurityFrame.OnRefreshShortCut;
+begin
+  if CanFocus then
+  begin
+    Refresh.RaiseOnError;
+    Handled := True;
+  end;
 end;
 
 function TOwnerGroupSecurityFrame.Refresh;
@@ -197,14 +213,6 @@ begin
     SidEditor.Sid := SD.Owner
   else
     SidEditor.Sid := SD.Group;
-end;
-
-procedure TOwnerGroupSecurityFrame.SetActive;
-begin
-  if Active then
-    ActionList.State := asNormal
-  else
-    ActionList.State := asSuspended;
 end;
 
 { Integration }

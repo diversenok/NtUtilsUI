@@ -10,29 +10,26 @@ uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes,
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls,
   Vcl.ExtCtrls, VirtualTrees, NtUtilsUI.DevirtualizedTree, NtUiFrame,
-  NtUiCommon.Interfaces, System.Actions, Vcl.ActnList, NtUtilsUI,
-  NtUtilsUI.StdCtrls;
+  NtUiCommon.Interfaces, NtUtilsUI, NtUtilsUI.StdCtrls;
 
 type
-  TSearchFrame = class(TBaseFrame, ICanConsumeEscape, IObservesActivation)
+  TSearchFrame = class(TBaseFrame, ICanConsumeEscape)
     tbxSearchBox: TUiLibButtonedEdit;
     cbxColumn: TComboBox;
     Splitter: TSplitter;
-    ActionList: TActionList;
-    ActionSetFocus: TAction;
     procedure tbxSearchBoxChange(Sender: TObject);
     procedure tbxSearchBoxRightButtonClick(Sender: TObject);
     procedure tbxSearchBoxKeyPress(Sender: TObject; var Key: Char);
     procedure cbxColumnChange(Sender: TObject);
     procedure tbxSearchBoxKeyDown(Sender: TObject; var Key: Word;
       Shift: TShiftState);
-    procedure ActionSetFocusExecute(Sender: TObject);
     procedure tbxSearchBoxTypingChange(Sender: TObject);
   private
     FTree: TDevirtualizedTree;
     FColumnIndexes: TArray<TColumnIndex>;
     FOnQueryChange: TNotifyEvent;
     FSearchIconIndex, FSearchAltIconIndex: Integer;
+    FFocusShortCut: TUiLibShortCut;
     procedure UpdateColumns;
     function GetQueryText: String;
     function GetHasQueryText: Boolean;
@@ -42,11 +39,12 @@ type
     procedure LeftButtonIconChanged(ImageList: TImageList; ImageIndex: Integer);
     procedure LeftButtonAltIconChanged(ImageList: TImageList; ImageIndex: Integer);
     procedure RightButtonIconChanged(ImageList: TImageList; ImageIndex: Integer);
-    procedure SetActive(Active: Boolean);
     procedure RefreshSearchIcon;
+    procedure OnFocusShortCut(Sender: TUiLibShortCut; var Handled: Boolean);
   protected
     procedure LoadedOnce; override;
   public
+    constructor Create(AOwner: TComponent); override;
     procedure ClearQuery;
     property HasQueryText: Boolean read GetHasQueryText;
     property QueryText: String read GetQueryText;
@@ -67,11 +65,6 @@ uses
 {$R '..\Icons\SearchBox.res'}
 
 { TSearchFrame }
-
-procedure TSearchFrame.ActionSetFocusExecute;
-begin
-  tbxSearchBox.SetFocus;
-end;
 
 procedure TSearchFrame.ApplySearch;
 var
@@ -174,6 +167,14 @@ begin
     (cbxColumn.Focused and cbxColumn.DroppedDown);
 end;
 
+constructor TSearchFrame.Create;
+begin
+  inherited;
+  FFocusShortCut := TUiLibShortCut.Create(Self);
+  FFocusShortCut.ShortCut := scCtrl or Ord('F');
+  FFocusShortCut.OnExecute := OnFocusShortCut;
+end;
+
 function TSearchFrame.GetHasQueryText;
 begin
   Result := tbxSearchBox.Text <> '';
@@ -239,6 +240,15 @@ begin
   RegisterResourceIcon('SearchBox.Typing', LeftButtonAltIconChanged);
 end;
 
+procedure TSearchFrame.OnFocusShortCut;
+begin
+  if CanFocus then
+  begin
+    tbxSearchBox.SetFocus;
+    Handled := True;
+  end;
+end;
+
 procedure TSearchFrame.RefreshSearchIcon;
 begin
   if tbxSearchBox.Typing then
@@ -251,14 +261,6 @@ procedure TSearchFrame.RightButtonIconChanged;
 begin
   tbxSearchBox.Images := ImageList;
   tbxSearchBox.RightButton.ImageIndex := ImageIndex;
-end;
-
-procedure TSearchFrame.SetActive;
-begin
-  if Active then
-    ActionList.State := asNormal
-  else
-    ActionList.State := asSuspended;
 end;
 
 procedure TSearchFrame.tbxSearchBoxChange;

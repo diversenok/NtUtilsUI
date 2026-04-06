@@ -9,14 +9,14 @@ interface
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes,
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, NtUiFrame,
-  NtUiFrame.Acl, Ntapi.WinNt, NtUtils, NtUiCommon.Prototypes, System.Actions,
-  Vcl.ActnList, NtUiCommon.Interfaces, NtUtils.Security.Acl, NtUtilsUI;
+  NtUiFrame.Acl, Ntapi.WinNt, NtUtils, NtUiCommon.Prototypes,
+  NtUiCommon.Interfaces, NtUtils.Security.Acl, NtUtilsUI;
 
 type
   TAclType = (aiDacl, aiLabel, aiTrust, aiSacl, aiAttribute, aiScope, aiFilter);
 
   TAclSecurityFrame = class(TFrame, IHasDefaultCaption, ICanConsumeEscape,
-    IObservesActivation, IDelayedLoad)
+    IDelayedLoad)
     AclFrame: TAclFrame;
     btnRefresh: TButton;
     btnApply: TButton;
@@ -26,8 +26,6 @@ type
     cbxInheritReq: TCheckBox;
     cbxDefaulted: TCheckBox;
     cbxPresent: TCheckBox;
-    ActionList: TActionList;
-    ActionRefresh: TAction;
     procedure btnRefreshClick(Sender: TObject);
     procedure btnApplyClick(Sender: TObject);
     procedure cbxPresentClick(Sender: TObject);
@@ -35,20 +33,22 @@ type
     FFrameLoaded: Boolean;
     FAclType: TAclType;
     FContext: TNtUiLibSecurityContext;
+    FRefreshShortCut: TUiLibShortCut;
     function GetControlFlags: TSecurityDescriptorControl;
     procedure SetControlFlags(const Value: TSecurityDescriptorControl);
     function QueryAcl(out Control: TSecurityDescriptorControl; out Aces: TArray<TAceData>): TNtxStatus;
     function Refresh: TNtxStatus;
     function Apply: TNtxStatus;
     function GetDefaultCaption: String;
-    procedure SetActive(Active: Boolean);
     procedure DelayedLoad;
     procedure AclChanged(Sender: TObject);
     function GetCanConsumeEscapeImpl: ICanConsumeEscape;
     property CanConsumeEscapeImpl: ICanConsumeEscape read GetCanConsumeEscapeImpl implements ICanConsumeEscape;
+    procedure OnRefreshShortCut(Sender: TUiLibShortCut; var Handled: Boolean);
   protected
     procedure Loaded; override;
   public
+    constructor Create(AOwner: TComponent); override;
     procedure LoadFor(
       AclType: TAclType;
       const Context: TNtUiLibSecurityContext
@@ -185,6 +185,15 @@ begin
     AclFrame.SetEmptyMessage('NULL ACL');
 end;
 
+constructor TAclSecurityFrame.Create;
+begin
+  inherited;
+
+  FRefreshShortCut := TUiLibShortCut.Create(Self);
+  FRefreshShortCut.ShortCut := VK_F5;
+  FRefreshShortCut.OnExecute := OnRefreshShortCut;
+end;
+
 procedure TAclSecurityFrame.DelayedLoad;
 begin
   Refresh;
@@ -238,6 +247,15 @@ begin
 
   FAclType := AclType;
   FContext := Context;
+end;
+
+procedure TAclSecurityFrame.OnRefreshShortCut;
+begin
+  if CanFocus then
+  begin
+    Refresh.RaiseOnError;
+    Handled := True;
+  end;
 end;
 
 function TAclSecurityFrame.QueryAcl;
@@ -316,16 +334,6 @@ begin
 
   if not Result.IsSuccess then
     AclFrame.SetEmptyMessage('Unable to query:'#$D#$A + Result.ToString);
-end;
-
-procedure TAclSecurityFrame.SetActive;
-begin
-  if Active then
-    ActionList.State := asNormal
-  else
-    ActionList.State := asSuspended;
-
-  (AclFrame as IObservesActivation).SetActive(Active);
 end;
 
 procedure TAclSecurityFrame.SetControlFlags;

@@ -91,12 +91,4 @@ object AclSecurityFrame: TAclSecurityFrame
       OnClick = cbxPresentClick
     end
   end
-  object ActionList: TActionList
-    Left = 440
-    Top = 104
-    object ActionRefresh: TAction
-      ShortCut = 116
-      OnExecute = btnRefreshClick
-    end
-  end
 end

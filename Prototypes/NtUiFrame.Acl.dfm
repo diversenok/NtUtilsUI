@@ -241,20 +241,4 @@ inherited AclFrame: TAclFrame
       OnClick = btnDownClick
     end
   end
-  object ActionList: TActionList
-    Left = 152
-    Top = 88
-    object alxNew: TAction
-      ShortCut = 16462
-      OnExecute = btnAddClick
-    end
-    object alxCanonicalize: TAction
-      ShortCut = 24654
-      OnExecute = btnCanonicalizeClick
-    end
-    object alxEdit: TAction
-      ShortCut = 16453
-      OnExecute = cmEditClick
-    end
-  end
 end
