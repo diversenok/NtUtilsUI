@@ -12,9 +12,8 @@ uses
   NtUiCommon.Interfaces, NtUtilsUI;
 
 type
-  TAppContainerListAllUsersFrame = class (TFrame, ICanConsumeEscape,
-    IHasDefaultCaption, IAllowsDefaultNodeAction,
-    IHasModalResult, IHasModalResultObservation)
+  TAppContainerListAllUsersFrame = class (TFrame, IHasDefaultCaption,
+    IAllowsDefaultNodeAction, IHasModalResult, IHasModalResultObservation)
   published
     lblUsers: TLabel;
     tbxUser: TEdit;
@@ -23,10 +22,8 @@ type
     procedure btnSelectUserClick(Sender: TObject);
   private
     FUser: ISid;
-    function GetCanConsumeEscapeImpl: ICanConsumeEscape;
     function GetNodeDefaultActionImpl: IAllowsDefaultNodeAction;
     function GetModalResultObservation: IHasModalResultObservation;
-    property CanConsumeEscapeImpl: ICanConsumeEscape read GetCanConsumeEscapeImpl implements ICanConsumeEscape;
     property NodeDefaultActionImpl: IAllowsDefaultNodeAction read GetNodeDefaultActionImpl implements IAllowsDefaultNodeAction;
     property ModalResultObservationImpl: IHasModalResultObservation read GetModalResultObservation implements IHasModalResult, IHasModalResultObservation;
     property Impl: TAppContainerListFrame read AppContainersFrame implements IHasDefaultCaption;
@@ -49,11 +46,6 @@ procedure TAppContainerListAllUsersFrame.btnSelectUserClick;
 begin
   if Assigned(NtUiLibSelectUserProfile) then
     LoadForUser(NtUiLibSelectUserProfile(Self).User);
-end;
-
-function TAppContainerListAllUsersFrame.GetCanConsumeEscapeImpl;
-begin
-  Result := AppContainersFrame;
 end;
 
 function TAppContainerListAllUsersFrame.GetModalResultObservation;

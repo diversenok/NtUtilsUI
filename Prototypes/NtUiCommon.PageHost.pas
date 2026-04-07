@@ -12,7 +12,7 @@ uses
   NtUiCommon.Prototypes, NtUiCommon.Interfaces, NtUtilsUI;
 
 type
-  TFramePages = class(TFrame, ICanConsumeEscape, IHasDefaultCaption)
+  TFramePages = class(TFrame, IHasDefaultCaption)
     PageControl: TPageControl;
     procedure PageControlChange(Sender: TObject);
   private
@@ -21,7 +21,6 @@ type
     FShortCuts: TArray<TUiLibShortCut>;
     FDelayLoaded: TArray<Boolean>;
     FDefaultCaption: String;
-    function ConsumesEscape: Boolean;
     procedure OnTabShortCut(Sender: TUiLibShortCut; var Handled: Boolean);
     function GetDefaultCaption: String;
     procedure NotifyDelayedLoading(Index: Integer);
@@ -42,19 +41,6 @@ uses
 {$R *.dfm}
 
 { TFramePages }
-
-function TFramePages.ConsumesEscape;
-var
-  ForwardedImpl: ICanConsumeEscape;
-  i: Integer;
-begin
-  i := PageControl.ActivePageIndex;
-
-  // Forward the request to the frame from the active page
-  Result := (i >= 0) and (i <= High(FFrames)) and
-    IUnknown(FFrames[i]).QueryInterface(ICanConsumeEscape,
-    ForwardedImpl).IsSuccess and ForwardedImpl.ConsumesEscape;
-end;
 
 procedure TFramePages.FrameEnabledChanged;
 begin

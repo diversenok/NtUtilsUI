@@ -14,8 +14,8 @@ uses
   NtUtilsUI;
 
 type
-  TAceFrame = class(TFrame, ICanConsumeEscape, IHasDefaultCaption,
-    IHasModalButtonCaptions, IHasModalResult)
+  TAceFrame = class(TFrame, IHasDefaultCaption, IHasModalButtonCaptions,
+    IHasModalResult)
     cbxType: TComboBox;
     lblType: TLabel;
     lblFlags: TLabel;
@@ -50,7 +50,6 @@ type
     procedure UpdateMaskType;
   protected
     procedure Loaded; override;
-    function ConsumesEscape: Boolean;
     function GetDefaultCaption: String;
     function GetConfirmationCaption: String;
     function GetCancellationCaption: String;
@@ -100,11 +99,6 @@ begin
   lblExtraData.Enabled := not (AceType in CallbackAces);
   fmxExtraData.Enabled := not (AceType in CallbackAces);
   UpdateMaskType;
-end;
-
-function TAceFrame.ConsumesEscape;
-begin
-  Result := cbxType.DroppedDown;
 end;
 
 function TAceFrame.GetAce;

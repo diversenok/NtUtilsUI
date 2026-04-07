@@ -14,14 +14,12 @@ uses
   NtUtilsUI;
 
 type
-  TWellKnownSidsFrame = class(TBaseFrame, ICanConsumeEscape, IHasDefaultCaption,
-    IDelayedLoad)
+  TWellKnownSidsFrame = class(TBaseFrame, IHasDefaultCaption, IDelayedLoad)
     Tree: TDevirtualizedTree;
     SearchBox: TSearchFrame;
   private
     Backend: TTreeNodeInterfaceProvider;
     BackendRef: IUnknown;
-    property SearchImpl: TSearchFrame read SearchBox implements ICanConsumeEscape;
     function GetDefaultCaption: String;
   protected
     procedure LoadedOnce; override;

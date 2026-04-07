@@ -15,8 +15,7 @@ uses
 
 type
   // A control for selecting an integrity level or SID
-  TUiLibIntegritySid = class (TUiLibControl, ICanConsumeEscape,
-    IHasDefaultCaption, IHasModalResult)
+  TUiLibIntegritySid = class (TUiLibControl, IHasDefaultCaption, IHasModalResult)
   private
     FValue: TIntegrityRid;
     FTrackBar: TTrackBar;
@@ -34,7 +33,6 @@ type
     function GetSid: ISid;
     procedure SetSid(const Value: ISid);
   private
-    property CanConsumeEscapeImpl: TUiLibComboBox read FComboBox implements ICanConsumeEscape;
     function GetDefaultCaption: String;
     function GetModalResult: IInterface;
   protected

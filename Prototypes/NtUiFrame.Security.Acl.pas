@@ -15,8 +15,7 @@ uses
 type
   TAclType = (aiDacl, aiLabel, aiTrust, aiSacl, aiAttribute, aiScope, aiFilter);
 
-  TAclSecurityFrame = class(TFrame, IHasDefaultCaption, ICanConsumeEscape,
-    IDelayedLoad)
+  TAclSecurityFrame = class(TFrame, IHasDefaultCaption, IDelayedLoad)
     AclFrame: TAclFrame;
     btnRefresh: TButton;
     btnApply: TButton;
@@ -42,8 +41,6 @@ type
     function GetDefaultCaption: String;
     procedure DelayedLoad;
     procedure AclChanged(Sender: TObject);
-    function GetCanConsumeEscapeImpl: ICanConsumeEscape;
-    property CanConsumeEscapeImpl: ICanConsumeEscape read GetCanConsumeEscapeImpl implements ICanConsumeEscape;
     procedure OnRefreshShortCut(Sender: TUiLibShortCut; var Handled: Boolean);
   protected
     procedure Loaded; override;
@@ -197,11 +194,6 @@ end;
 procedure TAclSecurityFrame.DelayedLoad;
 begin
   Refresh;
-end;
-
-function TAclSecurityFrame.GetCanConsumeEscapeImpl;
-begin
-  Result := AclFrame;
 end;
 
 function TAclSecurityFrame.GetControlFlags;

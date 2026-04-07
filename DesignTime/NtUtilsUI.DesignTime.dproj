@@ -124,6 +124,7 @@
         <DCCReference Include="NtUtilsUI.ListView.pas"/>
         <DCCReference Include="NtUtilsUI.pas"/>
         <DCCReference Include="NtUtilsUI.Sid.Integrity.pas"/>
+        <DCCReference Include="NtUtilsUI.Forms.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

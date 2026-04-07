@@ -13,7 +13,7 @@ object FrameHostDialog: TFrameHostDialog
   KeyPreview = True
   Position = poOwnerFormCenter
   ShowHint = True
-  OnKeyDown = FormKeyDown
+  CloseOnEscape = True
   TextHeight = 13
   object btnClose: TButton
     Left = 3

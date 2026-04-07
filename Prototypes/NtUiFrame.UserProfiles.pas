@@ -13,7 +13,7 @@ uses
   NtUiBackend.UserProfiles, NtUiFrame, NtUtilsUI;
 
 type
-  TUserProfilesFrame = class(TFrame, ICanConsumeEscape, IHasDefaultCaption,
+  TUserProfilesFrame = class(TFrame, IHasDefaultCaption,
     IAllowsDefaultNodeAction, IHasModalResult, IHasModalResultObservation)
   published
     Tree: TDevirtualizedTree;
@@ -22,7 +22,6 @@ type
     Backend: TTreeNodeInterfaceProvider;
     BackendRef: IUnknown;
     property BackendImpl: TTreeNodeInterfaceProvider read Backend implements IHasModalResult, IHasModalResultObservation, IAllowsDefaultNodeAction;
-    property SearchImpl: TSearchFrame read SearchBox implements ICanConsumeEscape;
     function GetDefaultCaption: String;
   protected
     procedure Loaded; override;

@@ -40,6 +40,7 @@ contains
   NtUtilsUI.StdCtrls in 'NtUtilsUI.StdCtrls.pas',
   NtUtilsUI.ListView in 'NtUtilsUI.ListView.pas',
   NtUtilsUI in 'NtUtilsUI.pas',
-  NtUtilsUI.Sid.Integrity in 'NtUtilsUI.Sid.Integrity.pas';
+  NtUtilsUI.Sid.Integrity in 'NtUtilsUI.Sid.Integrity.pas',
+  NtUtilsUI.Forms in 'NtUtilsUI.Forms.pas';
 
 end.

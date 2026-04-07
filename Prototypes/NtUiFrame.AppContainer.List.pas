@@ -13,9 +13,8 @@ uses
   NtUiFrame, NtUtilsUI;
 
 type
-  TAppContainerListFrame = class (TFrame, ICanConsumeEscape,
-    IHasDefaultCaption, IAllowsDefaultNodeAction,
-    IHasModalResult, IHasModalResultObservation)
+  TAppContainerListFrame = class (TFrame, IHasDefaultCaption,
+    IAllowsDefaultNodeAction, IHasModalResult, IHasModalResultObservation)
     PopupMenu: TPopupMenu;
     cmInspect: TMenuItem;
     procedure cmInspectClick(Sender: TObject);
@@ -29,7 +28,6 @@ type
     Backend: TTreeNodeInterfaceProvider;
     BackendRef: IUnknown;
     property BackendImpl: TTreeNodeInterfaceProvider read Backend implements IHasModalResult, IHasModalResultObservation, IAllowsDefaultNodeAction;
-    property SearchImpl: TSearchFrame read SearchBox implements ICanConsumeEscape;
     function GetDefaultCaption: String;
   protected
     procedure Loaded; override;

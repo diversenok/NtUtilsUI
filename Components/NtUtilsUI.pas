@@ -26,10 +26,9 @@ type
   // Forward base form and shortcut classes
   TUiLibMainForm = NtUtilsUI.Forms.TUiLibMainForm;
   TUiLibChildForm = NtUtilsUI.Forms.TUiLibChildForm;
-  TUiLibShortCut = NtUtilsUI.Forms.TUiLibShortCut;
+  TUiLibShortCut = NtUtilsUI.Interfaces.TUiLibShortCut;
 
   // Forward known component interfaces
-  ICanConsumeEscape = NtUtilsUI.Interfaces.ICanConsumeEscape;
   IHasDefaultCaption = NtUtilsUI.Interfaces.IHasDefaultCaption;
   IHasModalResult = NtUtilsUI.Interfaces.IHasModalResult;
   IHasModalResultObservation = NtUtilsUI.Interfaces.IHasModalResultObservation;

@@ -14,7 +14,6 @@ type
   TFrameHostDialog = class(TUiLibChildForm)
     btnClose: TButton;
     btnSelect: TButton;
-    procedure FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
     procedure btnCloseClick(Sender: TObject);
     procedure DefaultActionChosen(const Node: INodeProvider);
     procedure btnSelectClick(Sender: TObject);
@@ -153,19 +152,6 @@ begin
   end;
 
   Form.Show;
-end;
-
-procedure TFrameHostDialog.FormKeyDown;
-var
-  Consumer: ICanConsumeEscape;
-begin
-  if (Key = VK_ESCAPE) and (not Assigned(FFrameRef) or not
-    FFrameRef.QueryInterface(ICanConsumeEscape, Consumer).IsSuccess or
-    not Consumer.ConsumesEscape) then
-  begin
-    btnClose.Click;
-    Key := 0;
-  end;
 end;
 
 procedure TFrameHostDialog.FrameModalResultChanged;

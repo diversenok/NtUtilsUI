@@ -13,13 +13,12 @@ uses
   NtUiCommon.Interfaces, NtUtilsUI, NtUtilsUI.StdCtrls;
 
 type
-  TSearchFrame = class(TBaseFrame, ICanConsumeEscape)
+  TSearchFrame = class(TBaseFrame)
     tbxSearchBox: TUiLibButtonedEdit;
     cbxColumn: TComboBox;
     Splitter: TSplitter;
     procedure tbxSearchBoxChange(Sender: TObject);
     procedure tbxSearchBoxRightButtonClick(Sender: TObject);
-    procedure tbxSearchBoxKeyPress(Sender: TObject; var Key: Char);
     procedure cbxColumnChange(Sender: TObject);
     procedure tbxSearchBoxKeyDown(Sender: TObject; var Key: Word;
       Shift: TShiftState);
@@ -30,6 +29,7 @@ type
     FOnQueryChange: TNotifyEvent;
     FSearchIconIndex, FSearchAltIconIndex: Integer;
     FFocusShortCut: TUiLibShortCut;
+    FEscShortCut: TUiLibShortCut;
     procedure UpdateColumns;
     function GetQueryText: String;
     function GetHasQueryText: Boolean;
@@ -41,6 +41,7 @@ type
     procedure RightButtonIconChanged(ImageList: TImageList; ImageIndex: Integer);
     procedure RefreshSearchIcon;
     procedure OnFocusShortCut(Sender: TUiLibShortCut; var Handled: Boolean);
+    procedure OnEscShortcut(Sender: TUiLibShortcut; var Handled: Boolean);
   protected
     procedure LoadedOnce; override;
   public
@@ -53,7 +54,6 @@ type
     property OnQueryChange: TNotifyEvent read FOnQueryChange write FOnQueryChange;
     procedure AttachToTree(Tree: TDevirtualizedTree);
     procedure ApplySearch;
-    function ConsumesEscape: Boolean;
   end;
 
 implementation
@@ -161,18 +161,17 @@ begin
   UpdateColumns;
 end;
 
-function TSearchFrame.ConsumesEscape;
-begin
-  Result := (tbxSearchBox.Focused and HasQueryText) or
-    (cbxColumn.Focused and cbxColumn.DroppedDown);
-end;
-
 constructor TSearchFrame.Create;
 begin
   inherited;
+
   FFocusShortCut := TUiLibShortCut.Create(Self);
   FFocusShortCut.ShortCut := scCtrl or Ord('F');
   FFocusShortCut.OnExecute := OnFocusShortCut;
+
+  FEscShortCut := TUiLibShortCut.Create(Self);
+  FEscShortCut.ShortCut := VK_ESCAPE;
+  FEscShortCut.OnExecute := OnEscShortCut;
 end;
 
 function TSearchFrame.GetHasQueryText;
@@ -240,6 +239,20 @@ begin
   RegisterResourceIcon('SearchBox.Typing', LeftButtonAltIconChanged);
 end;
 
+procedure TSearchFrame.OnEscShortcut;
+begin
+  if not tbxSearchBox.Focused then
+    Exit;
+
+  if HasQueryText then
+  begin
+    ClearQuery;
+    Handled := True;
+  end
+  else if Assigned(FTree) and FTree.CanFocus then
+    FTree.SetFocus;
+end;
+
 procedure TSearchFrame.OnFocusShortCut;
 begin
   if CanFocus then
@@ -278,19 +291,6 @@ begin
   if (Key in [VK_UP, VK_DOWN, VK_PRIOR, VK_NEXT]) and
     Assigned(FTree) and FTree.CanFocus then
     FTree.SetFocus;
-end;
-
-procedure TSearchFrame.tbxSearchBoxKeyPress;
-begin
-  if Key = Chr(VK_ESCAPE) then
-  begin
-    if HasQueryText then
-      ClearQuery
-    else if Assigned(FTree) and FTree.CanFocus then
-      FTree.SetFocus;
-
-    Key := #0;
-  end;
 end;
 
 procedure TSearchFrame.tbxSearchBoxRightButtonClick;

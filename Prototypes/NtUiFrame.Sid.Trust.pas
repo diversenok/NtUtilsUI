@@ -12,8 +12,7 @@ uses
   Vcl.ComCtrls, Ntapi.WinNt, NtUtils, NtUiCommon.Interfaces, NtUtilsUI;
 
 type
-  TFrameTrustSid = class(TFrame, ICanConsumeEscape, IHasDefaultCaption,
-    IHasModalResult)
+  TFrameTrustSid = class(TFrame, IHasDefaultCaption, IHasModalResult)
     TrackBarType: TTrackBar;
     TrackBarLevel: TTrackBar;
     lblNoneType: TLabel;
@@ -40,7 +39,6 @@ type
     procedure SetSid(const Value: ISid);
   protected
     procedure Loaded; override;
-    function ConsumesEscape: Boolean;
     function GetDefaultCaption: String;
     function GetModalResult: IInterface;
   public
@@ -83,11 +81,6 @@ begin
   end;
 
   UpdateTypeTrackBar;
-end;
-
-function TFrameTrustSid.ConsumesEscape;
-begin
-  Result := cbxType.DroppedDown or cbxLevel.DroppedDown;
 end;
 
 function TFrameTrustSid.GetDefaultCaption;

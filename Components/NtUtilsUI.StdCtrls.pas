@@ -62,10 +62,11 @@ type
     property OnTypingChange: TNotifyEvent read FOnTypingChange write FOnTypingChange;
   end;
 
-  TUiLibComboBox = class(TComboBox, ICanConsumeEscape)
+  TUiLibComboBox = class(TComboBox)
   private
+    FEscShortCut: TUiLibShortCut;
     function GetText: String;
-    function ConsumesEscape: Boolean;
+    procedure OnEscShortcut(Sender: TUiLibShortcut; var Handled: Boolean);
   protected
     procedure CreateWnd; override;
     procedure ComboWndProc(var Message: TMessage; ComboWnd: HWnd; ComboProc: TWindowProcPtr); override;
@@ -425,17 +426,16 @@ begin
     inherited;
 end;
 
-function TUiLibComboBox.ConsumesEscape;
-begin
-  Result := DroppedDown;
-end;
-
 procedure TUiLibComboBox.CreateWnd;
 begin
   inherited;
 
   if EditHandle <> 0 then
     SendMessageW(EditHandle, EM_SETWORDBREAKPROC, 0, LPARAM(@EditWordBreakProc));
+
+  FEscShortCut := TUiLibShortCut.Create(Self);
+  FEscShortCut.ShortCut := VK_ESCAPE;
+  FEscShortCut.OnExecute := OnEscShortcut;
 end;
 
 function TUiLibComboBox.GetText;
@@ -450,6 +450,12 @@ begin
     Key := #0;
 
   inherited;
+end;
+
+procedure TUiLibComboBox.OnEscShortcut;
+begin
+  if Focused and DroppedDown then
+    Handled := True;
 end;
 
 { TUiLibButton }

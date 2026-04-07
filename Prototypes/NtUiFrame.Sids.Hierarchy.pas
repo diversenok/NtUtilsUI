@@ -14,14 +14,12 @@ uses
   NtUiCommon.Interfaces, NtUtilsUI;
 
 type
-  TSidHierarchyFrame = class(TBaseFrame, ICanConsumeEscape, IHasDefaultCaption,
-    IDelayedLoad)
+  TSidHierarchyFrame = class(TBaseFrame, IHasDefaultCaption, IDelayedLoad)
     Tree: TDevirtualizedTree;
     SearchBox: TSearchFrame;
   private
     Backend: TTreeNodeInterfaceProvider;
     BackendRef: IUnknown;
-    property SearchImpl: TSearchFrame read SearchBox implements ICanConsumeEscape;
     function GetDefaultCaption: String;
   protected
     procedure LoadedOnce; override;

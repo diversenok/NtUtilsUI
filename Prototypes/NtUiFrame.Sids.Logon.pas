@@ -9,14 +9,12 @@ uses
   NtUtilsUI.DevirtualizedTree, NtUiCommon.Interfaces, NtUtilsUI;
 
 type
-  TLogonSidsFrame = class(TBaseFrame, ICanConsumeEscape, IHasDefaultCaption,
-    IDelayedLoad)
+  TLogonSidsFrame = class(TBaseFrame, IHasDefaultCaption, IDelayedLoad)
     SearchBox: TSearchFrame;
     Tree: TDevirtualizedTree;
   private
     Backend: TTreeNodeInterfaceProvider;
     BackendRef: IUnknown;
-    property SearchImpl: TSearchFrame read SearchBox implements ICanConsumeEscape;
     function GetDefaultCaption: String;
   protected
     procedure DelayedLoad;

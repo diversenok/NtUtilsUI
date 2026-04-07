@@ -28,7 +28,6 @@ inherited SearchFrame: TSearchFrame
     TabOrder = 0
     TextHint = 'Search'
     OnKeyDown = tbxSearchBoxKeyDown
-    OnKeyPress = tbxSearchBoxKeyPress
     OnRightButtonClick = tbxSearchBoxRightButtonClick
     OnDelayedChange = tbxSearchBoxChange
     OnTypingChange = tbxSearchBoxTypingChange

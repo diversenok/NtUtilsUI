@@ -10,10 +10,17 @@ uses
   System.Classes;
 
 type
-  // Indicates a component that can prevent Escape from closing the dialog
-  ICanConsumeEscape = interface
-    ['{4280FDBC-97C0-41DC-9C96-98142BCABADF}']
-    function ConsumesEscape: Boolean;
+  TUiLibShortCut = class;
+  TUiLibShortCutEvent = procedure (Sender: TUiLibShortCut; var Handled: Boolean) of object;
+
+  TUiLibShortCut = class (TComponent)
+  private
+    FShortCut: TShortCut;
+    FOnExecute: TUiLibShortCutEvent;
+  public
+    property ShortCut: TShortCut read FShortCut write FShortCut;
+    property OnExecute: TUiLibShortCutEvent read FOnExecute write FOnExecute;
+    function Invoke: Boolean;
   end;
 
   // Indicates a component that suggests a modal dialog or page caption
@@ -42,5 +49,15 @@ type
   end;
 
 implementation
+
+{ TUiLibShortCut }
+
+function TUiLibShortCut.Invoke;
+begin
+  Result := False;
+
+  if Assigned(FOnExecute) then
+    FOnExecute(Self, Result);
+end;
 
 end.

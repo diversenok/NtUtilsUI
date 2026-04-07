@@ -14,7 +14,7 @@ uses
   NtUiCommon.Interfaces, NtUtils.Security.Acl, NtUtilsUI, NtUtilsUI.StdCtrls;
 
 type
-  TAclFrame = class(TBaseFrame, ICanConsumeEscape, ICanShowEmptyMessage)
+  TAclFrame = class(TBaseFrame, ICanShowEmptyMessage)
     Tree: TDevirtualizedTree;
     btnUp: TUiLibButton;
     btnDown: TUiLibButton;
@@ -47,7 +47,6 @@ type
     FEditShortCut: TUiLibShortCut;
     procedure AclChanged;
     function GetAces: TArray<TAceData>;
-    property SearchImpl: TSearchFrame read Search implements ICanConsumeEscape;
     procedure OnAddShortCut(Sender: TUiLibShortCut; var Handled: Boolean);
     procedure OnEditShortCut(Sender: TUiLibShortCut; var Handled: Boolean);
   protected

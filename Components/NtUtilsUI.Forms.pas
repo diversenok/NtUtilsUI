@@ -1,32 +1,24 @@
 unit NtUtilsUI.Forms;
 
 {
-  This module introduces improved base classes for forms.
+  This module contains the full runtime component definitions for the improved
+  base form classes.
+
+  NOTE: Keep the published interface in sync with the design-time definitions!
 }
 
 interface
 
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes,
-  Vcl.Controls, Vcl.Forms, NtUtils, DelphiUtils.AutoEvents;
+  Vcl.Controls, Vcl.Forms, NtUtils, DelphiUtils.AutoEvents,
+  NtUtilsUI.Interfaces;
 
 type
-  TUiLibShortCut = class;
-  TUiLibShortCutEvent = procedure (Sender: TUiLibShortCut; var Handled: Boolean) of object;
-
-  TUiLibShortCut = class (TComponent)
-  private
-    FShortCut: TShortCut;
-    FOnExecute: TUiLibShortCutEvent;
-  public
-    property ShortCut: TShortCut read FShortCut write FShortCut;
-    property OnExecute: TUiLibShortCutEvent read FOnExecute write FOnExecute;
-    function Invoke: Boolean;
-  end;
-
   TUiLibForm = class abstract (TForm)
   private
     const idOnTop = 10001;
+    var FCloseOnEscape: Boolean;
     procedure WMSysCommand(var Message: TWMSysCommand); message WM_SYSCOMMAND;
     procedure WMInitMenuPopup(var Message: TWMInitMenuPopup); message WM_INITMENUPOPUP;
     procedure WMWindowPosChanged(var Message: TWMWindowPosChanged); message WM_WINDOWPOSCHANGED;
@@ -37,6 +29,8 @@ type
   public
     function ShowModal: Integer; override;
     function IsShortCut(var Message: TWMKey): Boolean; override;
+  published
+    property CloseOnEscape: Boolean read FCloseOnEscape write FCloseOnEscape;
   end;
 
   TUiLibMainForm = class abstract (TUiLibForm)
@@ -105,16 +99,6 @@ begin
   end;
 end;
 
-{ TUiLibShortCut }
-
-function TUiLibShortCut.Invoke;
-begin
-  Result := False;
-
-  if Assigned(FOnExecute) then
-    FOnExecute(Self, Result);
-end;
-
 { TUiLibForm }
 
 procedure TUiLibForm.DoClose;
@@ -153,12 +137,25 @@ begin
 end;
 
 function TUiLibForm.IsShortCut;
+var
+  ShortCut: TShortCut;
 begin
   Result := inherited;
 
   if not Vcl.Menus.IsAltGRPressed then
-    Result := DispatchShortCut(Self, Vcl.Menus.ShortCut(Message.CharCode,
-      KeyDataToShiftState(Message.KeyData))) or Result;
+  begin
+    ShortCut := Vcl.Menus.ShortCut(Message.CharCode,
+      KeyDataToShiftState(Message.KeyData));
+
+    Result := DispatchShortCut(Self, ShortCut) or Result;
+
+    // Support closing on an unhandled escape shortcut
+    if (ShortCut = VK_ESCAPE) and FCloseOnEscape and not Result then
+    begin
+      Result := True;
+      Close;
+    end;
+  end;
 end;
 
 function TUiLibForm.ShowModal;
