@@ -122,7 +122,7 @@
         <DCCReference Include="NtUtilsUI.DevirtualizedTree.pas"/>
         <DCCReference Include="NtUtilsUI.StdCtrls.pas"/>
         <DCCReference Include="NtUtilsUI.ListView.pas"/>
-        <DCCReference Include="NtUtilsUI.pas"/>
+        <DCCReference Include="NtUtilsUI.Base.pas"/>
         <DCCReference Include="NtUtilsUI.Sid.Integrity.pas"/>
         <DCCReference Include="NtUtilsUI.Forms.pas"/>
         <BuildConfiguration Include="Base">

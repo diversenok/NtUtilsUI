@@ -11,8 +11,7 @@ interface
 
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes,
-  Vcl.Controls, Vcl.Forms, NtUtils, DelphiUtils.AutoEvents,
-  NtUtilsUI.Interfaces;
+  Vcl.Controls, Vcl.Forms, NtUtils, DelphiUtils.AutoEvents, NtUtilsUI.Base;
 
 type
   TUiLibForm = class abstract (TForm)

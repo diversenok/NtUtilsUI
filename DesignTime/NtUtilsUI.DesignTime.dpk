@@ -39,7 +39,7 @@ contains
   NtUtilsUI.DevirtualizedTree in 'NtUtilsUI.DevirtualizedTree.pas',
   NtUtilsUI.StdCtrls in 'NtUtilsUI.StdCtrls.pas',
   NtUtilsUI.ListView in 'NtUtilsUI.ListView.pas',
-  NtUtilsUI in 'NtUtilsUI.pas',
+  NtUtilsUI.Base in 'NtUtilsUI.Base.pas',
   NtUtilsUI.Sid.Integrity in 'NtUtilsUI.Sid.Integrity.pas',
   NtUtilsUI.Forms in 'NtUtilsUI.Forms.pas';
 

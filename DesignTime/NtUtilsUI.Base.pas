@@ -1,4 +1,4 @@
-unit NtUtilsUI;
+unit NtUtilsUI.Base;
 
 {
   This module contains (stripped down) design-time component base definitions.
@@ -14,12 +14,8 @@ uses
 type
   // A base class for composite visual controls
   TUiLibControl = class abstract (TWinControl)
-  private
-    FLoaded: Boolean;
   protected
     procedure CMEnabledChanged(var Message: TMessage); message CM_ENABLEDCHANGED;
-    procedure Loaded; override;
-    procedure LoadedOnce; virtual;
   published
     property Align;
     property Anchors;
@@ -43,22 +39,6 @@ begin
   for i := 0 to ControlCount - 1 do
     if (Controls[i].Owner = Self) and (Controls[i] is TWinControl) then
       TWinControl(Controls[i]).Enabled := Enabled;
-end;
-
-procedure TUiLibControl.Loaded;
-begin
-  inherited;
-
-  if not FLoaded then
-  begin
-    FLoaded := True;
-    LoadedOnce;
-  end;
-end;
-
-procedure TUiLibControl.LoadedOnce;
-begin
-  ; // To be overriden
 end;
 
 end.

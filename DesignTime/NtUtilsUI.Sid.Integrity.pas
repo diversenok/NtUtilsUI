@@ -10,7 +10,8 @@ unit NtUtilsUI.Sid.Integrity;
 interface
 
 uses
-  System.Classes, Vcl.StdCtrls, Vcl.ComCtrls, NtUtilsUI, NtUtilsUI.StdCtrls;
+  System.Classes, Vcl.StdCtrls, Vcl.ComCtrls, NtUtilsUI.Base,
+  NtUtilsUI.StdCtrls;
 
 type
   TUiLibIntegritySid = class (TUiLibControl)

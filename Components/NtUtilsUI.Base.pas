@@ -1,18 +1,22 @@
-unit NtUtilsUI.Interfaces;
+unit NtUtilsUI.Base;
 
 {
-  This module provides definitions for optional component interfaces.
+  This module contains the full runtime definitions definitions for the base
+  component classes and interfaces.
+
+  NOTE: Keep the published interface in sync with the design-time definitions!
 }
 
 interface
 
 uses
-  System.Classes;
+  Winapi.Messages, System.Classes, Vcl.Controls;
 
 type
   TUiLibShortCut = class;
   TUiLibShortCutEvent = procedure (Sender: TUiLibShortCut; var Handled: Boolean) of object;
 
+  // An auto-registering shortcut handler
   TUiLibShortCut = class (TComponent)
   private
     FShortCut: TShortCut;
@@ -21,6 +25,21 @@ type
     property ShortCut: TShortCut read FShortCut write FShortCut;
     property OnExecute: TUiLibShortCutEvent read FOnExecute write FOnExecute;
     function Invoke: Boolean;
+  end;
+
+  // A base class for composite visual controls
+  TUiLibControl = class abstract (TWinControl)
+  protected
+    procedure CMEnabledChanged(var Message: TMessage); message CM_ENABLEDCHANGED;
+  public
+    function Focused: Boolean; override;
+  published
+    property Align;
+    property Anchors;
+    property Enabled;
+    property TabOrder;
+    property TabStop;
+    property Visible;
   end;
 
   // Indicates a component that suggests a modal dialog or page caption
@@ -58,6 +77,36 @@ begin
 
   if Assigned(FOnExecute) then
     FOnExecute(Self, Result);
+end;
+
+{ TUiLibControl }
+
+procedure TUiLibControl.CMEnabledChanged;
+var
+  i: Integer;
+begin
+  inherited;
+
+  // Notify all children of the enabled state change
+  for i := 0 to ControlCount - 1 do
+    if (Controls[i].Owner = Self) and (Controls[i] is TWinControl) then
+      TWinControl(Controls[i]).Enabled := Enabled;
+end;
+
+function TUiLibControl.Focused;
+var
+  i: Integer;
+begin
+  Result := inherited;
+
+  // Check nested controls for the focus
+  if not Result then
+    for i := 0 to Pred(ControlCount) do
+      if (Controls[i] is TWinControl) and TWinControl(Controls[i]).Focused then
+      begin
+        Result := True;
+        Break;
+      end;
 end;
 
 end.
