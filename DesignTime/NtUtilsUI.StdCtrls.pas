@@ -10,7 +10,7 @@ unit NtUtilsUI.StdCtrls;
 interface
 
 uses
-  System.Classes, Vcl.StdCtrls, Vcl.ExtCtrls;
+  System.Classes, Vcl.StdCtrls, Vcl.ExtCtrls, Vcl.ImgList;
 
 type
   TUiLibEdit = class(TEdit)
@@ -49,9 +49,16 @@ type
     property ImageResource: String read FImageResource write FImageResource;
   end;
 
+  TUiLibImageListHelper = class helper for TCustomImageList
+    function AddIconFromResource(Instance: THandle; const ResourceName: String): Integer;
+  end;
+
 procedure Register;
 
 implementation
+
+uses
+  Winapi.Windows, Winapi.CommCtrl;
 
 procedure Register;
 begin
@@ -73,6 +80,14 @@ constructor TUiLibButtonedEdit.Create;
 begin
   inherited;
   FDelayedChangeTimeout := 500;
+end;
+
+{ TUiLibImageListHelper }
+
+function TUiLibImageListHelper.AddIconFromResource;
+begin
+  Result := ImageList_AddIcon(Handle, LoadIcon(Instance, PChar(ResourceName)));
+  Change;
 end;
 
 end.

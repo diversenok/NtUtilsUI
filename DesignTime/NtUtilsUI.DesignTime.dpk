@@ -41,6 +41,7 @@ contains
   NtUtilsUI.ListView in 'NtUtilsUI.ListView.pas',
   NtUtilsUI.Base in 'NtUtilsUI.Base.pas',
   NtUtilsUI.Sid.Integrity in 'NtUtilsUI.Sid.Integrity.pas',
-  NtUtilsUI.Forms in 'NtUtilsUI.Forms.pas';
+  NtUtilsUI.Forms in 'NtUtilsUI.Forms.pas',
+  NtUtilsUI.SearchBox in 'NtUtilsUI.SearchBox.pas';
 
 end.
