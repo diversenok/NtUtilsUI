@@ -209,7 +209,7 @@ inherited AclFrame: TAclFrame
     inherited Splitter: TSplitter
       Left = 454
     end
-    inherited tbxSearchBox: TUiLibButtonedEdit
+    inherited SearchBox: TUiLibSearchBox
       Width = 454
     end
     inherited cbxColumn: TComboBox

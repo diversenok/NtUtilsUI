@@ -10,48 +10,28 @@ uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes,
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls,
   Vcl.ExtCtrls, VirtualTrees, NtUtilsUI.DevirtualizedTree, NtUiFrame,
-  NtUiCommon.Interfaces, NtUtilsUI, NtUtilsUI.StdCtrls;
+  NtUiCommon.Interfaces, NtUtilsUI, NtUtilsUI.StdCtrls, NtUtilsUI.Base,
+  NtUtilsUI.SearchBox;
 
 type
   TSearchFrame = class(TBaseFrame)
-    tbxSearchBox: TUiLibButtonedEdit;
     cbxColumn: TComboBox;
     Splitter: TSplitter;
-    procedure tbxSearchBoxChange(Sender: TObject);
-    procedure tbxSearchBoxRightButtonClick(Sender: TObject);
+    SearchBox: TUiLibSearchBox;
     procedure cbxColumnChange(Sender: TObject);
-    procedure tbxSearchBoxKeyDown(Sender: TObject; var Key: Word;
-      Shift: TShiftState);
-    procedure tbxSearchBoxTypingChange(Sender: TObject);
+    procedure SearchBoxSearch(Sender: TObject);
+    procedure SearchBoxArrow(Sender: TObject);
   private
     FTree: TDevirtualizedTree;
     FColumnIndexes: TArray<TColumnIndex>;
     FOnQueryChange: TNotifyEvent;
-    FSearchIconIndex, FSearchAltIconIndex: Integer;
-    FFocusShortCut: TUiLibShortCut;
     FEscShortCut: TUiLibShortCut;
     procedure UpdateColumns;
-    function GetQueryText: String;
-    function GetHasQueryText: Boolean;
-    function GetQueryColumn: TColumnIndex;
     function GetQueryColumns: TArray<TColumnIndex>;
     procedure ColumnVisibilityChanged(const Sender: TBaseVirtualTree; const Column: TColumnIndex; Visible: Boolean);
-    procedure LeftButtonIconChanged(ImageList: TImageList; ImageIndex: Integer);
-    procedure LeftButtonAltIconChanged(ImageList: TImageList; ImageIndex: Integer);
-    procedure RightButtonIconChanged(ImageList: TImageList; ImageIndex: Integer);
-    procedure RefreshSearchIcon;
-    procedure OnFocusShortCut(Sender: TUiLibShortCut; var Handled: Boolean);
     procedure OnEscShortcut(Sender: TUiLibShortcut; var Handled: Boolean);
-  protected
-    procedure LoadedOnce; override;
   public
     constructor Create(AOwner: TComponent); override;
-    procedure ClearQuery;
-    property HasQueryText: Boolean read GetHasQueryText;
-    property QueryText: String read GetQueryText;
-    property QueryColumn: TColumnIndex read GetQueryColumn;
-    property QueryColumns: TArray<TColumnIndex> read GetQueryColumns;
-    property OnQueryChange: TNotifyEvent read FOnQueryChange write FOnQueryChange;
     procedure AttachToTree(Tree: TDevirtualizedTree);
     procedure ApplySearch;
   end;
@@ -62,7 +42,6 @@ uses
   NtUtilsUI.VirtualTreeEx, NtUiCommon.Helpers, NtUtils.SysUtils;
 
 {$R *.dfm}
-{$R '..\Icons\SearchBox.res'}
 
 { TSearchFrame }
 
@@ -88,17 +67,19 @@ begin
     if Node.TryGetProvider(Provider) then
       FTree.IsVisible[Node] := Provider.SearchExpression('', -1);
 
-  if QueryText = '' then
+  if not SearchBox.HasQuery then
     Exit;
 
+  Expression := SearchBox.Query;
+
   // Check if the query parses into a number
-  IsNumberSearch := RtlxStrToUInt64(QueryText, NumberQuery, nsDecimal,
+  IsNumberSearch := RtlxStrToUInt64(Expression, NumberQuery, nsDecimal,
     [nsHexadecimal], True, [npSpace, npAccent, npApostrophe, npUnderscore]);
-  IsSignedNumber := IsNumberSearch and (Length(QueryText) > 1) and
-    (QueryText[Low(String)] = '-');
+  IsSignedNumber := IsNumberSearch and (Length(Expression) > 1) and
+    (Expression[Low(String)] = '-');
 
   // Prepare an upcased expression for text search
-  Expression := '*' + RtlxUpperString(QueryText) + '*';
+  Expression := '*' + RtlxUpperString(Expression) + '*';
 
   // Collect nodes that are visible without the search
   VisibleNodes := FTree.VisibleNodes.ToArray;
@@ -150,12 +131,6 @@ begin
     FOnQueryChange(Self);
 end;
 
-procedure TSearchFrame.ClearQuery;
-begin
-  // This will also re-apply the search
-  tbxSearchBox.Text := '';
-end;
-
 procedure TSearchFrame.ColumnVisibilityChanged;
 begin
   UpdateColumns;
@@ -165,28 +140,9 @@ constructor TSearchFrame.Create;
 begin
   inherited;
 
-  FFocusShortCut := TUiLibShortCut.Create(Self);
-  FFocusShortCut.ShortCut := scCtrl or Ord('F');
-  FFocusShortCut.OnExecute := OnFocusShortCut;
-
   FEscShortCut := TUiLibShortCut.Create(Self);
   FEscShortCut.ShortCut := VK_ESCAPE;
   FEscShortCut.OnExecute := OnEscShortCut;
-end;
-
-function TSearchFrame.GetHasQueryText;
-begin
-  Result := tbxSearchBox.Text <> '';
-end;
-
-function TSearchFrame.GetQueryColumn;
-begin
-  Result := cbxColumn.ItemIndex;
-
-  if (Result > 0) and (Result <= High(FColumnIndexes)) then
-    Result := FColumnIndexes[Result]
-  else
-    Result := -1;
 end;
 
 function TSearchFrame.GetQueryColumns;
@@ -210,97 +166,29 @@ begin
   end;
 end;
 
-function TSearchFrame.GetQueryText;
-begin
-  Result := tbxSearchBox.Text;
-end;
-
-procedure TSearchFrame.LeftButtonAltIconChanged;
-begin
-  FSearchAltIconIndex := ImageIndex;
-  tbxSearchBox.Images := ImageList;
-  tbxSearchBox.LeftButton.Visible := Assigned(ImageList);
-  RefreshSearchIcon;
-end;
-
-procedure TSearchFrame.LeftButtonIconChanged;
-begin
-  FSearchIconIndex := ImageIndex;
-  tbxSearchBox.Images := ImageList;
-  tbxSearchBox.LeftButton.Visible := Assigned(ImageList);
-  RefreshSearchIcon;
-end;
-
-procedure TSearchFrame.LoadedOnce;
-begin
-  inherited;
-  RegisterResourceIcon('SearchBox.Search', LeftButtonIconChanged);
-  RegisterResourceIcon('SearchBox.Clear', RightButtonIconChanged);
-  RegisterResourceIcon('SearchBox.Typing', LeftButtonAltIconChanged);
-end;
-
 procedure TSearchFrame.OnEscShortcut;
 begin
-  if not tbxSearchBox.Focused then
+  if not SearchBox.Focused then
     Exit;
 
-  if HasQueryText then
+  if SearchBox.HasQuery then
   begin
-    ClearQuery;
+    SearchBox.ClearQuery;
     Handled := True;
   end
   else if Assigned(FTree) and FTree.CanFocus then
     FTree.SetFocus;
 end;
 
-procedure TSearchFrame.OnFocusShortCut;
+procedure TSearchFrame.SearchBoxArrow;
 begin
-  if CanFocus then
-  begin
-    tbxSearchBox.SetFocus;
-    Handled := True;
-  end;
-end;
-
-procedure TSearchFrame.RefreshSearchIcon;
-begin
-  if tbxSearchBox.Typing then
-    tbxSearchBox.LeftButton.ImageIndex := FSearchAltIconIndex
-  else
-    tbxSearchBox.LeftButton.ImageIndex := FSearchIconIndex;
-end;
-
-procedure TSearchFrame.RightButtonIconChanged;
-begin
-  tbxSearchBox.Images := ImageList;
-  tbxSearchBox.RightButton.ImageIndex := ImageIndex;
-end;
-
-procedure TSearchFrame.tbxSearchBoxChange;
-begin
-  tbxSearchBox.RightButton.Visible := HasQueryText;
-  ApplySearch;
-
-  // Notify subscribers
-  if Assigned(FOnQueryChange) then
-    FOnQueryChange(Self);
-end;
-
-procedure TSearchFrame.tbxSearchBoxKeyDown;
-begin
-  if (Key in [VK_UP, VK_DOWN, VK_PRIOR, VK_NEXT]) and
-    Assigned(FTree) and FTree.CanFocus then
+  if Assigned(FTree) and FTree.CanFocus then
     FTree.SetFocus;
 end;
 
-procedure TSearchFrame.tbxSearchBoxRightButtonClick;
+procedure TSearchFrame.SearchBoxSearch;
 begin
-  ClearQuery;
-end;
-
-procedure TSearchFrame.tbxSearchBoxTypingChange;
-begin
-  RefreshSearchIcon;
+  ApplySearch;
 end;
 
 procedure TSearchFrame.UpdateColumns;

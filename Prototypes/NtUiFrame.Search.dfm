@@ -19,18 +19,16 @@ inherited SearchFrame: TSearchFrame
     MinSize = 110
     ResizeStyle = rsUpdate
   end
-  object tbxSearchBox: TUiLibButtonedEdit
+  object SearchBox: TUiLibSearchBox
     Left = 0
     Top = 0
     Width = 270
     Height = 23
     Align = alClient
     TabOrder = 0
-    TextHint = 'Search'
-    OnKeyDown = tbxSearchBoxKeyDown
-    OnRightButtonClick = tbxSearchBoxRightButtonClick
-    OnDelayedChange = tbxSearchBoxChange
-    OnTypingChange = tbxSearchBoxTypingChange
+    OnSearch = SearchBoxSearch
+    OnArrowUp = SearchBoxArrow
+    OnArrowDown = SearchBoxArrow
   end
   object cbxColumn: TComboBox
     Left = 276
