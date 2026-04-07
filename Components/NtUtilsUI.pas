@@ -40,6 +40,8 @@ type
   TUiLibControl = class abstract (TWinControl)
   protected
     procedure CMEnabledChanged(var Message: TMessage); message CM_ENABLEDCHANGED;
+  public
+    function Focused: Boolean; override;
   published
     property Align;
     property Anchors;
@@ -98,6 +100,21 @@ begin
     Result := UiLibHostPick(AOwner, ControlFactory)
   else
     raise EClassNotFound.Create(MSG_E_NO_HOST);
+end;
+
+function TUiLibControl.Focused;
+var
+  i: Integer;
+begin
+  Result := inherited;
+
+  if not Result then
+    for i := 0 to Pred(ControlCount) do
+      if (Controls[i] is TWinControl) and TWinControl(Controls[i]).Focused then
+      begin
+        Result := True;
+        Break;
+      end;
 end;
 
 end.
