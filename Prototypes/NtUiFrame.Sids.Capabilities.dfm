@@ -4,30 +4,13 @@ object CapabilityListFrame: TCapabilityListFrame
   Width = 640
   Height = 480
   TabOrder = 0
-  inline SearchBox: TSearchFrame
+  object SearchBox: TUiLibTreeSearchBox
     Left = 0
     Top = 0
     Width = 640
     Height = 21
     Align = alTop
-    Constraints.MinHeight = 21
-    Constraints.MinWidth = 240
-    DoubleBuffered = True
-    ParentDoubleBuffered = False
-    ParentShowHint = False
-    ShowHint = True
-    TabOrder = 0
-    inherited Splitter: TSplitter
-      Left = 474
-      Height = 21
-    end
-    inherited SearchBox: TUiLibSearchBox
-      Width = 474
-      Height = 21
-    end
-    inherited cbxColumn: TComboBox
-      Left = 480
-    end
+    TabOrder = 1
   end
   object Tree: TDevirtualizedTree
     AlignWithMargins = True
@@ -48,7 +31,7 @@ object CapabilityListFrame: TCapabilityListFrame
     Header.DefaultHeight = 24
     Header.Height = 24
     Header.Options = [hoColumnResize, hoDblClickResize, hoDrag, hoHotTrack, hoRestrictDrag, hoShowSortGlyphs, hoVisible, hoDisableAnimatedResize, hoHeaderClickAutoSort, hoAutoColumnPopupMenu, hoAutoResizeInclCaption]
-    TabOrder = 1
+    TabOrder = 0
     TreeOptions.AutoOptions = [toAutoDropExpand, toAutoScrollOnExpand, toAutoTristateTracking, toAutoDeleteMovedNodes, toAutoChangeScale]
     TreeOptions.ExportMode = emSelected
     TreeOptions.MiscOptions = [toAcceptOLEDrop, toCheckSupport, toFullRepaintOnResize, toInitOnSave, toToggleOnDblClick, toWheelPanning]

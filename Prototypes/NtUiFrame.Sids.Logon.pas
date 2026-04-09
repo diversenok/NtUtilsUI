@@ -5,12 +5,13 @@ interface
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes,
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls,
-  NtUiFrame.Search, VirtualTrees, NtUtilsUI.VirtualTreeEx,
-  NtUtilsUI.DevirtualizedTree, NtUiCommon.Interfaces, NtUtilsUI;
+  VirtualTrees, NtUtilsUI.VirtualTreeEx, NtUtilsUI.DevirtualizedTree,
+  NtUiCommon.Interfaces, NtUtilsUI, NtUtilsUI.Base,
+  NtUtilsUI.DevirtualizedTree.Search;
 
 type
   TLogonSidsFrame = class(TFrame, IHasDefaultCaption, IDelayedLoad)
-    SearchBox: TSearchFrame;
+    SearchBox: TUiLibTreeSearchBox;
     Tree: TDevirtualizedTree;
   private
     Backend: TTreeNodeInterfaceProvider;

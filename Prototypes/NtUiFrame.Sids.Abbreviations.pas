@@ -10,12 +10,13 @@ uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes,
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, VirtualTrees,
   NtUtilsUI.VirtualTreeEx, NtUtilsUI.DevirtualizedTree,
-  NtUiFrame.Search, NtUiCommon.Interfaces, NtUtilsUI;
+  NtUiCommon.Interfaces, NtUtilsUI, NtUtilsUI.Base,
+  NtUtilsUI.DevirtualizedTree.Search;
 
 type
   TSidAbbreviationFrame = class(TFrame, IHasDefaultCaption, IDelayedLoad)
     Tree: TDevirtualizedTree;
-    SearchBox: TSearchFrame;
+    SearchBox: TUiLibTreeSearchBox;
   private
     Backend: TTreeNodeInterfaceProvider;
     BackendRef: IUnknown;

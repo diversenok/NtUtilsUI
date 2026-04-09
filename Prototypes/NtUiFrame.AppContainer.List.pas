@@ -8,9 +8,9 @@ interface
 
 uses
   Vcl.Controls, System.Classes, Vcl.Forms, VirtualTrees,
-  NtUtilsUI.VirtualTreeEx, NtUtilsUI.DevirtualizedTree, NtUiFrame.Search,
-  NtUtils, NtUiCommon.Interfaces, NtUiBackend.AppContainers, Vcl.Menus,
-  NtUtilsUI;
+  NtUtilsUI.VirtualTreeEx, NtUtilsUI.DevirtualizedTree, NtUtils,
+  NtUiCommon.Interfaces, NtUiBackend.AppContainers, Vcl.Menus,
+  NtUtilsUI, NtUtilsUI.Base, NtUtilsUI.DevirtualizedTree.Search;
 
 type
   TAppContainerListFrame = class (TFrame, IHasDefaultCaption,
@@ -21,7 +21,7 @@ type
     procedure TreeNodeDblClick(Sender: TBaseVirtualTree;
       const HitInfo: THitInfo);
   published
-    SearchBox: TSearchFrame;
+    SearchBox: TUiLibTreeSearchBox;
     Tree: TDevirtualizedTree;
     procedure FrameMainActionSet(Sender: TObject);
   private

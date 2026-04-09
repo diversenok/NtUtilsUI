@@ -5,13 +5,13 @@ interface
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes,
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, VirtualTrees,
-  NtUtilsUI.VirtualTreeEx, NtUtilsUI.DevirtualizedTree,
-  NtUiFrame.Search, NtUiCommon.Interfaces, NtUtilsUI;
+  NtUtilsUI.VirtualTreeEx, NtUtilsUI.DevirtualizedTree, NtUiCommon.Interfaces,
+  NtUtilsUI, NtUtilsUI.Base, NtUtilsUI.DevirtualizedTree.Search;
 
 type
   TCapabilityListFrame = class(TFrame, IHasDefaultCaption, IHasModalResult,
     IDelayedLoad)
-    SearchBox: TSearchFrame;
+    SearchBox: TUiLibTreeSearchBox;
     Tree: TDevirtualizedTree;
   private
     Backend: TTreeNodeInterfaceProvider;

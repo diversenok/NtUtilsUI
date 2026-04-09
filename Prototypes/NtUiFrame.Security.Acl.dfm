@@ -25,17 +25,8 @@ object AclSecurityFrame: TAclSecurityFrame
       Left = 595
       Height = 205
     end
-    inherited Search: TSearchFrame
+    inherited Search: TUiLibTreeSearchBox
       Width = 620
-      inherited Splitter: TSplitter
-        Left = 454
-      end
-      inherited SearchBox: TUiLibSearchBox
-        Width = 454
-      end
-      inherited cbxColumn: TComboBox
-        Left = 460
-      end
     end
   end
   object btnRefresh: TButton

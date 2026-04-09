@@ -66,7 +66,7 @@ object UserProfilesFrame: TUserProfilesFrame
         Width = 70
       end>
   end
-  inline SearchBox: TSearchFrame
+  object SearchBox: TUiLibTreeSearchBox
     AlignWithMargins = True
     Left = 0
     Top = 0
@@ -77,21 +77,6 @@ object UserProfilesFrame: TUserProfilesFrame
     Margins.Right = 0
     Margins.Bottom = 5
     Align = alTop
-    Constraints.MinHeight = 21
-    Constraints.MinWidth = 240
-    DoubleBuffered = True
-    ParentDoubleBuffered = False
     TabOrder = 1
-    inherited Splitter: TSplitter
-      Left = 534
-      Height = 21
-    end
-    inherited SearchBox: TUiLibSearchBox
-      Width = 534
-      Height = 21
-    end
-    inherited cbxColumn: TComboBox
-      Left = 540
-    end
   end
 end

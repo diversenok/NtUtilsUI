@@ -66,29 +66,12 @@ object WellKnownSidsFrame: TWellKnownSidsFrame
         Width = 110
       end>
   end
-  inline SearchBox: TSearchFrame
+  object SearchBox: TUiLibTreeSearchBox
     Left = 0
     Top = 0
     Width = 640
     Height = 21
     Align = alTop
-    Constraints.MinHeight = 21
-    Constraints.MinWidth = 240
-    DoubleBuffered = True
-    ParentDoubleBuffered = False
-    ParentShowHint = False
-    ShowHint = True
     TabOrder = 1
-    inherited Splitter: TSplitter
-      Left = 474
-      Height = 21
-    end
-    inherited SearchBox: TUiLibSearchBox
-      Width = 474
-      Height = 21
-    end
-    inherited cbxColumn: TComboBox
-      Left = 480
-    end
   end
 end

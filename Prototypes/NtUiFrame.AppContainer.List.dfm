@@ -8,28 +8,13 @@ object AppContainerListFrame: TAppContainerListFrame
   ParentShowHint = False
   ShowHint = True
   TabOrder = 0
-  inline SearchBox: TSearchFrame
+  object SearchBox: TUiLibTreeSearchBox
     Left = 0
     Top = 0
     Width = 600
     Height = 21
     Align = alTop
-    Constraints.MinHeight = 21
-    Constraints.MinWidth = 240
-    DoubleBuffered = True
-    ParentDoubleBuffered = False
     TabOrder = 1
-    inherited Splitter: TSplitter
-      Left = 434
-      Height = 21
-    end
-    inherited SearchBox: TUiLibSearchBox
-      Width = 434
-      Height = 21
-    end
-    inherited cbxColumn: TComboBox
-      Left = 440
-    end
   end
   object Tree: TDevirtualizedTree
     AlignWithMargins = True

@@ -9,15 +9,15 @@ interface
 uses
   System.SysUtils, System.Classes, Vcl.Graphics, Vcl.Controls, Vcl.Forms,
   Vcl.Dialogs, VirtualTrees, NtUtilsUI.VirtualTreeEx,
-  NtUtilsUI.DevirtualizedTree, NtUiFrame.Search, NtUiCommon.Interfaces,
-  NtUiBackend.UserProfiles, NtUtilsUI;
+  NtUtilsUI.DevirtualizedTree, NtUiCommon.Interfaces, NtUiBackend.UserProfiles,
+  NtUtilsUI, NtUtilsUI.Base, NtUtilsUI.DevirtualizedTree.Search;
 
 type
   TUserProfilesFrame = class(TFrame, IHasDefaultCaption,
     IAllowsDefaultNodeAction, IHasModalResult, IHasModalResultObservation)
   published
     Tree: TDevirtualizedTree;
-    SearchBox: TSearchFrame;
+    SearchBox: TUiLibTreeSearchBox;
   private
     Backend: TTreeNodeInterfaceProvider;
     BackendRef: IUnknown;

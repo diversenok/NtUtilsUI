@@ -10,8 +10,9 @@ uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes,
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, VirtualTrees,
   NtUtilsUI.VirtualTreeEx, NtUtilsUI.DevirtualizedTree, NtUtils, Vcl.StdCtrls,
-  Ntapi.WinNt, Vcl.Menus, Vcl.ExtCtrls, NtUiFrame.Search,
-  NtUiCommon.Interfaces, NtUtils.Security.Acl, NtUtilsUI, NtUtilsUI.StdCtrls;
+  Ntapi.WinNt, Vcl.Menus, Vcl.ExtCtrls, NtUiCommon.Interfaces,
+  NtUtils.Security.Acl, NtUtilsUI, NtUtilsUI.StdCtrls,
+  NtUtilsUI.Base, NtUtilsUI.DevirtualizedTree.Search;
 
 type
   TAclFrame = class(TFrame, ICanShowEmptyMessage)
@@ -27,7 +28,7 @@ type
     cmUp: TMenuItem;
     cmDown: TMenuItem;
     RightPanel: TPanel;
-    Search: TSearchFrame;
+    Search: TUiLibTreeSearchBox;
     procedure btnCanonicalizeClick(Sender: TObject);
     procedure btnDeleteClick(Sender: TObject);
     procedure SelectionChanged(Sender: TBaseVirtualTree; Node: PVirtualNode);

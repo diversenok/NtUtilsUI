@@ -195,7 +195,7 @@ object AclFrame: TAclFrame
       ImageResource = 'Resources.Icon.Up'
     end
   end
-  inline Search: TSearchFrame
+  object Search: TUiLibTreeSearchBox
     AlignWithMargins = True
     Left = 0
     Top = 0
@@ -206,24 +206,7 @@ object AclFrame: TAclFrame
     Margins.Right = 0
     Margins.Bottom = 4
     Align = alTop
-    Constraints.MinHeight = 21
-    Constraints.MinWidth = 240
-    DoubleBuffered = True
-    ParentDoubleBuffered = False
-    ParentShowHint = False
-    ShowHint = True
     TabOrder = 2
-    inherited Splitter: TSplitter
-      Left = 454
-      Height = 21
-    end
-    inherited SearchBox: TUiLibSearchBox
-      Width = 454
-      Height = 21
-    end
-    inherited cbxColumn: TComboBox
-      Left = 460
-    end
   end
   object PopupMenu: TPopupMenu
     Left = 232

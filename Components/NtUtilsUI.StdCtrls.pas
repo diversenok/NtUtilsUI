@@ -71,6 +71,8 @@ type
     procedure CreateWnd; override;
     procedure ComboWndProc(var Message: TMessage; ComboWnd: HWnd; ComboProc: TWindowProcPtr); override;
     procedure KeyPress(var Key: Char); override;
+  public
+    procedure UpdateItems(const NewItems: TArray<String>; FallbackIndex: Integer = -1);
   end;
 
   TUiLibButton = class(TButton)
@@ -456,6 +458,50 @@ procedure TUiLibComboBox.OnEscShortcut;
 begin
   if Focused and DroppedDown then
     Handled := True;
+end;
+
+procedure TUiLibComboBox.UpdateItems;
+var
+  PreviousEvent: TNotifyEvent;
+  PreviousItem: String;
+  PreviousItemFound: Boolean;
+  i: Integer;
+begin
+  // Save the current state
+  PreviousItem := Text;
+  PreviousEvent := OnChange;
+
+  OnChange := nil;
+  Items.BeginUpdate;
+  try
+    // Remove all items
+    Clear;
+
+    // Add new items
+    for i := 0 to High(NewItems) do
+      Items.Add(NewItems[i]);
+
+    // Restore selection
+    PreviousItemFound := False;
+    for i := 0 to High(NewItems) do
+      if Items[i] = PreviousItem then
+      begin
+        Text := PreviousItem;
+        ItemIndex := i;
+        PreviousItemFound := True;
+        Break;
+      end;
+
+    // Reset selection if necessary
+    if not PreviousItemFound then
+    begin
+      Text := PreviousItem;
+      ItemIndex := FallbackIndex;
+    end;
+  finally
+    Items.EndUpdate;
+    OnChange := PreviousEvent;
+  end;
 end;
 
 { TUiLibButton }
