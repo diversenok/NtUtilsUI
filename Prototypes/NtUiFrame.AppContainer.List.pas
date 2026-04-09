@@ -10,7 +10,7 @@ uses
   Vcl.Controls, System.Classes, Vcl.Forms, VirtualTrees,
   NtUtilsUI.VirtualTreeEx, NtUtilsUI.DevirtualizedTree, NtUiFrame.Search,
   NtUtils, NtUiCommon.Interfaces, NtUiBackend.AppContainers, Vcl.Menus,
-  NtUiFrame, NtUtilsUI;
+  NtUtilsUI;
 
 type
   TAppContainerListFrame = class (TFrame, IHasDefaultCaption,

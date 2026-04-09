@@ -9,7 +9,7 @@ interface
 
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes,
-  Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, NtUiFrame,
+  Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs,
   UI.Prototypes.Sid.Edit, Vcl.StdCtrls, NtUiCommon.Interfaces,
   NtUiCommon.Prototypes, NtUtils, NtUtilsUI;
 

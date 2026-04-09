@@ -9,12 +9,12 @@ interface
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes,
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, VirtualTrees,
-  NtUtilsUI.VirtualTreeEx, NtUtilsUI.DevirtualizedTree, NtUiFrame,
+  NtUtilsUI.VirtualTreeEx, NtUtilsUI.DevirtualizedTree,
   NtUiFrame.Search, NtUiCommon.Interfaces, NtUiBackend.Sids.WellKnown,
   NtUtilsUI;
 
 type
-  TWellKnownSidsFrame = class(TBaseFrame, IHasDefaultCaption, IDelayedLoad)
+  TWellKnownSidsFrame = class(TFrame, IHasDefaultCaption, IDelayedLoad)
     Tree: TDevirtualizedTree;
     SearchBox: TSearchFrame;
   private
@@ -22,7 +22,7 @@ type
     BackendRef: IUnknown;
     function GetDefaultCaption: String;
   protected
-    procedure LoadedOnce; override;
+    procedure CreateWnd; override;
     procedure DelayedLoad;
   end;
 
@@ -48,7 +48,7 @@ begin
   Result := 'Well-known SIDs';
 end;
 
-procedure TWellKnownSidsFrame.LoadedOnce;
+procedure TWellKnownSidsFrame.CreateWnd;
 begin
   inherited;
   SearchBox.AttachToTree(Tree);

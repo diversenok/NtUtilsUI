@@ -5,7 +5,7 @@ interface
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes,
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls,
-  NtUtils, NtUiFrame, NtUiLib.AutoCompletion, NtUtilsUI.StdCtrls;
+  NtUtils, NtUiLib.AutoCompletion, NtUtilsUI.StdCtrls;
 
 type
   TSidChoice = (
@@ -14,7 +14,7 @@ type
     scTrust
   );
 
-  TSidEditor = class(TBaseFrame)
+  TSidEditor = class(TFrame)
     tbxSid: TEdit;
     btnDsPicker: TUiLibButton;
     btnCheatsheet: TUiLibButton;
@@ -33,7 +33,7 @@ type
     procedure SetSid(const Sid: ISid);
     procedure SetSidChoice(const Value: TSidChoice);
   protected
-    procedure LoadedOnce; override;
+    procedure CreateWnd; override;
     procedure FrameEnabledChanged(var Message: TMessage); message CM_ENABLEDCHANGED;
   public
     function TryGetSid(out Sid: ISid): TNtxStatus;
@@ -106,7 +106,7 @@ begin
   TryGetSid(Result).RaiseOnError;
 end;
 
-procedure TSidEditor.LoadedOnce;
+procedure TSidEditor.CreateWnd;
 begin
   inherited;
   btnDsPicker.Visible := Assigned(NtUiLibSelectDsObject);

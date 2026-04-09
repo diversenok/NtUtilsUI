@@ -1,4 +1,4 @@
-inherited SearchFrame: TSearchFrame
+object SearchFrame: TSearchFrame
   Left = 0
   Top = 0
   Width = 436
@@ -6,9 +6,9 @@ inherited SearchFrame: TSearchFrame
   Anchors = [akLeft, akTop, akRight]
   Constraints.MinHeight = 21
   Constraints.MinWidth = 240
-  TabOrder = 0
   DoubleBuffered = True
   ParentDoubleBuffered = False
+  TabOrder = 0
   object Splitter: TSplitter
     Left = 270
     Top = 0

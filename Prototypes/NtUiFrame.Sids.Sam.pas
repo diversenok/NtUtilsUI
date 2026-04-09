@@ -5,11 +5,11 @@ interface
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes,
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, VirtualTrees,
-  NtUtilsUI.VirtualTreeEx, NtUtilsUI.DevirtualizedTree, NtUiFrame,
+  NtUtilsUI.VirtualTreeEx, NtUtilsUI.DevirtualizedTree,
   NtUiFrame.Search, NtUiCommon.Interfaces, NtUtilsUI;
 
 type
-  TSamSidsFrame = class(TBaseFrame, IHasDefaultCaption, IDelayedLoad)
+  TSamSidsFrame = class(TFrame, IHasDefaultCaption, IDelayedLoad)
     Tree: TDevirtualizedTree;
     SearchBox: TSearchFrame;
   private
@@ -17,7 +17,7 @@ type
     BackendRef: IUnknown;
     function GetDefaultCaption: String;
   protected
-    procedure LoadedOnce; override;
+    procedure CreateWnd; override;
     procedure DelayedLoad;
   public
     { Public declarations }
@@ -73,7 +73,7 @@ begin
   Result := 'SAM Accounts';
 end;
 
-procedure TSamSidsFrame.LoadedOnce;
+procedure TSamSidsFrame.CreateWnd;
 begin
   inherited;
   SearchBox.AttachToTree(Tree);

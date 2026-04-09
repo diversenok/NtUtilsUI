@@ -10,7 +10,7 @@ uses
   Winapi.Windows, System.SysUtils, System.Classes, Vcl.Graphics, Vcl.Controls,
   Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Ntapi.WinNt, NtUtils.Security.Acl,
   NtUiFrame.Bits, UI.Prototypes.Sid.Edit, Vcl.ExtCtrls, NtUiFrame.Ace.Condition,
-  NtUiFrame, NtUiFrame.Hex.Edit, NtUiFrame.Guid, NtUiCommon.Interfaces,
+  NtUiFrame.Hex.Edit, NtUiFrame.Guid, NtUiCommon.Interfaces,
   NtUtilsUI;
 
 type

@@ -1,6 +1,9 @@
-inherited LogonSidsFrame: TLogonSidsFrame
+object LogonSidsFrame: TLogonSidsFrame
+  Left = 0
+  Top = 0
   Width = 640
   Height = 400
+  TabOrder = 0
   inline SearchBox: TSearchFrame
     Left = 0
     Top = 0
@@ -9,14 +12,18 @@ inherited LogonSidsFrame: TLogonSidsFrame
     Align = alTop
     Constraints.MinHeight = 21
     Constraints.MinWidth = 240
+    DoubleBuffered = True
+    ParentDoubleBuffered = False
     ParentShowHint = False
     ShowHint = True
     TabOrder = 0
     inherited Splitter: TSplitter
       Left = 474
+      Height = 21
     end
     inherited SearchBox: TUiLibSearchBox
       Width = 474
+      Height = 21
     end
     inherited cbxColumn: TComboBox
       Left = 480

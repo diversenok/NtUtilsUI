@@ -23,16 +23,16 @@ object AceFrame: TAceFrame
   object lblFlags: TLabel
     Left = 354
     Top = 184
-    Width = 29
-    Height = 13
+    Width = 30
+    Height = 15
     Anchors = [akTop, akRight]
     Caption = 'Flags:'
   end
   object lblAccessMask: TLabel
     Left = 3
     Top = 184
-    Width = 37
-    Height = 13
+    Width = 39
+    Height = 15
     Caption = 'Access:'
   end
   object lblSid: TLabel
@@ -124,6 +124,22 @@ object AceFrame: TAceFrame
     ParentShowHint = False
     ShowHint = True
     TabOrder = 1
+    inherited tbxSid: TEdit
+      Width = 513
+      Height = 21
+    end
+    inherited btnDsPicker: TUiLibButton
+      Left = 575
+      Height = 25
+    end
+    inherited btnCheatsheet: TUiLibButton
+      Left = 546
+      Height = 25
+    end
+    inherited btnChoice: TUiLibButton
+      Left = 517
+      Height = 25
+    end
   end
   inline fmxServerSid: TSidEditor
     Left = 0
@@ -135,6 +151,22 @@ object AceFrame: TAceFrame
     ParentShowHint = False
     ShowHint = True
     TabOrder = 2
+    inherited tbxSid: TEdit
+      Width = 513
+      Height = 21
+    end
+    inherited btnDsPicker: TUiLibButton
+      Left = 575
+      Height = 25
+    end
+    inherited btnCheatsheet: TUiLibButton
+      Left = 546
+      Height = 25
+    end
+    inherited btnChoice: TUiLibButton
+      Left = 517
+      Height = 25
+    end
   end
   object cbxObjectType: TCheckBox
     Left = 0
@@ -196,7 +228,7 @@ object AceFrame: TAceFrame
             Options = [coAllowClick, coDraggable, coEnabled, coParentBidiMode, coParentColor, coResizable, coVisible, coAutoSpring, coSmartResize, coAllowFocus, coDisableAnimatedResize, coEditable, coStyleColor]
             Position = 0
             Text = 'Name'
-            Width = 256
+            Width = 252
           end>
       end
       inherited BottomPanel: TPanel
@@ -229,7 +261,7 @@ object AceFrame: TAceFrame
             Options = [coAllowClick, coDraggable, coEnabled, coParentBidiMode, coParentColor, coResizable, coVisible, coAutoSpring, coSmartResize, coAllowFocus, coDisableAnimatedResize, coEditable, coStyleColor]
             Position = 0
             Text = 'Name'
-            Width = 338
+            Width = 334
           end>
       end
       inherited BottomPanel: TPanel

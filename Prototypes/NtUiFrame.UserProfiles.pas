@@ -10,7 +10,7 @@ uses
   System.SysUtils, System.Classes, Vcl.Graphics, Vcl.Controls, Vcl.Forms,
   Vcl.Dialogs, VirtualTrees, NtUtilsUI.VirtualTreeEx,
   NtUtilsUI.DevirtualizedTree, NtUiFrame.Search, NtUiCommon.Interfaces,
-  NtUiBackend.UserProfiles, NtUiFrame, NtUtilsUI;
+  NtUiBackend.UserProfiles, NtUtilsUI;
 
 type
   TUserProfilesFrame = class(TFrame, IHasDefaultCaption,

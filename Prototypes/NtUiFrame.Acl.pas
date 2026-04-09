@@ -10,11 +10,11 @@ uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes,
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, VirtualTrees,
   NtUtilsUI.VirtualTreeEx, NtUtilsUI.DevirtualizedTree, NtUtils, Vcl.StdCtrls,
-  NtUiFrame, Ntapi.WinNt, Vcl.Menus, Vcl.ExtCtrls, NtUiFrame.Search,
+  Ntapi.WinNt, Vcl.Menus, Vcl.ExtCtrls, NtUiFrame.Search,
   NtUiCommon.Interfaces, NtUtils.Security.Acl, NtUtilsUI, NtUtilsUI.StdCtrls;
 
 type
-  TAclFrame = class(TBaseFrame, ICanShowEmptyMessage)
+  TAclFrame = class(TFrame, ICanShowEmptyMessage)
     Tree: TDevirtualizedTree;
     btnUp: TUiLibButton;
     btnDown: TUiLibButton;
@@ -50,7 +50,7 @@ type
     procedure OnAddShortCut(Sender: TUiLibShortCut; var Handled: Boolean);
     procedure OnEditShortCut(Sender: TUiLibShortCut; var Handled: Boolean);
   protected
-    procedure LoadedOnce; override;
+    procedure CreateWnd; override;
   public
     constructor Create(AOwner: TComponent); override;
     procedure SetEmptyMessage(const Value: String);
@@ -160,7 +160,7 @@ begin
   AclChanged;
 end;
 
-procedure TAclFrame.LoadedOnce;
+procedure TAclFrame.CreateWnd;
 begin
   inherited;
   btnAdd.Enabled := Assigned(NtUiLibCreateAce);

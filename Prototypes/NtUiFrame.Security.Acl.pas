@@ -8,7 +8,7 @@ interface
 
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes,
-  Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, NtUiFrame,
+  Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls,
   NtUiFrame.Acl, Ntapi.WinNt, NtUtils, NtUiCommon.Prototypes,
   NtUiCommon.Interfaces, NtUtils.Security.Acl, NtUtilsUI;
 

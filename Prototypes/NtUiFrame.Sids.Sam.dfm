@@ -1,8 +1,11 @@
-inherited SamSidsFrame: TSamSidsFrame
+object SamSidsFrame: TSamSidsFrame
+  Left = 0
+  Top = 0
   Width = 640
   Height = 400
   Constraints.MinHeight = 120
   Constraints.MinWidth = 300
+  TabOrder = 0
   object Tree: TDevirtualizedTree
     AlignWithMargins = True
     Left = 0
@@ -71,14 +74,18 @@ inherited SamSidsFrame: TSamSidsFrame
     Align = alTop
     Constraints.MinHeight = 21
     Constraints.MinWidth = 240
+    DoubleBuffered = True
+    ParentDoubleBuffered = False
     ParentShowHint = False
     ShowHint = True
     TabOrder = 1
     inherited Splitter: TSplitter
       Left = 474
+      Height = 21
     end
     inherited SearchBox: TUiLibSearchBox
       Width = 474
+      Height = 21
     end
     inherited cbxColumn: TComboBox
       Left = 480

@@ -1,10 +1,13 @@
-inherited AclFrame: TAclFrame
+object AclFrame: TAclFrame
+  Left = 0
+  Top = 0
   Width = 620
   Height = 230
   Constraints.MinHeight = 165
   Constraints.MinWidth = 320
   ParentShowHint = False
   ShowHint = True
+  TabOrder = 0
   object Tree: TDevirtualizedTree
     Left = 0
     Top = 25
@@ -205,12 +208,18 @@ inherited AclFrame: TAclFrame
     Align = alTop
     Constraints.MinHeight = 21
     Constraints.MinWidth = 240
+    DoubleBuffered = True
+    ParentDoubleBuffered = False
+    ParentShowHint = False
+    ShowHint = True
     TabOrder = 2
     inherited Splitter: TSplitter
       Left = 454
+      Height = 21
     end
     inherited SearchBox: TUiLibSearchBox
       Width = 454
+      Height = 21
     end
     inherited cbxColumn: TComboBox
       Left = 460

@@ -10,11 +10,11 @@ uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes,
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, VirtualTrees,
   NtUtilsUI.VirtualTreeEx, NtUtilsUI.DevirtualizedTree,
-  NtUiBackend.Sids.Hierarchy, NtUiFrame, NtUiFrame.Search,
+  NtUiBackend.Sids.Hierarchy, NtUiFrame.Search,
   NtUiCommon.Interfaces, NtUtilsUI;
 
 type
-  TSidHierarchyFrame = class(TBaseFrame, IHasDefaultCaption, IDelayedLoad)
+  TSidHierarchyFrame = class(TFrame, IHasDefaultCaption, IDelayedLoad)
     Tree: TDevirtualizedTree;
     SearchBox: TSearchFrame;
   private
@@ -22,7 +22,7 @@ type
     BackendRef: IUnknown;
     function GetDefaultCaption: String;
   protected
-    procedure LoadedOnce; override;
+    procedure CreateWnd; override;
     procedure DelayedLoad;
   public
     { Public declarations }
@@ -44,7 +44,7 @@ begin
   Result := 'SID Hierarchy';
 end;
 
-procedure TSidHierarchyFrame.LoadedOnce;
+procedure TSidHierarchyFrame.CreateWnd;
 begin
   inherited;
   SearchBox.AttachToTree(Tree);

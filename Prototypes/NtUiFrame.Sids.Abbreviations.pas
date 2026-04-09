@@ -9,11 +9,11 @@ interface
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes,
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, VirtualTrees,
-  NtUtilsUI.VirtualTreeEx, NtUtilsUI.DevirtualizedTree, NtUiFrame,
+  NtUtilsUI.VirtualTreeEx, NtUtilsUI.DevirtualizedTree,
   NtUiFrame.Search, NtUiCommon.Interfaces, NtUtilsUI;
 
 type
-  TSidAbbreviationFrame = class(TBaseFrame, IHasDefaultCaption, IDelayedLoad)
+  TSidAbbreviationFrame = class(TFrame, IHasDefaultCaption, IDelayedLoad)
     Tree: TDevirtualizedTree;
     SearchBox: TSearchFrame;
   private
@@ -21,7 +21,7 @@ type
     BackendRef: IUnknown;
     function GetDefaultCaption: String;
   protected
-    procedure LoadedOnce; override;
+    procedure CreateWnd; override;
     procedure DelayedLoad;
   public
     { Public declarations }
@@ -52,7 +52,7 @@ begin
   Result := 'SDDL Abbreviations';
 end;
 
-procedure TSidAbbreviationFrame.LoadedOnce;
+procedure TSidAbbreviationFrame.CreateWnd;
 begin
   inherited;
   SearchBox.AttachToTree(Tree);

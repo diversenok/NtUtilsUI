@@ -1,10 +1,13 @@
-inherited AceConditionFrame: TAceConditionFrame
+object AceConditionFrame: TAceConditionFrame
+  Left = 0
+  Top = 0
   Width = 600
   Height = 25
   Constraints.MinHeight = 25
   Constraints.MinWidth = 200
   ParentShowHint = False
   ShowHint = True
+  TabOrder = 0
   object tbxCondition: TEdit
     AlignWithMargins = True
     Left = 0

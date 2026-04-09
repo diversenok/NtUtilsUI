@@ -1,9 +1,10 @@
-inherited SidEditor: TSidEditor
+object SidEditor: TSidEditor
+  Left = 0
+  Top = 0
   Width = 600
   Height = 25
   Anchors = [akLeft, akTop, akRight]
-  ExplicitWidth = 600
-  ExplicitHeight = 25
+  TabOrder = 0
   object tbxSid: TEdit
     AlignWithMargins = True
     Left = 0

@@ -79,12 +79,16 @@ object UserProfilesFrame: TUserProfilesFrame
     Align = alTop
     Constraints.MinHeight = 21
     Constraints.MinWidth = 240
+    DoubleBuffered = True
+    ParentDoubleBuffered = False
     TabOrder = 1
     inherited Splitter: TSplitter
       Left = 534
+      Height = 21
     end
     inherited SearchBox: TUiLibSearchBox
       Width = 534
+      Height = 21
     end
     inherited cbxColumn: TComboBox
       Left = 540

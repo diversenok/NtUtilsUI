@@ -4,12 +4,12 @@ interface
 
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes,
-  Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, NtUiFrame,
+  Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls,
   NtUiFrame.Search, VirtualTrees, NtUtilsUI.VirtualTreeEx,
   NtUtilsUI.DevirtualizedTree, NtUiCommon.Interfaces, NtUtilsUI;
 
 type
-  TLogonSidsFrame = class(TBaseFrame, IHasDefaultCaption, IDelayedLoad)
+  TLogonSidsFrame = class(TFrame, IHasDefaultCaption, IDelayedLoad)
     SearchBox: TSearchFrame;
     Tree: TDevirtualizedTree;
   private
@@ -18,7 +18,7 @@ type
     function GetDefaultCaption: String;
   protected
     procedure DelayedLoad;
-    procedure LoadedOnce; override;
+    procedure CreateWnd; override;
   public
     { Public declarations }
   end;
@@ -58,7 +58,7 @@ begin
   Result := 'Logon Sessions';
 end;
 
-procedure TLogonSidsFrame.LoadedOnce;
+procedure TLogonSidsFrame.CreateWnd;
 begin
   inherited;
   SearchBox.AttachToTree(Tree);

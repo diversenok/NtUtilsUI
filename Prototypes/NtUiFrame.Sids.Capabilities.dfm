@@ -12,14 +12,18 @@ object CapabilityListFrame: TCapabilityListFrame
     Align = alTop
     Constraints.MinHeight = 21
     Constraints.MinWidth = 240
+    DoubleBuffered = True
+    ParentDoubleBuffered = False
     ParentShowHint = False
     ShowHint = True
     TabOrder = 0
     inherited Splitter: TSplitter
       Left = 474
+      Height = 21
     end
     inherited SearchBox: TUiLibSearchBox
       Width = 474
+      Height = 21
     end
     inherited cbxColumn: TComboBox
       Left = 480
