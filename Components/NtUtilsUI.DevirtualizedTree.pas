@@ -101,6 +101,7 @@ type
     function OverrideMainActionMenuEnabled(Node: PVirtualNode): Boolean; override;
     function AddChildEx(Parent: PVirtualNode; const Provider: INodeProvider): INodeProvider;
     function InsertNodeEx(Node: PVirtualNode; Mode: TVTNodeAttachMode; const Provider: INodeProvider): INodeProvider;
+    procedure ApplyFilter(const Query: String; UseColumn: TColumnIndex = -1);
   end;
 
   TNodeProvider = class (TInterfacedObject, INodeProvider)
@@ -355,6 +356,73 @@ begin
   Assert(Assigned(Provider), 'Provider must not be null');
   Provider.Attach(inherited AddChild(Parent, IInterface(Provider)));
   Result := Provider;
+end;
+
+procedure TDevirtualizedTree.ApplyFilter;
+var
+  Node, Parent: PVirtualNode;
+  Provider: INodeProvider;
+  SearchColumns: TColumnsArray;
+  Column: TVirtualTreeColumn;
+  Matches, IsNumberSearch, IsSignedNumber: Boolean;
+  Expression: String;
+  NumberQuery: UInt64;
+begin
+  // Select which columns we want to search
+  if Header.Columns.IsValidColumn(UseColumn) then
+    SearchColumns := [Header.Columns[UseColumn]]
+  else
+    SearchColumns := Header.Columns.GetVisibleColumns;
+
+  BeginUpdateAuto;
+
+  // Reset visibility
+  for Node in Nodes do
+    if Node.TryGetProvider(Provider) then
+      IsVisible[Node] := Provider.SearchExpression('', -1);
+
+  if Query = '' then
+    Exit;
+
+  // Check if the query parses into a number
+  IsNumberSearch := RtlxStrToUInt64(Query, NumberQuery, nsDecimal,
+    [nsHexadecimal], True, [npSpace, npAccent, npApostrophe, npUnderscore]);
+  IsSignedNumber := IsNumberSearch and (Length(Query) > 1) and
+    (Query[Low(String)] = '-');
+
+  // Prepare an upcased expression for text search
+  Expression := '*' + RtlxUpperString(Query) + '*';
+
+  // Collect nodes that are visible without the search and test each one
+  // against the query
+  for Node in VisibleNodes.ToArray do
+    if Node.TryGetProvider(Provider) then
+    begin
+      Matches := False;
+
+      // At least one coulmn should match
+      for Column in SearchColumns do
+      begin
+        Matches := (IsNumberSearch and
+          Provider.SearchNumber(NumberQuery, IsSignedNumber, Column.Index)) or
+          Provider.SearchExpression(Expression, Column.Index);
+
+        if Matches then
+          Break;
+      end;
+
+      if Matches then
+      begin
+        // Make the node and all of its parents visible
+        Parent := Node;
+        repeat
+          IsVisible[Parent] := True;
+          Parent := NodeParent[Parent];
+        until not Assigned(Parent);
+      end
+      else
+        IsVisible[Node] := False;
+    end;
 end;
 
 procedure TDevirtualizedTree.DoBeforeItemErase;

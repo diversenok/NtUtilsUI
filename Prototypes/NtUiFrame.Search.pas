@@ -10,8 +10,7 @@ uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes,
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls,
   Vcl.ExtCtrls, VirtualTrees, NtUtilsUI.DevirtualizedTree,
-  NtUiCommon.Interfaces, NtUtilsUI, NtUtilsUI.StdCtrls, NtUtilsUI.Base,
-  NtUtilsUI.SearchBox;
+  NtUtilsUI, NtUtilsUI.StdCtrls, NtUtilsUI.Base, NtUtilsUI.SearchBox;
 
 type
   TSearchFrame = class(TFrame)
@@ -27,7 +26,6 @@ type
     FOnQueryChange: TNotifyEvent;
     FEscShortCut: TUiLibShortCut;
     procedure UpdateColumns;
-    function GetQueryColumns: TArray<TColumnIndex>;
     procedure ColumnVisibilityChanged(const Sender: TBaseVirtualTree; const Column: TColumnIndex; Visible: Boolean);
     procedure OnEscShortcut(Sender: TUiLibShortcut; var Handled: Boolean);
   public
@@ -39,7 +37,7 @@ type
 implementation
 
 uses
-  NtUtilsUI.VirtualTreeEx, NtUiCommon.Helpers, NtUtils.SysUtils;
+  NtUiCommon.Helpers;
 
 {$R *.dfm}
 
@@ -47,72 +45,17 @@ uses
 
 procedure TSearchFrame.ApplySearch;
 var
-  Node, Parent: PVirtualNode;
-  VisibleNodes: TArray<PVirtualNode>;
-  Provider: INodeProvider;
-  SearchColumns: TArray<TColumnIndex>;
-  Column: TColumnIndex;
-  Matches, IsNumberSearch, IsSignedNumber: Boolean;
-  Expression: String;
-  NumberQuery: UInt64;
+  SearchColumn: TColumnIndex;
 begin
   if not Assigned(FTree) then
     Exit;
 
-  SearchColumns := GetQueryColumns;
-  FTree.BeginUpdateAuto;
+  if cbxColumn.ItemIndex > 0 then
+    SearchColumn := FColumnIndexes[cbxColumn.ItemIndex]
+  else
+    SearchColumn := -1;
 
-  // Reset visibility
-  for Node in FTree.Nodes do
-    if Node.TryGetProvider(Provider) then
-      FTree.IsVisible[Node] := Provider.SearchExpression('', -1);
-
-  if not SearchBox.HasQuery then
-    Exit;
-
-  Expression := SearchBox.Query;
-
-  // Check if the query parses into a number
-  IsNumberSearch := RtlxStrToUInt64(Expression, NumberQuery, nsDecimal,
-    [nsHexadecimal], True, [npSpace, npAccent, npApostrophe, npUnderscore]);
-  IsSignedNumber := IsNumberSearch and (Length(Expression) > 1) and
-    (Expression[Low(String)] = '-');
-
-  // Prepare an upcased expression for text search
-  Expression := '*' + RtlxUpperString(Expression) + '*';
-
-  // Collect nodes that are visible without the search
-  VisibleNodes := FTree.VisibleNodes.ToArray;
-
-  // Test each node against the query
-  for Node in VisibleNodes do
-    if Node.TryGetProvider(Provider) then
-    begin
-      Matches := False;
-
-      // At least one coulmn should match
-      for Column in SearchColumns do
-      begin
-        Matches := (IsNumberSearch and
-          Provider.SearchNumber(NumberQuery, IsSignedNumber, Column)) or
-          Provider.SearchExpression(Expression, Column);
-
-        if Matches then
-          Break;
-      end;
-
-      if Matches then
-      begin
-        // Make the node and all of its parents visible
-        Parent := Node;
-        repeat
-          FTree.IsVisible[Parent] := True;
-          Parent := FTree.NodeParent[Parent];
-        until not Assigned(Parent);
-      end
-      else
-        FTree.IsVisible[Node] := False;
-    end;
+  FTree.ApplyFilter(SearchBox.Query, SearchColumn);
 end;
 
 procedure TSearchFrame.AttachToTree;
@@ -143,27 +86,6 @@ begin
   FEscShortCut := TUiLibShortCut.Create(Self);
   FEscShortCut.ShortCut := VK_ESCAPE;
   FEscShortCut.OnExecute := OnEscShortCut;
-end;
-
-function TSearchFrame.GetQueryColumns;
-var
-  VisibleColumns: TColumnsArray;
-  i: Integer;
-begin
-  i := cbxColumn.ItemIndex;
-
-  if (i > 0) and (i <= High(FColumnIndexes)) then
-    // Only the specified column
-    Result := [FColumnIndexes[i]]
-  else
-  begin
-    // All visible columns
-    VisibleColumns := FTree.Header.Columns.GetVisibleColumns;
-    SetLength(Result, Length(VisibleColumns));
-
-    for i := 0 to High(VisibleColumns) do
-      Result[i] := VisibleColumns[i].Index;
-  end;
 end;
 
 procedure TSearchFrame.OnEscShortcut;
