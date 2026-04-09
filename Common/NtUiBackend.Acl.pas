@@ -65,7 +65,7 @@ implementation
 uses
   NtUtils.Security.Sid, NtUtils.Security, NtUtils.SysUtils, NtUiLib.Errors,
   VirtualTrees, DelphiUiLib.LiteReflection, DelphiUiLib.Strings,
-  NtUtilsUI, NtUiCommon.Helpers, VirtualTrees.Types;
+  NtUtilsUI, VirtualTrees.Types;
 
 const
   colUse = 0;

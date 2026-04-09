@@ -42,7 +42,7 @@ implementation
 uses
   Ntapi.WinNt, Ntapi.ntpebteb, NtUtils.Security.Sid, NtUtils.Lsa.Sid,
   DelphiUiLib.LiteReflection, DelphiUiLib.Strings, VirtualTrees,
-  NtUiCommon.Helpers, System.UITypes, NtUtilsUI;
+  System.UITypes, NtUtilsUI;
 
 type
   TSidHierarchySpecialHandling = (

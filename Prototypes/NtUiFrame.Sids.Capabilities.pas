@@ -28,8 +28,8 @@ type
 implementation
 
 uses
-  NtUiBackend.Sids.Capabilities, NtUiCommon.Helpers, NtUiCommon.Prototypes,
-  NtUtils, VirtualTrees.Types;
+  NtUiBackend.Sids.Capabilities, NtUiCommon.Prototypes, NtUtils,
+  VirtualTrees.Types;
 
 {$R *.dfm}
 

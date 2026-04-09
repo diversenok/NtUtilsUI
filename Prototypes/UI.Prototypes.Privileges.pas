@@ -61,7 +61,7 @@ implementation
 
 uses
   Ntapi.ntlsa, DelphiUiLib.Strings, DelphiUiLib.LiteReflection,
-  NtUtilsUI, NtUiCommon.Helpers, VirtualTrees.Types;
+  NtUtilsUI, VirtualTrees.Types;
 
 {$R *.dfm}
 

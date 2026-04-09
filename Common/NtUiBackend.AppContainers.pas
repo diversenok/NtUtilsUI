@@ -69,8 +69,7 @@ uses
   Ntapi.ntseapi, DelphiApi.Reflection, NtUtils.SysUtils, NtUtils.Security.Sid,
   NtUtils.Tokens, NtUtils.Tokens.Info, NtUtils.Packages, NtUtils.Profiles,
   Vcl.Graphics, Vcl.Controls, NtUiLib.Errors, DelphiUiLib.Strings,
-  NtUtilsUI, NtUiCommon.Helpers, NtUiCommon.Prototypes,
-  NtUtils.Profiles.AppContainer;
+  NtUtilsUI, NtUiCommon.Prototypes, NtUtils.Profiles.AppContainer;
 
 {$BOOLEVAL OFF}
 {$IFOPT R+}{$DEFINE R+}{$ENDIF}

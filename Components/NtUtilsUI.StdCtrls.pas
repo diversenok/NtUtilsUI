@@ -86,6 +86,15 @@ type
     property ImageResource: String read FImageResource write SetImageResource;
   end;
 
+  TUiLibCheckBoxHelper = class helper for TCheckBox
+  private
+    procedure SetCheckedSuppressClick(Value: Boolean);
+    procedure SetStateSuppressClick(Value: TCheckBoxState);
+  public
+    property StateSuppressClick: TCheckBoxState write SetStateSuppressClick;
+    property CheckedSuppressClick: Boolean write SetCheckedSuppressClick;
+  end;
+
   TUiLibImageListHelper = class helper for TCustomImageList
     function AddIconFromResource(Instance: THandle; const ResourceName: String): Integer;
   end;
@@ -541,6 +550,28 @@ begin
 
   // Load the resource
   ImageIndex := FImageList.AddIconFromResource(HInstance, Value)
+end;
+
+{ TUiLibCheckBox }
+
+procedure TUiLibCheckBoxHelper.SetCheckedSuppressClick;
+var
+  PreviousDisabled: Boolean;
+begin
+  PreviousDisabled := ClicksDisabled;
+  ClicksDisabled := True;
+  Checked := Value;
+  ClicksDisabled := PreviousDisabled;
+end;
+
+procedure TUiLibCheckBoxHelper.SetStateSuppressClick;
+var
+  PreviousDisabled: Boolean;
+begin
+  PreviousDisabled := ClicksDisabled;
+  ClicksDisabled := True;
+  State := Value;
+  ClicksDisabled := PreviousDisabled;
 end;
 
 { TUiLibImageListHelper }
