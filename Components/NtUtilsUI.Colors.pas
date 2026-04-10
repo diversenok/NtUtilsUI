@@ -12,6 +12,7 @@ uses
 type
   TColorSettings = record
     // Text background
+    clBackground: TColor;
     clBackgroundAllow: TColor;
     clBackgroundAllowAccent: TColor;
     clBackgroundDeny: TColor;
@@ -26,6 +27,7 @@ type
     clBackgroundGuiThread: TColor;
 
     // Text foreground
+    clForeground: TColor;
     clForegroundError: TColor;
     clForegroundInactive: TColor;
     clForegroundLink: TColor;
@@ -34,6 +36,7 @@ type
 
 var
   DefaultColorSettings: TColorSettings = (
+    clBackground: clWindow;                    // White
     clBackgroundAllow: $E0F0E0;                // Light green
     clBackgroundAllowAccent: $C0F0C0;          // Medium-light green
     clBackgroundDeny: $E0E0F0;                 // Light red
@@ -47,6 +50,7 @@ var
     clBackgroundUser: $AAFFFF;                 // Light yellow
     clBackgroundGuiThread: $77FFFF;            // Light yellow
 
+    clForeground: clWindowText;                // Black
     clForegroundError: $0000F0;                // Red
     clForegroundInactive: $808080;             // Gray
     clForegroundLink: $D77800;                 // Blue
