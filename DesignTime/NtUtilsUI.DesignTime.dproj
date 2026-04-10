@@ -127,6 +127,7 @@
         <DCCReference Include="NtUtilsUI.Forms.pas"/>
         <DCCReference Include="NtUtilsUI.SearchBox.pas"/>
         <DCCReference Include="NtUtilsUI.DevirtualizedTree.Search.pas"/>
+        <DCCReference Include="NtUtilsUI.Guid.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

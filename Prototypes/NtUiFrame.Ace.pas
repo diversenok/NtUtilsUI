@@ -10,8 +10,8 @@ uses
   Winapi.Windows, System.SysUtils, System.Classes, Vcl.Graphics, Vcl.Controls,
   Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Ntapi.WinNt, NtUtils.Security.Acl,
   NtUiFrame.Bits, UI.Prototypes.Sid.Edit, Vcl.ExtCtrls, NtUiFrame.Ace.Condition,
-  NtUiFrame.Hex.Edit, NtUiFrame.Guid, NtUiCommon.Interfaces,
-  NtUtilsUI;
+  NtUiFrame.Hex.Edit, NtUtilsUI.Guid, NtUiCommon.Interfaces, NtUtilsUI,
+  NtUtilsUI.Base;
 
 type
   TAceFrame = class(TFrame, IHasDefaultCaption, IHasModalButtonCaptions,
@@ -34,8 +34,8 @@ type
     fmxCondition: TAceConditionFrame;
     fmxExtraData: THexEditFrame;
     lblExtraData: TLabel;
-    fmxObjectType: TGuidFrame;
-    fmxInheritedObjectType: TGuidFrame;
+    fmxObjectType: TUiLibGuidBox;
+    fmxInheritedObjectType: TUiLibGuidBox;
     procedure cbxObjectTypeClick(Sender: TObject);
     procedure cbxInheritedObjectTypeClick(Sender: TObject);
     procedure cbxTypeChange(Sender: TObject);

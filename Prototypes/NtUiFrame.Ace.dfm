@@ -124,22 +124,6 @@ object AceFrame: TAceFrame
     ParentShowHint = False
     ShowHint = True
     TabOrder = 1
-    inherited tbxSid: TEdit
-      Width = 513
-      Height = 21
-    end
-    inherited btnDsPicker: TUiLibButton
-      Left = 575
-      Height = 25
-    end
-    inherited btnCheatsheet: TUiLibButton
-      Left = 546
-      Height = 25
-    end
-    inherited btnChoice: TUiLibButton
-      Left = 517
-      Height = 25
-    end
   end
   inline fmxServerSid: TSidEditor
     Left = 0
@@ -151,22 +135,6 @@ object AceFrame: TAceFrame
     ParentShowHint = False
     ShowHint = True
     TabOrder = 2
-    inherited tbxSid: TEdit
-      Width = 513
-      Height = 21
-    end
-    inherited btnDsPicker: TUiLibButton
-      Left = 575
-      Height = 25
-    end
-    inherited btnCheatsheet: TUiLibButton
-      Left = 546
-      Height = 25
-    end
-    inherited btnChoice: TUiLibButton
-      Left = 517
-      Height = 25
-    end
   end
   object cbxObjectType: TCheckBox
     Left = 0
@@ -299,23 +267,21 @@ object AceFrame: TAceFrame
     ShowHint = True
     TabOrder = 7
   end
-  inline fmxObjectType: TGuidFrame
+  object fmxObjectType: TUiLibGuidBox
     Left = 0
     Top = 464
     Width = 600
     Height = 21
     Anchors = [akLeft, akRight, akBottom]
-    Constraints.MinWidth = 224
     Enabled = False
     TabOrder = 8
   end
-  inline fmxInheritedObjectType: TGuidFrame
+  object fmxInheritedObjectType: TUiLibGuidBox
     Left = 0
     Top = 512
     Width = 600
     Height = 21
     Anchors = [akLeft, akRight, akBottom]
-    Constraints.MinWidth = 224
     Enabled = False
     TabOrder = 9
   end
