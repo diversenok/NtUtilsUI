@@ -15,13 +15,13 @@ uses
 
 type
   TUiLibForm = class abstract (TForm)
-  private
+  strict private
     const idOnTop = 10001;
     var FCloseOnEscape: Boolean;
     procedure WMSysCommand(var Message: TWMSysCommand); message WM_SYSCOMMAND;
     procedure WMInitMenuPopup(var Message: TWMInitMenuPopup); message WM_INITMENUPOPUP;
     procedure WMWindowPosChanged(var Message: TWMWindowPosChanged); message WM_WINDOWPOSCHANGED;
-  protected
+  strict protected
     procedure DoClose(var Action: TCloseAction); override;
     procedure DoCreate; override;
     procedure DoShow; override;
@@ -33,13 +33,17 @@ type
   end;
 
   TUiLibMainForm = class abstract (TUiLibForm)
-  private
+  strict private
     class var FInstance: TUiLibMainForm;
+    class var FOnMainFormCloseQuery: TAutoPoll;
+    class var FOnMainFormClose: TAutoEvent;
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
+    function CloseQuery: Boolean; override;
     class property Instance: TUiLibMainForm read FInstance;
-    class var OnMainFormClose: TAutoEvent;
+    class function SubscribeCloseQuery(Callback: TPollCallback): IAutoReleasable; static;
+    class function SubscribeClose(Callback: TEventCallback): IAutoReleasable; static;
   end;
 
   TUiLibChildFormMode = (
@@ -49,10 +53,10 @@ type
   );
 
   TUiLibChildForm = class abstract (TUiLibForm)
-  private
+  strict private
     FChildMode: TUiLibChildFormMode;
-    FMainFormCloseSubscription: IAutoReleasable;
-  protected
+    FMainFormCloseQuerySub, FMainFormCloseSub: IAutoReleasable;
+  strict protected
     procedure CreateParams(var Params: TCreateParams); override;
     procedure DoCreate; override;
     procedure DoShow; override;
@@ -216,19 +220,43 @@ end;
 
 { TUiLibMainForm }
 
+function TUiLibMainForm.CloseQuery;
+begin
+  Result := inherited;
+
+  if Result then
+  begin
+    Result := FOnMainFormCloseQuery.Poll;
+
+    if Result then
+      FOnMainFormClose.Invoke;
+  end;
+end;
+
 constructor TUiLibMainForm.Create;
 begin
   inherited Create(AOwner);
-  Assert(not Assigned(FInstance), 'Created multiple main forms.');
+
+  if Assigned(FInstance) then
+    raise EInvalidOperation.Create('Attempted to create multiple main forms.');
+
   FInstance := Self;
 end;
 
 destructor TUiLibMainForm.Destroy;
 begin
-  if FInstance = Self then
-    FInstance := nil;
-
+  FInstance := nil;
   inherited;
+end;
+
+class function TUiLibMainForm.SubscribeClose;
+begin
+  FOnMainFormClose.Subscribe(Callback);
+end;
+
+class function TUiLibMainForm.SubscribeCloseQuery;
+begin
+  FOnMainFormCloseQuery.Subscribe(Callback);
 end;
 
 { TUiLibChildForm }
@@ -255,7 +283,8 @@ end;
 procedure TUiLibChildForm.DoCreate;
 begin
   inherited;
-  FMainFormCloseSubscription := TUiLibMainForm.OnMainFormClose.Subscribe(Close);
+  FMainFormCloseQuerySub := TUiLibMainForm.SubscribeCloseQuery(CloseQuery);
+  FMainFormCloseSub := TUiLibMainForm.SubscribeClose(Close);
 end;
 
 procedure TUiLibChildForm.DoShow;
@@ -263,7 +292,7 @@ begin
   // Our parent class makes us inherit stay-on-top from the owner
   inherited;
 
-  // If there is no owner, inherit it from the main form
+  // If there is no owner, inherit the style from the main form
   if not Assigned(Owner) and Assigned(TUiLibMainForm.Instance) and
     (TUiLibMainForm.Instance.FormStyle = fsStayOnTop) and (FormStyle = fsNormal) then
     FormStyle := fsStayOnTop;
