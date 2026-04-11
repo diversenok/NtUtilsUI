@@ -39,7 +39,7 @@ begin
   inherited;
 
   Width := 300;
-  Height := 23;
+  Height := 21;
   Constraints.MinWidth := 300;
 
   FEdit := TUiLibEdit.Create(Self);

@@ -16,8 +16,8 @@ type
   TUiLibGuidBox = class (TUiLibControl)
   private
     FEdit: TUiLibEdit;
-    FGuid, FFallbackGuid: TGuid;
-    FGuidValid: TNtxStatus;
+    FGuid: TGuid;
+    FValid: TNtxStatus;
     procedure EditChange(Sender: TObject);
     procedure EditExit(Sender: TObject);
     function GetGuid: TGuid;
@@ -27,7 +27,6 @@ type
     constructor Create(AOwner: TComponent); override;
     function TryGetGuid(out Value: TGuid): TNtxStatus;
     property Guid: TGuid read GetGuid write SetGuid;
-    property FallbackGuid: TGuid read FFallbackGuid write FFallbackGuid;
   end;
 
 implementation
@@ -42,7 +41,7 @@ begin
   inherited;
 
   Width := 300;
-  Height := 23;
+  Height := 21;
   Constraints.MinWidth := 300;
 
   FEdit := TUiLibEdit.Create(Self);
@@ -58,20 +57,20 @@ end;
 procedure TUiLibGuidBox.EditChange;
 begin
   // Attempt to parse it
-  FGuidValid := RtlxStringToGuid(FEdit.Text, FGuid);
+  FValid := RtlxStringToGuid(FEdit.Text, FGuid);
   UpdateFeedbackColor;
 end;
 
 procedure TUiLibGuidBox.EditExit;
 begin
-  // Reset invalid GUIDs when leaving the control
-  if not FGuidValid.IsSuccess then
-    SetGuid(FFallbackGuid);
+  // Reset to the last valid GUID when leaving the control
+  if not FValid.IsSuccess then
+    SetGuid(FGuid);
 end;
 
 function TUiLibGuidBox.GetGuid;
 begin
-  FGuidValid.RaiseOnError;
+  FValid.RaiseOnError;
   Result := FGuid;
 end;
 
@@ -79,8 +78,7 @@ procedure TUiLibGuidBox.SetGuid;
 begin
   // The provided Guid is always valid
   FGuid := Value;
-  FFallbackGuid := Value;
-  FGuidValid := NtxSuccess;
+  FValid := NtxSuccess;
 
   // Format it
   FEdit.OnChange := nil;
@@ -91,7 +89,7 @@ end;
 
 function TUiLibGuidBox.TryGetGuid;
 begin
-  Result := FGuidValid;
+  Result := FValid;
 
   if Result.IsSuccess then
     Value := FGuid;
@@ -99,7 +97,7 @@ end;
 
 procedure TUiLibGuidBox.UpdateFeedbackColor;
 begin
-  if FGuidValid.IsSuccess then
+  if FValid.IsSuccess then
     FEdit.Color := ColorSettings.clBackground
   else
     FEdit.Color := ColorSettings.clBackgroundError;
