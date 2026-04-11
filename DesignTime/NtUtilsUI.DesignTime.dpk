@@ -44,6 +44,7 @@ contains
   NtUtilsUI.Forms in 'NtUtilsUI.Forms.pas',
   NtUtilsUI.SearchBox in 'NtUtilsUI.SearchBox.pas',
   NtUtilsUI.DevirtualizedTree.Search in 'NtUtilsUI.DevirtualizedTree.Search.pas',
-  NtUtilsUI.Guid in 'NtUtilsUI.Guid.pas';
+  NtUtilsUI.Guid in 'NtUtilsUI.Guid.pas',
+  NtUtilsUI.Number in 'NtUtilsUI.Number.pas';
 
 end.
