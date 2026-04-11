@@ -85,7 +85,7 @@ const
   NUMERIC_WIDTH_PER_SIZE: array [TIntegerSize] of Byte = (2, 4, 8,
     {$IF SizeOf(UIntPtr) = SizeOf(Cardinal)}8{$ELSE}16{$ENDIF}, 16);
 
-  NUMERIC_WIDTH_ROUND_TO_GROUP = $80; // Round the number of digits to the group size
+  // NUMERIC_WIDTH_ROUND_TO_GROUP = $80; // Round the number of digits to the group size
   NUMERIC_WIDTH_ROUND_TO_BYTE = $40; // Round the number of digits to the byte size
   NUMERIC_WIDTH_FLAG_MASK = $C0;
 
