@@ -32,6 +32,7 @@ type
     procedure CreateWnd; override;
   public
     constructor Create(AOwner: TComponent); override;
+    destructor Destroy; override;
     procedure AttachToTree(Tree: TDevirtualizedTree);
   end;
 
@@ -116,6 +117,17 @@ procedure TUiLibTreeSearchBox.CreateWnd;
 begin
   inherited;
   UpdateColumns;
+end;
+
+destructor TUiLibTreeSearchBox.Destroy;
+begin
+  if Assigned(FTree) then
+  begin
+    FTree.OnColumnVisibilityChanged := nil;
+    FTree := nil;
+  end;
+
+  inherited;
 end;
 
 procedure TUiLibTreeSearchBox.OnEscShortcut;
