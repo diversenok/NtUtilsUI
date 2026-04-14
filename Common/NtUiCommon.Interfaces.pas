@@ -27,57 +27,6 @@ type
 
   { Tree interfaces }
 
-  // Indicates a component that allows enumerating all devirtualized nodes
-  IHasNodes = interface
-    ['{4B2C5DD6-52AF-4C3B-A831-B985DFA0B10E}']
-    function NodeCount(const ProviderId: TGuid): Cardinal;
-    function Nodes(const ProviderId: TGuid): TArray<INodeProvider>;
-  end;
-
-  // Indicates a component that allows enumerating selected devirtualized nodes
-  IHasSelectedNodes = interface
-    ['{E7D0A799-5719-4CA0-A76C-819C1AEF45EB}']
-    function SelectedNodeCount(const ProviderId: TGuid): Cardinal;
-    function SelectedNodes(const ProviderId: TGuid): TArray<INodeProvider>;
-  end;
-
-  // Indicates a component that allows observing node selection changes
-  IHasSelectedNodesObservation = interface (IHasSelectedNodes)
-    ['{CE3DD21D-BD55-44E8-B923-12DF4F62233D}']
-    function GetOnSelectionChange: TNotifyEvent;
-    procedure SetOnSelectionChange(const Callback: TNotifyEvent);
-    property OnSelectionChange: TNotifyEvent read GetOnSelectionChange write SetOnSelectionChange;
-  end;
-
-  // Indicates a component that allows enumerating checked devirtualized nodes
-  IHasCheckedNodes = interface
-    ['{7E5EF7D7-2A31-4DD2-A643-6DAE99F4F032}']
-    function CheckedNodeCount(const ProviderId: TGuid): Cardinal;
-    function CheckedNodes(const ProviderId: TGuid): TArray<INodeProvider>;
-  end;
-
-  // Indicates a component that allows observing node check state changes
-  IHasCheckedNodesObservation = interface (IHasCheckedNodes)
-    ['{E0F17AE7-E36D-4B6A-A495-5D495026D60D}']
-    function GetOnCheckedChange: TNotifyEvent;
-    procedure SetOnCheckedChange(const Callback: TNotifyEvent);
-    property OnCheckedChange: TNotifyEvent read GetOnCheckedChange write SetOnCheckedChange;
-  end;
-
-  // Indicates a component allowing to retrieve the focused devirtualized node
-  IHasFocusedNode = interface
-    ['{3B4E5A9A-C832-429B-9440-F2FC2399214E}']
-    function FocusedNode: INodeProvider;
-  end;
-
-  // Indicates a component that allows modifying devirtualized nodes
-  IAllowsEditingNodes = interface
-    ['{05DA3293-63D8-42CB-B26A-AFA502C56A42}']
-    function BeginUpdateAuto: IAutoReleasable;
-    procedure ClearItems;
-    procedure AddItem(const Item: INodeProvider; const Parent: INodeProvider = nil);
-  end;
-
   TNodeProviderEvent = procedure (const Node: INodeProvider) of object;
 
   // Indicates a component that allows controlling default tree menu action
@@ -127,8 +76,6 @@ type
   end;
 
   TTreeNodeInterfaceProvider = class (TBaseTreeExtension, ICanShowEmptyMessage,
-    IHasNodes, IHasSelectedNodes, IHasSelectedNodesObservation,
-    IHasCheckedNodes, IHasCheckedNodesObservation, IHasFocusedNode, IAllowsEditingNodes,
     IAllowsDefaultNodeAction, IHasModalResult, IHasModalResultObservation)
   private
     FOnNodeSelectionChange: TNotifyEvent;
