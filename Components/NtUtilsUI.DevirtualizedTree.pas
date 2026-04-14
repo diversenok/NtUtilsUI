@@ -81,6 +81,13 @@ type
     property Provider: INodeProvider read GetProvider write SetProvider;
   end;
 
+  TVTVirtualNodeEnumerationHelper = record helper for TVTVirtualNodeEnumeration
+    function Count: Integer;
+    function ToArray: TArray<PVirtualNode>;
+    function CountProviders(const ProviderId: TGuid): Integer;
+    function Providers(const ProviderId: TGuid): TArray<INodeProvider>;
+  end;
+
   TDevirtualizedTree = class(TVirtualStringTreeEx)
   protected
     procedure DoGetText(var pEventArgs: TVSTGetCellTextEventArgs); override;
@@ -347,6 +354,61 @@ function TVirtualNodeHelper.TryGetProvider(
 begin
   Result := HasProvider and Succeeded(IInterface(GetData^).QueryInterface(IID,
     Provider));
+end;
+
+{ TVTVirtualNodeEnumerationHelper }
+
+function TVTVirtualNodeEnumerationHelper.Count;
+var
+  Node: PVirtualNode;
+begin
+  Result := 0;
+
+  for Node in Self do
+    Inc(Result);
+end;
+
+function TVTVirtualNodeEnumerationHelper.CountProviders;
+var
+  Node: PVirtualNode;
+begin
+  Result := 0;
+
+  for Node in Self do
+    if Node.HasProvider(ProviderId) then
+      Inc(Result);
+end;
+
+function TVTVirtualNodeEnumerationHelper.Providers;
+var
+  Node: PVirtualNode;
+  Provider: INodeProvider;
+  i: Integer;
+begin
+  SetLength(Result, CountProviders(ProviderId));
+
+  i := 0;
+  for Node in Self do
+    if Node.TryGetProvider(ProviderId, Provider) then
+    begin
+      Result[i] := Provider;
+      Inc(i);
+    end;
+end;
+
+function TVTVirtualNodeEnumerationHelper.ToArray;
+var
+  Node: PVirtualNode;
+  i: Integer;
+begin
+  SetLength(Result, Count);
+
+  i := 0;
+  for Node in Self do
+  begin
+    Result[i] := Node;
+    Inc(i);
+  end;
 end;
 
 { TDevirtualizedTree }

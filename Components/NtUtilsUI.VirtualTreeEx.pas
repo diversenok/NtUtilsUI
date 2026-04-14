@@ -16,10 +16,6 @@ uses
 type
   TNodeEvent = procedure (Node: PVirtualNode) of object;
 
-  TVTVirtualNodeEnumerationHelper = record helper for TVTVirtualNodeEnumeration
-    function ToArray: TArray<PVirtualNode>;
-  end;
-
   TVirtualTreeColumnsHelper = class helper for TVirtualTreeColumns
     function BeginUpdateAuto: IAutoReleasable;
   end;
@@ -114,6 +110,11 @@ implementation
 
 uses
   Winapi.Windows, Winapi.ShLwApi, System.SysUtils, Vcl.Themes, Vcl.Clipbrd;
+
+type
+  TVTVirtualNodeEnumerationHelper = record helper for TVTVirtualNodeEnumeration
+    function ToArray: TArray<PVirtualNode>;
+  end;
 
 { TVTVirtualNodeEnumerationHelper }
 
