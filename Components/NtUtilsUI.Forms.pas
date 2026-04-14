@@ -153,7 +153,7 @@ begin
     Result := DispatchShortCut(Self, ShortCut) or Result;
 
     // Support closing on an unhandled escape shortcut
-    if (ShortCut = VK_ESCAPE) and FCloseOnEscape and not Result then
+    if (ShortCut = VK_ESCAPE) and FCloseOnEscape and not Result and Active then
     begin
       Result := True;
       Close;
@@ -251,12 +251,12 @@ end;
 
 class function TUiLibMainForm.SubscribeClose;
 begin
-  FOnMainFormClose.Subscribe(Callback);
+  Result := FOnMainFormClose.Subscribe(Callback);
 end;
 
 class function TUiLibMainForm.SubscribeCloseQuery;
 begin
-  FOnMainFormCloseQuery.Subscribe(Callback);
+  Result := FOnMainFormCloseQuery.Subscribe(Callback);
 end;
 
 { TUiLibChildForm }
