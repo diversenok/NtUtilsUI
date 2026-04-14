@@ -170,14 +170,11 @@ begin
   for i in EnumType.ValidValues do
   begin
     Name := EnumType.TypeInfo.EnumerationName(i);
+    RtlxPrefixStripString(EnumType.Prefix, Name, True);
+    RtlxSuffixStripString(EnumType.Suffix, Name, True);
 
-    case EnumType.NamingStyle of
-      nsCamelCase:
-        Name := PrettifyCamelCase(Name, EnumType.Prefix, EnumType.Suffix);
-
-      nsSnakeCase:
-        Name := PrettifySnakeCase(Name, EnumType.Prefix, EnumType.Suffix);
-    end;
+    if EnumType.NamingStyle <> nsPreserveCase then
+      RtlxPrettifyIdentifier(Name);
 
     Result.Nodes[Count] := TFlagNode.Create(Size, Name, Cardinal(i),
       Result.Mask, rbkSubEnum);

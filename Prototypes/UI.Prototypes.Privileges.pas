@@ -61,7 +61,7 @@ implementation
 
 uses
   Ntapi.ntlsa, DelphiUiLib.Strings, DelphiUiLib.LiteReflection,
-  NtUtilsUI, VirtualTrees.Types;
+  NtUtilsUI, VirtualTrees.Types, NtUtils.SysUtils;
 
 {$R *.dfm}
 
@@ -147,7 +147,9 @@ begin
   if LsaxQueryPrivilege(Privilege.Luid, FColumnText[colName],
     FColumnText[colDescription], hxPolicy).IsSuccess then
   begin
-    FColumnText[colFriendly] := PrettifyCamelCase(FColumnText[colName], 'Se');
+    FColumnText[colFriendly] := FColumnText[colName];
+    RtlxPrefixStripString('Se', FColumnText[colFriendly], True);
+    FColumnText[colFriendly] := RtlxPrettifyIdentifier(FColumnText[colFriendly]);
 
     FHint := BuildHint([
       THintSection.New('Friendly Name', FColumnText[colFriendly]),
