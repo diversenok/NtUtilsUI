@@ -63,6 +63,7 @@ type
   public
     constructor Create(AOwner: TComponent; Mode: TUiLibChildFormMode); reintroduce;
     property ChildMode: TUiLibChildFormMode read FChildMode;
+    class procedure CreateAndShow(ShowOnTaskbar: Boolean = True);
   end;
 
 function IsWindowTopmost(Handle: HWND): Boolean;
@@ -268,6 +269,13 @@ begin
 
   if FChildMode <> cfmDesktop then
     BorderIcons := BorderIcons - [biMinimize];
+end;
+
+class procedure TUiLibChildForm.CreateAndShow;
+const
+  Mode: array [Boolean] of TUiLibChildFormMode = (cfmApplication, cfmDesktop);
+begin
+  TUiLibChildForm(NewInstance).Create(nil, Mode[ShowOnTaskbar <> False]).Show;
 end;
 
 procedure TUiLibChildForm.CreateParams;
