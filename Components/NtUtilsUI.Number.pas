@@ -28,7 +28,7 @@ type
     procedure EditKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
     function GetNumber: UInt64;
     procedure SetNumber(const Value: UInt64);
-    procedure UpdateFeedbackColor;
+    procedure UpdateFeedback;
     procedure SetNumberBase(const Value: TNumericSystem);
     procedure SetNumberSign(const Value: TIntegerSign);
     procedure SetNumberSize(const Value: TIntegerSize);
@@ -49,7 +49,7 @@ type
 implementation
 
 uses
-  Winapi.Windows, System.SysUtils, Vcl.Controls, NtUtilsUI;
+  Winapi.Windows, System.SysUtils, Vcl.Controls, NtUtilsUI, DelphiUiLib.Strings;
 
 {$BOOLEVAL OFF}
 {$IFOPT R+}{$DEFINE R+}{$ENDIF}
@@ -87,7 +87,7 @@ begin
   // Attempt to parse the input while being as flexible as possible
   FValid := RtlxStrToUInt64(FEdit.Text, FNumber, nsDecimal, [nsDecimal,
     nsHexadecimal], True, NUMERIC_SPACES_ALL, FNumberSize);
-  UpdateFeedbackColor;
+  UpdateFeedback;
 
   if FValid and Assigned(FOnChange) then
     FOnChange(Self);
@@ -165,15 +165,15 @@ begin
   else
     // Reset to the last valid number
     SetNumber(FNumber);
+
+  UpdateFeedback;
 end;
 
 procedure TUiLibNumberBox.SetNumber;
 begin
   FNumber := Value;
   FValid := True;
-
   Reformat;
-  UpdateFeedbackColor;
 
   if Assigned(FOnChange) then
     FOnChange(Self);
@@ -211,12 +211,25 @@ begin
     Value := FNumber;
 end;
 
-procedure TUiLibNumberBox.UpdateFeedbackColor;
+procedure TUiLibNumberBox.UpdateFeedback;
 begin
   if FValid then
-    FEdit.Color := ColorSettings.clBackground
+  begin
+    FEdit.Color := ColorSettings.clBackground;
+    FEdit.Hint := BuildHint([
+      THintSection.New('Signed Decimal', RtlxIntToDec(FNumber,
+        FNumberSize, isSigned, FNumberWidth, npSpace)),
+      THintSection.New('Unsigned Decimal', RtlxIntToDec(FNumber,
+        FNumberSize, isUnsigned, FNumberWidth, npSpace)),
+      THintSection.New('Hexadecimal', RtlxIntToHex(FNumber, FNumberWidth,
+        True, npSpace))
+    ]);
+  end
   else
+  begin
     FEdit.Color := ColorSettings.clBackgroundError;
+    FEdit.Hint := ''
+  end;
 end;
 
 end.
