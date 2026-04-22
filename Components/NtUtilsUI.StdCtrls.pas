@@ -69,6 +69,7 @@ type
     procedure OnEscShortcut(Sender: TUiLibShortcut; var Handled: Boolean);
   protected
     procedure CreateWnd; override;
+    procedure WMWindowPosChanged(var Message: TWMWindowPosChanging); message WM_WINDOWPOSCHANGED;
     procedure ComboWndProc(var Message: TMessage; ComboWnd: HWnd; ComboProc: TWindowProcPtr); override;
     procedure KeyPress(var Key: Char); override;
   public
@@ -511,6 +512,21 @@ begin
     Items.EndUpdate;
     OnChange := PreviousEvent;
   end;
+end;
+
+procedure TUiLibComboBox.WMWindowPosChanged;
+var
+  Selection: TSelection;
+begin
+  // Determine the selection before resizing
+  SendGetIntMessage(Handle, CB_GETEDITSEL, Selection.StartPos,
+    Selection.EndPos);
+
+  inherited;
+
+  // Restore the selection after resizing
+  SendMessage(Handle, CB_SETEDITSEL, 0, MakeLParam(Word(Selection.StartPos),
+    Word(Selection.EndPos)));
 end;
 
 { TUiLibButton }
