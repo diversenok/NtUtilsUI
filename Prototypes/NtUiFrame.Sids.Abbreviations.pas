@@ -22,7 +22,7 @@ type
     BackendRef: IUnknown;
     function GetDefaultCaption: String;
   protected
-    procedure CreateWnd; override;
+    procedure Loaded; override;
     procedure DelayedLoad;
   public
     { Public declarations }
@@ -53,7 +53,7 @@ begin
   Result := 'SDDL Abbreviations';
 end;
 
-procedure TSidAbbreviationFrame.CreateWnd;
+procedure TSidAbbreviationFrame.Loaded;
 begin
   inherited;
   SearchBox.AttachToTree(Tree);
