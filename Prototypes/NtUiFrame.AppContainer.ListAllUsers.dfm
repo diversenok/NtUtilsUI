@@ -15,7 +15,7 @@ object AppContainerListAllUsersFrame: TAppContainerListAllUsersFrame
     Height = 13
     Caption = 'User profile:'
   end
-  object tbxUser: TEdit
+  object tbxUser: TUiLibEdit
     Left = 72
     Top = 2
     Width = 447

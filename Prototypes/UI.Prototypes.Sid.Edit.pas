@@ -15,7 +15,7 @@ type
   );
 
   TSidEditor = class(TFrame)
-    tbxSid: TEdit;
+    tbxSid: TUiLibEdit;
     btnDsPicker: TUiLibButton;
     btnCheatsheet: TUiLibButton;
     btnChoice: TUiLibButton;

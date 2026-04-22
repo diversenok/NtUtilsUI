@@ -6,7 +6,7 @@ object HexEditFrame: THexEditFrame
   ParentShowHint = False
   ShowHint = True
   TabOrder = 0
-  object tbxHexString: TEdit
+  object tbxHexString: TUiLibEdit
     AlignWithMargins = True
     Left = 0
     Top = 2

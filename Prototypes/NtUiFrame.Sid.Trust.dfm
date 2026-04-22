@@ -97,7 +97,7 @@ object FrameTrustSid: TFrameTrustSid
     TickMarks = tmBoth
     OnChange = TrackBarLevelChange
   end
-  object cbxType: TComboBox
+  object cbxType: TUiLibComboBox
     Left = 0
     Top = 0
     Width = 400
@@ -112,7 +112,7 @@ object FrameTrustSid: TFrameTrustSid
       'Light (0x200)'
       'Full (0x400)')
   end
-  object cbxLevel: TComboBox
+  object cbxLevel: TUiLibComboBox
     Left = 0
     Top = 99
     Width = 400

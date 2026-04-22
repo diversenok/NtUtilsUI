@@ -11,12 +11,12 @@ uses
   Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Ntapi.WinNt, NtUtils.Security.Acl,
   NtUiFrame.Bits, UI.Prototypes.Sid.Edit, Vcl.ExtCtrls, NtUiFrame.Ace.Condition,
   NtUiFrame.Hex.Edit, NtUtilsUI.Guid, NtUiCommon.Interfaces, NtUtilsUI,
-  NtUtilsUI.Base;
+  NtUtilsUI.Base, NtUtilsUI.StdCtrls;
 
 type
   TAceFrame = class(TFrame, IHasDefaultCaption, IHasModalButtonCaptions,
     IHasModalResult)
-    cbxType: TComboBox;
+    cbxType: TUiLibComboBox;
     lblType: TLabel;
     lblFlags: TLabel;
     lblAccessMask: TLabel;

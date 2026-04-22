@@ -49,7 +49,7 @@ object BitsFrame: TBitsFrame
     BevelOuter = bvNone
     ShowCaption = False
     TabOrder = 1
-    object tbxValue: TEdit
+    object tbxValue: TUiLibEdit
       AlignWithMargins = True
       Left = 73
       Top = 5

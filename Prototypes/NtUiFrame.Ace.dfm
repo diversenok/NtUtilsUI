@@ -78,7 +78,7 @@ object AceFrame: TAceFrame
     AutoSize = False
     Caption = 'Extra Data:'
   end
-  object cbxType: TComboBox
+  object cbxType: TUiLibComboBox
     Left = 0
     Top = 18
     Width = 600
@@ -202,7 +202,7 @@ object AceFrame: TAceFrame
       inherited BottomPanel: TPanel
         Top = 207
         Width = 256
-        inherited tbxValue: TEdit
+        inherited tbxValue: TUiLibEdit
           Width = 110
         end
         inherited btnAll: TButton
@@ -235,7 +235,7 @@ object AceFrame: TAceFrame
       inherited BottomPanel: TPanel
         Top = 207
         Width = 338
-        inherited tbxValue: TEdit
+        inherited tbxValue: TUiLibEdit
           Width = 192
         end
         inherited btnAll: TButton

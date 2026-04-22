@@ -9,7 +9,8 @@ interface
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes,
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls,
-  Vcl.ComCtrls, Ntapi.WinNt, NtUtils, NtUiCommon.Interfaces, NtUtilsUI;
+  Vcl.ComCtrls, Ntapi.WinNt, NtUtils, NtUiCommon.Interfaces, NtUtilsUI,
+  NtUtilsUI.StdCtrls;
 
 type
   TFrameTrustSid = class(TFrame, IHasDefaultCaption, IHasModalResult)
@@ -22,8 +23,8 @@ type
     lblAntimalware: TLabel;
     lblWindows: TLabel;
     lblWinTcb: TLabel;
-    cbxType: TComboBox;
-    cbxLevel: TComboBox;
+    cbxType: TUiLibComboBox;
+    cbxLevel: TUiLibComboBox;
     procedure cbxTypeChange(Sender: TObject);
     procedure cbxLevelChange(Sender: TObject);
     procedure TrackBarTypeChange(Sender: TObject);

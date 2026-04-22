@@ -9,14 +9,14 @@ interface
 uses
   System.SysUtils, System.Classes, Vcl.Graphics, Vcl.Controls, Vcl.Forms,
   Vcl.Dialogs, Vcl.StdCtrls, NtUtils, NtUiFrame.AppContainer.List,
-  NtUiCommon.Interfaces, NtUtilsUI;
+  NtUiCommon.Interfaces, NtUtilsUI, NtUtilsUI.StdCtrls;
 
 type
   TAppContainerListAllUsersFrame = class (TFrame, IHasDefaultCaption,
     IAllowsDefaultNodeAction, IHasModalResult, IHasModalResultObservation)
   published
     lblUsers: TLabel;
-    tbxUser: TEdit;
+    tbxUser: TUiLibEdit;
     btnSelectUser: TButton;
     AppContainersFrame: TAppContainerListFrame;
     procedure btnSelectUserClick(Sender: TObject);

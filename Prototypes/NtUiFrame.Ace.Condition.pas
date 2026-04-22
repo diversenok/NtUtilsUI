@@ -13,7 +13,7 @@ uses
 
 type
   TAceConditionFrame = class(TFrame)
-    tbxCondition: TEdit;
+    tbxCondition: TUiLibEdit;
     btnNormalize: TUiLibButton;
     procedure tbxConditionChange(Sender: TObject);
     procedure btnNormalizeClick(Sender: TObject);

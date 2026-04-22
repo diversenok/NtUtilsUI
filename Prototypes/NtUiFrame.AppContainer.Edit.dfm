@@ -8,7 +8,7 @@ object AppContainerFieldFrame: TAppContainerFieldFrame
   ParentShowHint = False
   ShowHint = True
   TabOrder = 0
-  object tbxMoniker: TEdit
+  object tbxMoniker: TUiLibEdit
     Left = 0
     Top = 2
     Width = 289

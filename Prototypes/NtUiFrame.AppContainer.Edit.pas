@@ -8,12 +8,12 @@ interface
 
 uses
   Winapi.Messages, System.SysUtils, System.Classes, Vcl.Graphics, Vcl.Controls,
-  Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.Menus, NtUtils,
+  Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.Menus, NtUtils, NtUtilsUI.StdCtrls,
   NtUtils.Security.AppContainer;
 
 type
   TAppContainerFieldFrame = class(TFrame)
-    tbxMoniker: TEdit;
+    tbxMoniker: TUiLibEdit;
     btnSelect: TButton;
     pmMenu: TPopupMenu;
     cmClear: TMenuItem;

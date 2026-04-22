@@ -8,7 +8,7 @@ object AceConditionFrame: TAceConditionFrame
   ParentShowHint = False
   ShowHint = True
   TabOrder = 0
-  object tbxCondition: TEdit
+  object tbxCondition: TUiLibEdit
     AlignWithMargins = True
     Left = 0
     Top = 2

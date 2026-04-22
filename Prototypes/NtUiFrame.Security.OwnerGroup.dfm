@@ -15,7 +15,7 @@ object OwnerGroupSecurityFrame: TOwnerGroupSecurityFrame
     ParentShowHint = False
     ShowHint = True
     TabOrder = 0
-    inherited tbxSid: TEdit
+    inherited tbxSid: TUiLibEdit
       Width = 513
       Height = 21
     end

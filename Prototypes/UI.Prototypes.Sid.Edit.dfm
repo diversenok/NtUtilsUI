@@ -5,7 +5,7 @@ object SidEditor: TSidEditor
   Height = 25
   Anchors = [akLeft, akTop, akRight]
   TabOrder = 0
-  object tbxSid: TEdit
+  object tbxSid: TUiLibEdit
     AlignWithMargins = True
     Left = 0
     Top = 2

@@ -8,11 +8,12 @@ interface
 
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes,
-  Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, NtUtils;
+  Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, NtUtils,
+  NtUtilsUI.StdCtrls;
 
 type
   THexEditFrame = class(TFrame)
-    tbxHexString: TEdit;
+    tbxHexString: TUiLibEdit;
     procedure tbxHexStringChange(Sender: TObject);
     procedure tbxHexStringExit(Sender: TObject);
   private
