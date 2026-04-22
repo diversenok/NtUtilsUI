@@ -8,7 +8,7 @@ interface
 
 uses
   System.Classes, NtUtilsUI.Forms, NtUtilsUI.Base, NtUtilsUI.Components,
-  NtUtilsUI.Colors;
+  NtUtilsUI.Colors, NtUtils;
 
 const
   // Forward child form modes
@@ -30,6 +30,14 @@ type
   IHasModalResult = NtUtilsUI.Base.IHasModalResult;
   IHasModalResultObservation = NtUtilsUI.Base.IHasModalResultObservation;
   TWinControlFactory = NtUtilsUI.Components.TWinControlFactory;
+
+  TCollectionHelper = class helper for TCollection
+    function BeginUpdateAuto: IAutoReleasable;
+  end;
+
+  TStringsHelper = class helper for TStrings
+    function BeginUpdateAuto: IAutoReleasable;
+  end;
 
 // Show a control in a dialog
 procedure UiLibShow(
@@ -66,6 +74,34 @@ begin
     Result := UiLibHostPick(AOwner, ControlFactory)
   else
     raise EClassNotFound.Create(MSG_E_NO_HOST);
+end;
+
+{ TCollectionHelper }
+
+function TCollectionHelper.BeginUpdateAuto;
+begin
+  BeginUpdate;
+
+  Result := Auto.Defer(
+    procedure
+    begin
+      EndUpdate;
+    end
+  );
+end;
+
+{ TStringsHelper }
+
+function TStringsHelper.BeginUpdateAuto;
+begin
+  BeginUpdate;
+
+  Result := Auto.Defer(
+    procedure
+    begin
+      EndUpdate;
+    end
+  );
 end;
 
 end.
