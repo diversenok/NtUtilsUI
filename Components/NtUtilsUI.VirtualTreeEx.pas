@@ -141,16 +141,16 @@ end;
 
 function TVirtualTreeColumnsHelper.BeginUpdateAuto;
 var
-  [Weak] WeakRef: IUnknown;
+  WeakRef: IWeak;
 begin
   // Use a weak reference to verify that the defer didn't outlive the tree
-  WeakRef := Self.TreeView;
+  WeakRef := Auto.RefWeak(TreeView);
   BeginUpdate;
 
   Result := Auto.Defer(
     procedure
     begin
-      if Assigned(WeakRef) then
+      if WeakRef.HasRef then
         EndUpdate;
     end
   );
@@ -354,7 +354,7 @@ end;
 
 function TVirtualStringTreeEx.BackupSelectionAuto;
 var
-  [Weak] WeakRef: IUnknown;
+  WeakRef: IWeak;
   SelectionConditions: TArray<TCondition<PVirtualNode>>;
   FocusCondition: TCondition<PVirtualNode>;
 begin
@@ -369,7 +369,7 @@ begin
     FocusCondition := nil;
 
   // Use a weak reference to verify that the defer didn't outlive the tree
-  WeakRef := Self;
+  WeakRef := Auto.RefWeak(Self);
 
   // Restore selection afterward
   Result := Auto.Defer(
@@ -380,7 +380,7 @@ begin
       UpdateReleaser: IAutoReleasable;
     begin
       // Check if the tree is still alive
-      if not Assigned(WeakRef) then
+      if not WeakRef.HasRef then
         Exit;
 
       UpdateReleaser := BeginUpdateAuto;
@@ -408,16 +408,16 @@ end;
 
 function TVirtualStringTreeEx.BeginUpdateAuto;
 var
-  [Weak] WeakRef: IUnknown;
+  WeakRef: IWeak;
 begin
   // Use a weak reference to verify that the defer didn't outlive the tree
-  WeakRef := Self;
+  WeakRef := Auto.RefWeak(Self);
   BeginUpdate;
 
   Result := Auto.Defer(
     procedure
     begin
-      if Assigned(WeakRef) then
+      if WeakRef.HasRef then
         EndUpdate;
     end
   );

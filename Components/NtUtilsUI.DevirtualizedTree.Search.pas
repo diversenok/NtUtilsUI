@@ -10,8 +10,8 @@ unit NtUtilsUI.DevirtualizedTree.Search;
 interface
 
 uses
-  System.Classes, Vcl.ExtCtrls, VirtualTrees, NtUtilsUI.Base,
-  NtUtilsUI.StdCtrls, NtUtilsUI.SearchBox,
+  System.Classes, Vcl.ExtCtrls, VirtualTrees, DelphiUtils.AutoObjects,
+  NtUtilsUI.Base, NtUtilsUI.StdCtrls, NtUtilsUI.SearchBox,
   NtUtilsUI.DevirtualizedTree;
 
 type
@@ -21,8 +21,10 @@ type
     FColumnsBox: TUiLibComboBox;
     FSplitter: TSplitter;
     FEscShortCut: TUiLibShortCut;
-    [Weak] FTree: TDevirtualizedTree;
+    FTree: TDevirtualizedTree;
+    FTreeWeakRef: IWeak;
     FColumnIndexes: TArray<TColumnIndex>;
+    function HasTree: Boolean;
     procedure SearchBoxSearch(Sender: TObject);
     procedure SearchBoxArrow(Sender: TObject);
     procedure OnEscShortcut(Sender: TUiLibShortCut; var Handled: Boolean);
@@ -46,14 +48,19 @@ uses
 procedure TUiLibTreeSearchBox.AttachToTree;
 begin
   // Detach from the previous tree
-  if Assigned(FTree) then
+  if HasTree then
     FTree.OnColumnVisibilityChanged := nil;
 
   FTree := Tree;
 
   // Attach to the new one
   if Assigned(FTree) then
+  begin
+    FTreeWeakRef := Auto.RefWeak(Tree);
     FTree.OnColumnVisibilityChanged := ColumnVisibilityChanged;
+  end
+  else
+    FTreeWeakRef := nil;
 
   UpdateColumns;
 end;
@@ -121,13 +128,19 @@ end;
 
 destructor TUiLibTreeSearchBox.Destroy;
 begin
-  if Assigned(FTree) then
+  if HasTree then
   begin
     FTree.OnColumnVisibilityChanged := nil;
     FTree := nil;
+    FTreeWeakRef := nil;
   end;
 
   inherited;
+end;
+
+function TUiLibTreeSearchBox.HasTree;
+begin
+  Result := Assigned(FTreeWeakRef) and FTreeWeakRef.HasRef and Assigned(FTree);
 end;
 
 procedure TUiLibTreeSearchBox.OnEscShortcut;
@@ -140,13 +153,13 @@ begin
     FSearchBox.ClearQuery;
     Handled := True;
   end
-  else if Assigned(FTree) and FTree.CanFocus then
+  else if HasTree and FTree.CanFocus then
     FTree.SetFocus;
 end;
 
 procedure TUiLibTreeSearchBox.SearchBoxArrow;
 begin
-  if Assigned(FTree) and FTree.CanFocus then
+  if HasTree and FTree.CanFocus then
     FTree.SetFocus;
 end;
 
@@ -154,7 +167,7 @@ procedure TUiLibTreeSearchBox.SearchBoxSearch;
 var
   SearchColumn: TColumnIndex;
 begin
-  if Assigned(FTree) then
+  if HasTree then
   begin
     if FColumnsBox.ItemIndex > 0 then
       SearchColumn := FColumnIndexes[FColumnsBox.ItemIndex]
@@ -172,7 +185,7 @@ var
   i: Integer;
 begin
   // Collect all visible columns + one for searching all at once
-  if Assigned(FTree) then
+  if HasTree then
     NewColumns := FTree.Header.Columns.GetVisibleColumns
   else
     NewColumns := nil;
