@@ -2,7 +2,7 @@ unit NtUtilsUI.Number;
 
 {
   This module contains a (stripped down) design-time component definition for
-  the number selection control.
+  the number selection controls.
 
   NOTE: Keep the published interface in sync with the runtime definitions!
 }
@@ -25,7 +25,7 @@ type
 { TUiLibNumberBox }
 
   TUiLibNumberBox = class (TUiLibControl)
-  private
+  strict private
     FEdit: TUiLibEdit;
     FNumber: UInt64;
     FNumberBase: TNumericSystem;
@@ -50,12 +50,77 @@ type
     property OnChange: TNotifyEvent read FOnChange write FOnChange;
   end;
 
+{ TUiLibNumberComboBox }
+
+  TUiLibNumberComboBoxItem = class (TCollectionItem)
+  strict private
+    FNumber: UInt64;
+    FName: String;
+    procedure SetName(const Value: String);
+    procedure SetNumber(const Value: UInt64);
+  public
+    procedure Assign(Source: TPersistent); override;
+  published
+    property Number: UInt64 read FNumber write SetNumber;
+    property Name: String read FName write SetName;
+  end;
+
+  TUiLibNumberComboBox = class;
+
+  TUiLibNumberComboBoxItems = class (TCollection)
+  strict private
+    FComboBox: TUiLibNumberComboBox;
+    function GetItem(Index: Integer): TUiLibNumberComboBoxItem;
+    procedure SetItem(Index: Integer; const Value: TUiLibNumberComboBoxItem);
+  protected
+    procedure Update(Item: TCollectionItem); override;
+  public
+    constructor Create(ComboBox: TUiLibNumberComboBox);
+    property Items[Index: Integer]: TUiLibNumberComboBoxItem read GetItem write SetItem; default;
+  end;
+
+  TUiLibNumberComboBox = class (TUiLibControl)
+  strict private
+    FComboBox: TUiLibComboBox;
+    FKnownValues: TUiLibNumberComboBoxItems;
+    FNumber: UInt64;
+    FValid: Boolean;
+    FNumberBase: TNumericSystem;
+    FNumberSize: TIntegerSize;
+    FNumberWidth: Byte;
+    FNumberSign: TIntegerSign;
+    FOnChange: TNotifyEvent;
+    procedure SetNumber(const Value: UInt64);
+    procedure SetNumberBase(const Value: TNumericSystem);
+    procedure SetNumberSign(const Value: TIntegerSign);
+    procedure SetNumberSize(const Value: TIntegerSize);
+    procedure SetNumberWidth(const Value: Byte);
+    procedure Reformat;
+    procedure SetKnownValues(const Value: TUiLibNumberComboBoxItems);
+  private
+    procedure ItemsChanged;
+  protected
+    procedure CreateHandle; override;
+  public
+    constructor Create(AOwner: TComponent); override;
+    destructor Destroy; override;
+    function TryGetNumber(out Value: UInt64): Boolean;
+  published
+    property Number: UInt64 read FNumber write SetNumber default 0;
+    property NumberBase: TNumericSystem read FNumberBase write SetNumberBase default nsHexadecimal;
+    property NumberSize: TIntegerSize read FNumberSize write SetNumberSize default isUInt64;
+    property NumberWidth: Byte read FNumberWidth write SetNumberWidth default NUMERIC_WIDTH_ROUND_TO_GROUP;
+    property NumberSign: TIntegerSign read FNumberSign write SetNumberSign default isUnsigned;
+    property KnownValues: TUiLibNumberComboBoxItems read FKnownValues write SetKnownValues;
+    property OnChange: TNotifyEvent read FOnChange write FOnChange;
+  end;
+
 procedure Register;
 
 implementation
 
 uses
-  Vcl.Controls;
+  System.SysUtils, Vcl.Controls;
 
 {$BOOLEVAL OFF}
 {$IFOPT R+}{$DEFINE R+}{$ENDIF}
@@ -63,7 +128,7 @@ uses
 
 procedure Register;
 begin
-  RegisterComponents('NtUtilsUI', [TUiLibNumberBox]);
+  RegisterComponents('NtUtilsUI', [TUiLibNumberBox, TUiLibNumberComboBox]);
 end;
 
 { From NtUtils.SysUtils.pas }
@@ -414,6 +479,186 @@ procedure TUiLibNumberBox.SetNumberWidth;
 begin
   FNumberWidth := Value;
   Reformat
+end;
+
+{ TUiLibNumberComboBoxItem }
+
+procedure TUiLibNumberComboBoxItem.Assign;
+var
+  SourceItem: TUiLibNumberComboBoxItem absolute Source;
+begin
+  if Source is TUiLibNumberComboBoxItem then
+  begin
+    FNumber := SourceItem.FNumber;
+    FName := SourceItem.FName;
+  end
+  else
+    inherited Assign(Source);
+end;
+
+procedure TUiLibNumberComboBoxItem.SetName;
+begin
+  if FName <> Value then
+  begin
+    FName := Value;
+    Changed(False);
+  end;
+end;
+
+procedure TUiLibNumberComboBoxItem.SetNumber;
+begin
+  if FNumber <> Value then
+  begin
+    FNumber := Value;
+    Changed(False);
+  end;
+end;
+
+{ TUiLibNumberComboBoxItems }
+
+constructor TUiLibNumberComboBoxItems.Create;
+begin
+  FComboBox := ComboBox;
+  inherited Create(TUiLibNumberComboBoxItem);
+end;
+
+function TUiLibNumberComboBoxItems.GetItem;
+begin
+  Result := TUiLibNumberComboBoxItem(inherited GetItem(Index));
+end;
+
+procedure TUiLibNumberComboBoxItems.SetItem;
+begin
+  inherited SetItem(Index, Value);
+end;
+
+procedure TUiLibNumberComboBoxItems.Update;
+begin
+  inherited;
+
+  // Notify the combobox about the change
+  if Assigned(FComboBox) then
+    FComboBox.ItemsChanged;
+end;
+
+{ TUiLibNumberComboBox }
+
+constructor TUiLibNumberComboBox.Create;
+begin
+  inherited;
+
+  FKnownValues := TUiLibNumberComboBoxItems.Create(Self);
+  Width := 150;
+  Height := 21;
+  Constraints.MinWidth := 100;
+
+  FComboBox := TUiLibComboBox.Create(Self);
+  FComboBox.Width := Width;
+  FComboBox.Height := Height;
+  FComboBox.Align := alClient;
+  FComboBox.Parent := Self;
+
+  FNumberBase := nsHexadecimal;
+  FNumberSize := isUInt64;
+  FNumberWidth := NUMERIC_WIDTH_ROUND_TO_GROUP;
+  FNumberSign := isUnsigned;
+  FValid := True;
+  Reformat;
+end;
+
+procedure TUiLibNumberComboBox.CreateHandle;
+begin
+  inherited;
+  ItemsChanged;
+end;
+
+destructor TUiLibNumberComboBox.Destroy;
+begin
+  FreeAndNil(FKnownValues);
+  inherited;
+end;
+
+procedure TUiLibNumberComboBox.ItemsChanged;
+begin
+  Reformat;
+end;
+
+procedure TUiLibNumberComboBox.Reformat;
+var
+  i: Integer;
+  IsKnown: Boolean;
+begin
+  if not FValid then
+  begin
+    // Reset to the last valid number
+    SetNumber(FNumber);
+    Exit;
+  end;
+
+  IsKnown := False;
+
+  // Try one of the known numbers first
+  for i := 0 to Pred(FKnownValues.Count) do
+    if FKnownValues[i].Number = FNumber then
+    begin
+      FComboBox.Text := FKnownValues[i].Name;
+      IsKnown := True;
+      Break;
+    end;
+
+  if not IsKnown then
+  begin
+    // Print unknown numbers according to the settings
+    FComboBox.Text := RtlxIntToStr(FNumber, FNumberBase, FNumberWidth,
+      FNumberSize, FNumberSign, [nsHexadecimal], npSpace);
+  end;
+end;
+
+procedure TUiLibNumberComboBox.SetKnownValues;
+begin
+  FKnownValues.Assign(Value);
+end;
+
+procedure TUiLibNumberComboBox.SetNumber;
+begin
+  FNumber := Value;
+  FValid := True;
+  Reformat;
+
+  if Assigned(FOnChange) then
+    FOnChange(Self);
+end;
+
+procedure TUiLibNumberComboBox.SetNumberBase;
+begin
+  FNumberBase := Value;
+  Reformat;
+end;
+
+procedure TUiLibNumberComboBox.SetNumberSign;
+begin
+  FNumberSign := Value;
+  Reformat;
+end;
+
+procedure TUiLibNumberComboBox.SetNumberSize;
+begin
+  FNumberSize := Value;
+  Reformat;
+end;
+
+procedure TUiLibNumberComboBox.SetNumberWidth;
+begin
+  FNumberWidth := Value;
+  Reformat;
+end;
+
+function TUiLibNumberComboBox.TryGetNumber;
+begin
+  Result := FValid;
+
+  if Result then
+    Value := FNumber;
 end;
 
 end.
