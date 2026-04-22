@@ -10,7 +10,7 @@ unit NtUtilsUI.Sid.Integrity;
 interface
 
 uses
-  System.Classes, Vcl.StdCtrls, Vcl.ComCtrls, NtUtilsUI, NtUtilsUI.StdCtrls,
+  System.Classes, Vcl.StdCtrls, Vcl.ComCtrls, NtUtilsUI, NtUtilsUI.Number,
   Ntapi.ntseapi, NtUtils;
 
 type
@@ -19,7 +19,7 @@ type
   private
     FValue: TIntegrityRid;
     FTrackBar: TTrackBar;
-    FComboBox: TUiLibComboBox;
+    FComboBox: TUiLibNumberComboBox;
     FLabelUntrusted: TLabel;
     FLabelLow: TLabel;
     FLabelMedium: TLabel;
@@ -35,8 +35,6 @@ type
   private
     function GetDefaultCaption: String;
     function GetModalResult: IInterface;
-  protected
-    procedure CreateWnd; override;
   public
     constructor Create(AOwner: TComponent); override;
     class function Factory(const InitialChoice: ISid = nil): TWinControlFactory; static;
@@ -46,37 +44,19 @@ type
     ): ISid; static;
     property Rid: TIntegrityRid read FValue write SetValue;
     property Sid: ISid read GetSid write SetSid;
-end;
+  end;
 
 implementation
 
 uses
-  Vcl.Controls, Ntapi.WinNt, NtUtils.Security.Sid, DelphiUiLib.Strings,
+  Vcl.Controls, Ntapi.WinNt, NtUtils.SysUtils, NtUtils.Security.Sid,
   NtUtilsUI.Components;
-
-{
-  Potential improvements:
-   - Hints showing the RID value in decimal
-   - Highlight the combobox in red on invalid input
-}
 
 { TUiLibIntegritySid }
 
 procedure TUiLibIntegritySid.ComboBoxChange;
 begin
-  case FComboBox.ItemIndex of
-    0: FValue := SECURITY_MANDATORY_UNTRUSTED_RID;
-    1: FValue := SECURITY_MANDATORY_LOW_RID;
-    2: FValue := SECURITY_MANDATORY_MEDIUM_RID;
-    3: FValue := SECURITY_MANDATORY_MEDIUM_PLUS_RID;
-    4: FValue := SECURITY_MANDATORY_HIGH_RID;
-    5: FValue := SECURITY_MANDATORY_SYSTEM_RID;
-    6: FValue := SECURITY_MANDATORY_PROTECTED_PROCESS_RID;
-  else
-    if not UiLibStringToUInt(FComboBox.Text, Cardinal(FValue)) then
-      Exit;
-  end;
-
+  FValue := TIntegrityRid(FComboBox.Number);
   UpdateTrackBarValue;
 end;
 
@@ -101,13 +81,26 @@ begin
   FTrackBar.Position := 8192;
   FTrackBar.ShowSelRange := False;
   FTrackBar.TickMarks := tmBoth;
+  FTrackBar.OnChange := TrackBarChange;
   FTrackBar.Parent := Self;
 
-  FComboBox := TUiLibComboBox.Create(Self);
+  FComboBox := TUiLibNumberComboBox.Create(Self);
   FComboBox.Width := 280;
   FComboBox.Height := 21;
   FComboBox.Anchors := [akLeft, akTop, akRight];
-  FComboBox.Text := 'Medium (0x2000)';
+  FComboBox.NumberBase := nsHexadecimal;
+  FComboBox.NumberSize := isCardinal;
+  FComboBox.NumberWidth := 4;
+  FComboBox.KnownValues.BeginUpdate;
+  FComboBox.KnownValues.Add(SECURITY_MANDATORY_UNTRUSTED_RID, 'Untrusted (0x0000)');
+  FComboBox.KnownValues.Add(SECURITY_MANDATORY_LOW_RID, 'Low (0x1000)');
+  FComboBox.KnownValues.Add(SECURITY_MANDATORY_MEDIUM_RID, 'Medium (0x2000)');
+  FComboBox.KnownValues.Add(SECURITY_MANDATORY_MEDIUM_PLUS_RID, 'Medium Plus (0x2100)');
+  FComboBox.KnownValues.Add(SECURITY_MANDATORY_HIGH_RID, 'High (0x3000)');
+  FComboBox.KnownValues.Add(SECURITY_MANDATORY_SYSTEM_RID, 'System (0x4000)');
+  FComboBox.KnownValues.Add(SECURITY_MANDATORY_PROTECTED_PROCESS_RID, 'Protected (0x5000)');
+  FComboBox.KnownValues.EndUpdate;
+  FComboBox.OnChange := ComboBoxChange;
   FComboBox.Parent := Self;
 
   // Low: top middle-left
@@ -161,25 +154,7 @@ begin
   FLabelSystem.Parent := Self;
 
   FValue := SECURITY_MANDATORY_MEDIUM_RID;
-end;
-
-procedure TUiLibIntegritySid.CreateWnd;
-begin
-  inherited;
-
-  FComboBox.Items.AddStrings([
-    'Untrusted (0x0000)',
-    'Low (0x1000)',
-    'Medium (0x2000)',
-    'Medium Plus (0x2100)',
-    'High (0x3000)',
-    'System (0x4000)',
-    'Protected (0x5000)'
-  ]);
   UpdateComboBoxValue;
-
-  FComboBox.OnChange := ComboBoxChange;
-  FTrackBar.OnChange := TrackBarChange;
 end;
 
 class function TUiLibIntegritySid.Factory;
@@ -237,7 +212,7 @@ end;
 
 procedure TUiLibIntegritySid.TrackBarChange;
 begin
-  FValue := FTrackBar.Position;
+  FValue := TIntegrityRid(FTrackBar.Position);
 
   // Make known values slightly sticky
   if $800 - Abs(Integer(FValue and $FFF) - $800) < $1C000 / FTrackBar.Width then
@@ -251,10 +226,6 @@ procedure TUiLibIntegritySid.UpdateComboBoxValue;
 var
   OnChangeReverter: IDeferredOperation;
 begin
-  // Before handle allocation, the combo box is not populated yet
-  if not HandleAllocated then
-    Exit;
-
   FComboBox.OnChange := nil;
   OnChangeReverter := Auto.Defer(
     procedure
@@ -263,19 +234,7 @@ begin
     end
   );
 
-  // Choosing the item automatically selects its text
-  FComboBox.ItemIndex := -1;
-  case FValue of
-    SECURITY_MANDATORY_UNTRUSTED_RID:         FComboBox.ItemIndex := 0;
-    SECURITY_MANDATORY_LOW_RID:               FComboBox.ItemIndex := 1;
-    SECURITY_MANDATORY_MEDIUM_RID:            FComboBox.ItemIndex := 2;
-    SECURITY_MANDATORY_MEDIUM_PLUS_RID:       FComboBox.ItemIndex := 3;
-    SECURITY_MANDATORY_HIGH_RID:              FComboBox.ItemIndex := 4;
-    SECURITY_MANDATORY_SYSTEM_RID:            FComboBox.ItemIndex := 5;
-    SECURITY_MANDATORY_PROTECTED_PROCESS_RID: FComboBox.ItemIndex := 6;
-  else
-    FComboBox.Text := UiLibUIntToHex(FValue, 4);
-  end;
+  FComboBox.Number := FValue;
 end;
 
 procedure TUiLibIntegritySid.UpdateTrackBarValue;
@@ -290,7 +249,7 @@ begin
     end
   );
 
-  FTrackBar.Position := FValue;
+  FTrackBar.Position := Integer(FValue);
 end;
 
 initialization

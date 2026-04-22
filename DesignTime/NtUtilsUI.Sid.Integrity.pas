@@ -25,7 +25,7 @@ type
     FLabelSystem: TLabel;
   public
     constructor Create(AOwner: TComponent); override;
-end;
+  end;
 
 procedure Register;
 
