@@ -37,6 +37,7 @@ uses
   Vcl.Controls;
 
 {$R '..\Icons\SearchBox.res'}
+{$R 'Icons\TUiLibSearchBox.res'}
 
 procedure Register;
 begin

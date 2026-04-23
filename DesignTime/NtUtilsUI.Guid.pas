@@ -27,6 +27,8 @@ implementation
 uses
   Vcl.Controls;
 
+{$R 'Icons\TUiLibGuidBox.res'}
+
 procedure Register;
 begin
   RegisterComponents('NtUtilsUI', [TUiLibGuidBox]);

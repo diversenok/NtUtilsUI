@@ -126,6 +126,9 @@ uses
 {$IFOPT R+}{$DEFINE R+}{$ENDIF}
 {$IFOPT Q+}{$DEFINE Q+}{$ENDIF}
 
+{$R 'Icons\TUiLibNumberBox.res'}
+{$R 'Icons\TUiLibNumberComboBox.res'}
+
 procedure Register;
 begin
   RegisterComponents('NtUtilsUI', [TUiLibNumberBox, TUiLibNumberComboBox]);

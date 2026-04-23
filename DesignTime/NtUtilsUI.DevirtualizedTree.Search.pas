@@ -32,11 +32,12 @@ implementation
 uses
   Vcl.Controls, Vcl.StdCtrls;
 
+{$R 'Icons\TUiLibTreeSearchBox.res'}
+
 procedure Register;
 begin
   RegisterComponents('NtUtilsUI', [TUiLibTreeSearchBox]);
 end;
-
 
 { TUiLibTreeSearchBox }
 

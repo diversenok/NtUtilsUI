@@ -34,6 +34,8 @@ implementation
 uses
   Vcl.Controls;
 
+{$R 'Icons\TUiLibIntegritySid.res'}
+
 procedure Register;
 begin
   RegisterComponents('NtUtilsUI', [TUiLibIntegritySid]);
