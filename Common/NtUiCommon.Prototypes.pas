@@ -114,11 +114,6 @@ var
 
   { SIDs }
 
-  NtUiLibSelectTrust: function (
-    Owner: TComponent;
-    [opt] const DefaultSid: ISid = nil
-  ): ISid;
-
   NtUiLibSelectDsObject: function (
     ParentWindow: THwnd
   ): String;

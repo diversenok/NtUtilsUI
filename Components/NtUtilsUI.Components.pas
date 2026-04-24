@@ -33,8 +33,20 @@ var
     [opt] const InitialChoice: ISid = nil
   ): ISid;
 
+    // A host for selecting a trust SID
+  UiLibHostPickTrustSid: function (
+    Owner: TComponent;
+    [opt] const InitialChoice: ISid = nil
+  ): ISid;
+
 // Show a modal dialog to choose an integrity SID
 function UiLibPickIntegritySid(
+  Owner: TComponent;
+  [opt] const InitialChoice: ISid = nil
+): ISid;
+
+// Show a modal dialog to choose a trust SID
+function UiLibPickTrustSid(
   Owner: TComponent;
   [opt] const InitialChoice: ISid = nil
 ): ISid;
@@ -48,6 +60,14 @@ function UiLibPickIntegritySid;
 begin
   if Assigned(UiLibHostPickIntegritySid) then
     Result := UiLibHostPickIntegritySid(Owner, InitialChoice)
+  else
+    raise EClassNotFound.Create(MSG_E_NO_COMPONENT);
+end;
+
+function UiLibPickTrustSid;
+begin
+  if Assigned(UiLibHostPickTrustSid) then
+    Result := UiLibHostPickTrustSid(Owner, InitialChoice)
   else
     raise EClassNotFound.Create(MSG_E_NO_COMPONENT);
 end;

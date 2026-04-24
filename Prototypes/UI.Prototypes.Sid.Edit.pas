@@ -80,8 +80,7 @@ begin
       Sid := UiLibPickIntegritySid(Self, Current);
 
     scTrust:
-      if Assigned(NtUiLibSelectTrust) then
-        Sid := NtUiLibSelectTrust(Self, Current);
+      Sid := UiLibPickTrustSid(Self, Current);
   end;
 end;
 
@@ -148,7 +147,7 @@ begin
 
     scTrust:
     begin
-      btnChoice.Visible := Assigned(NtUiLibSelectTrust);
+      btnChoice.Visible := Assigned(UiLibHostPickTrustSid);
       btnChoice.Hint := 'Choose Trust Level';
     end;
   else

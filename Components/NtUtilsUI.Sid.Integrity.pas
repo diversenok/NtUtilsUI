@@ -223,33 +223,23 @@ begin
 end;
 
 procedure TUiLibIntegritySid.UpdateComboBoxValue;
-var
-  OnChangeReverter: IDeferredOperation;
 begin
   FComboBox.OnChange := nil;
-  OnChangeReverter := Auto.Defer(
-    procedure
-    begin
-      FComboBox.OnChange := ComboBoxChange;
-    end
-  );
-
-  FComboBox.Number := FValue;
+  try
+    FComboBox.Number := FValue;
+  finally
+    FComboBox.OnChange := ComboBoxChange;
+  end;
 end;
 
 procedure TUiLibIntegritySid.UpdateTrackBarValue;
-var
-  OnChangeReverter: IDeferredOperation;
 begin
   FTrackBar.OnChange := nil;
-  OnChangeReverter := Auto.Defer(
-    procedure
-    begin
-      FTrackBar.OnChange := TrackBarChange;
-    end
-  );
-
-  FTrackBar.Position := Integer(FValue);
+  try
+    FTrackBar.Position := Integer(FValue);
+  finally
+    FTrackBar.OnChange := TrackBarChange;
+  end;
 end;
 
 initialization
