@@ -6,7 +6,7 @@ uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes,
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, VirtualTrees,
   VirtualTrees.Types, NtUtils, NtUtils.Lsa.Sid, Vcl.Menus, DelphiUtils.Arrays,
-  Ntapi.ntseapi, NtUtilsUI.DevirtualizedTree, NtUtilsUI.VirtualTreeEx;
+  Ntapi.ntseapi, NtUtilsUI.DevirtualizedTree;
 
 const
   colFriendly = 0;
@@ -49,11 +49,11 @@ type
     function GetChecked: TArray<TGroup>;
     function GetIsChecked(const Group: TGroup): Boolean;
     function GetSelected: TArray<TGroup>;
-    function NodeComparer(const Node: PVirtualNode): TCondition<PVirtualNode>;
+    function NodeComparer(const Node: INodeProvider): TCondition<INodeProvider>;
     function NodeToGroup(const Node: PVirtualNode; out Group: TGroup): Boolean;
     procedure SetChecked(const Value: TArray<TGroup>);
     procedure SetIsChecked(const Group: TGroup; const Value: Boolean);
-    procedure DoDefaultAction(Node: PVirtualNode);
+    procedure DoDefaultAction(Node: INodeProvider);
   protected
     procedure FrameEnabledChanged(var Message: TMessage); message CM_ENABLEDCHANGED;
   public
@@ -222,7 +222,7 @@ begin
 
   for NewData in TGroupNodeData.CreateMany(Groups, FViewingMode) do
   begin
-    VST.AddChildEx(VST.RootNode, NewData);
+    VST.AddChild(NewData);
 
     if toCheckSupport in VST.TreeOptions.MiscOptions then
       VST.CheckType[NewData.Node] := ctCheckBox;
@@ -239,8 +239,8 @@ procedure TFrameGroups.DoDefaultAction;
 var
   GroupProvider: IGroup;
 begin
-  if Assigned(FDefaultAction) and Node.TryGetProvider(IGroup,
-    GroupProvider) then
+  if Assigned(FDefaultAction) and (Node.QueryInterface(IGroup,
+    GroupProvider) = S_OK) then
     FDefaultAction(GroupProvider.Group);
 end;
 
@@ -315,13 +315,13 @@ end;
 
 function TFrameGroups.GetAllGroups;
 begin
-  Result := TArray.Convert<PVirtualNode, TGroup>(VST.Nodes.ToArray,
+  Result := TArray.Convert<PVirtualNode, TGroup>(VST.Nodes.Nodes,
     NodeToGroup);
 end;
 
 function TFrameGroups.GetChecked;
 begin
-  Result := TArray.Convert<PVirtualNode, TGroup>(VST.CheckedNodes.ToArray,
+  Result := TArray.Convert<PVirtualNode, TGroup>(VST.CheckedNodes.Nodes,
     NodeToGroup);
 end;
 
@@ -339,7 +339,7 @@ end;
 
 function TFrameGroups.GetSelected;
 begin
-  Result := TArray.Convert<PVirtualNode, TGroup>(VST.SelectedNodes.ToArray,
+  Result := TArray.Convert<PVirtualNode, TGroup>(VST.SelectedNodes.Nodes,
     NodeToGroup);
 end;
 
@@ -357,16 +357,17 @@ var
   Provider: IGroup;
   Sid: ISid;
 begin
-  if Node.TryGetProvider(IGroup, Provider) then
+  if Succeeded(Node.QueryInterface(IGroup, Provider)) then
   begin
     // We compare nodes via their SIDs
     Sid := Provider.Group.Sid;
 
-    Result := function (const Node: PVirtualNode): Boolean
+    Result := function (const Node: INodeProvider): Boolean
     var
       Provider: IGroup;
     begin
-      Result := Node.TryGetProvider(IGroup, Provider) and Provider.Matches(Sid);
+      Result := Succeeded(Node.QueryInterface(IGroup, Provider)) and
+        Provider.Matches(Sid);
     end;
   end
   else

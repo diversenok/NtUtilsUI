@@ -251,7 +251,7 @@ end;
 function UiLibChooseAceIndex(
   Tree: TDevirtualizedTree;
   Category: TAceCategory
-): PVirtualNode;
+): INodeProvider;
 var
   CurrentCategory: TAceCategory;
   Node: PVirtualNode;
@@ -269,14 +269,14 @@ begin
 
       // Insert right before the next category
       if CurrentCategory > Category then
-        Exit(Node);
+        Exit(NodeProvider);
     end;
 end;
 
 procedure UiLibInsertAceNode;
 var
   NewNode: IAceNode;
-  InsertBefore: PVirtualNode;
+  InsertBefore: INodeProvider;
 begin
   Tree.BeginUpdateAuto;
 
@@ -289,9 +289,9 @@ begin
 
   // Add it to the tree
   if Assigned(InsertBefore) then
-    Tree.InsertNodeEx(InsertBefore, amInsertBefore, NewNode)
+    Tree.InsertNode(NewNode, amInsertBefore, InsertBefore)
   else
-    Tree.AddChildEx(nil, NewNode);
+    Tree.AddChild(NewNode);
 
   // Update column visibility
   UiLibUnhideAceSpecificColumns(Tree, Ace);
@@ -306,7 +306,7 @@ begin
 
   for i := 0 to High(Aces) do
   begin
-    Tree.AddChildEx(nil, UiLibMakeAceNode(Aces[i], AccessMaskType));
+    Tree.AddChild(UiLibMakeAceNode(Aces[i], AccessMaskType));
     UiLibUnhideAceSpecificColumns(Tree, Aces[i]);
   end;
 end;

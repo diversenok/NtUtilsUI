@@ -18,26 +18,21 @@ object BitsFrame: TBitsFrame
       'CSV'
       'Plain text'
       'Unicode text')
+    EmptyListMessage = 'No flags to display'
     Header.AutoSizeIndex = 0
-    Header.DefaultHeight = 24
-    Header.Height = 24
     Header.Options = [hoAutoResize, hoColumnResize, hoDblClickResize, hoDrag, hoHotTrack, hoRestrictDrag, hoShowSortGlyphs, hoDisableAnimatedResize, hoHeaderClickAutoSort, hoAutoColumnPopupMenu, hoAutoResizeInclCaption]
     TabOrder = 0
-    TreeOptions.AutoOptions = [toAutoDropExpand, toAutoScrollOnExpand, toAutoTristateTracking, toAutoDeleteMovedNodes, toAutoChangeScale]
-    TreeOptions.ExportMode = emSelected
     TreeOptions.MiscOptions = [toAcceptOLEDrop, toCheckSupport, toFullRepaintOnResize, toInitOnSave, toToggleOnDblClick, toWheelPanning]
     TreeOptions.PaintOptions = [toHideFocusRect, toHotTrack, toShowButtons, toShowDropmark, toShowTreeLines, toThemeAware, toUseBlendedImages, toUseExplorerTheme]
-    TreeOptions.SelectionOptions = [toFullRowSelect, toMultiSelect, toRightClickSelect]
     OnChecked = TreeChecked
     Touch.InteractiveGestures = [igPan, igPressAndTap]
     Touch.InteractiveGestureOptions = [igoPanSingleFingerHorizontal, igoPanSingleFingerVertical, igoPanInertia, igoPanGutter, igoParentPassthrough]
-    NoItemsText = 'No flags to display'
     Columns = <
       item
         Options = [coAllowClick, coDraggable, coEnabled, coParentBidiMode, coParentColor, coResizable, coVisible, coAutoSpring, coSmartResize, coAllowFocus, coDisableAnimatedResize, coEditable, coStyleColor]
         Position = 0
         Text = 'Name'
-        Width = 320
+        Width = 316
       end>
   end
   object BottomPanel: TPanel

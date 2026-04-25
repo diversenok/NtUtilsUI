@@ -6,7 +6,7 @@ uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes,
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, VirtualTrees,
   NtUtilsUI.DevirtualizedTree, Ntapi.WinNt, Ntapi.ntseapi, NtUtils,
-  NtUtils.Lsa, DelphiUtils.Arrays, NtUtilsUI.VirtualTreeEx;
+  NtUtils.Lsa, DelphiUtils.Arrays;
 
 const
   colFriendly = 0;
@@ -37,7 +37,7 @@ type
       const Node: PVirtualNode;
       out Privilege: TPrivilege
     ): Boolean;
-    function NodeComparer(const Node: PVirtualNode): TCondition<PVirtualNode>;
+    function NodeComparer(const Node: INodeProvider): TCondition<INodeProvider>;
     function ListSelected: TArray<TPrivilege>;
     function ListChecked: TArray<TPrivilege>;
     procedure SetChecked(const NewChecked: TArray<TPrivilege>);
@@ -222,13 +222,13 @@ end;
 
 function TFramePrivileges.ListChecked;
 begin
-  Result := TArray.Convert<PVirtualNode, TPrivilege>(VST.CheckedNodes.ToArray,
+  Result := TArray.Convert<PVirtualNode, TPrivilege>(VST.CheckedNodes.Nodes,
     NodeToPrivilege);
 end;
 
 function TFramePrivileges.ListSelected;
 begin
-  Result := TArray.Convert<PVirtualNode, TPrivilege>(VST.SelectedNodes.ToArray,
+  Result := TArray.Convert<PVirtualNode, TPrivilege>(VST.SelectedNodes.Nodes,
     NodeToPrivilege);
 end;
 
@@ -242,7 +242,7 @@ begin
   VST.RootNodeCount := 0;
   for NodeData in TPrivilegeNodeData.CreateMany(New) do
   begin
-    VST.AddChildEx(VST.RootNode, NodeData);
+    VST.AddChild(NodeData);
 
     if toCheckSupport in VST.TreeOptions.MiscOptions then
     begin
@@ -262,16 +262,16 @@ var
   Provider: IPrivilege;
   Luid: TPrivilegeId;
 begin
-  if Node.TryGetProvider(IPrivilege, Provider) then
+  if Succeeded(Node.QueryInterface(IPrivilege, Provider)) then
   begin
     // We compare nodes via their LUIDs
     Luid := Provider.Privilege.Luid;
 
-    Result := function (const Node: PVirtualNode): Boolean
+    Result := function (const Node: INodeProvider): Boolean
     var
       Provider: IPrivilege;
     begin
-      Result := Node.TryGetProvider(IPrivilege, Provider) and
+      Result := Succeeded(Node.QueryInterface(IPrivilege, Provider)) and
         (Provider.Privilege.Luid = Luid);
     end;
   end

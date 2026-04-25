@@ -35,7 +35,6 @@ requires
   vcl;
 
 contains
-  NtUtilsUI.VirtualTreeEx in 'NtUtilsUI.VirtualTreeEx.pas',
   NtUtilsUI.DevirtualizedTree in 'NtUtilsUI.DevirtualizedTree.pas',
   NtUtilsUI.StdCtrls in 'NtUtilsUI.StdCtrls.pas',
   NtUtilsUI.ListView in 'NtUtilsUI.ListView.pas',

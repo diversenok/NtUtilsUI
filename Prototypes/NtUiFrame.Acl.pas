@@ -9,7 +9,7 @@ interface
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes,
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, VirtualTrees,
-  NtUtilsUI.VirtualTreeEx, NtUtilsUI.DevirtualizedTree, NtUtils, Vcl.StdCtrls,
+  NtUtilsUI.DevirtualizedTree, NtUtils, Vcl.StdCtrls,
   Ntapi.WinNt, Vcl.Menus, Vcl.ExtCtrls, NtUiCommon.Interfaces,
   NtUtils.Security.Acl, NtUtilsUI, NtUtilsUI.StdCtrls,
   NtUtilsUI.Base, NtUtilsUI.DevirtualizedTree.Search;
@@ -104,7 +104,7 @@ end;
 procedure TAclFrame.btnDeleteClick;
 begin
   Tree.BeginUpdateAuto;
-  Tree.DeleteSelectedNodesEx(True);
+  Tree.DeleteSelectedNodes;
   AclChanged;
 end;
 
@@ -195,7 +195,7 @@ end;
 
 procedure TAclFrame.SetEmptyMessage;
 begin
-  Tree.NoItemsText := Value;
+  Tree.EmptyListMessage := Value;
 end;
 
 procedure TAclFrame.TreeGetPopupMenu;

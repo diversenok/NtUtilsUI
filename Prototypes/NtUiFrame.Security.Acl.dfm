@@ -17,17 +17,6 @@ object AclSecurityFrame: TAclSecurityFrame
     ParentShowHint = False
     ShowHint = True
     TabOrder = 0
-    inherited Tree: TDevirtualizedTree
-      Width = 592
-      Height = 205
-    end
-    inherited RightPanel: TPanel
-      Left = 595
-      Height = 205
-    end
-    inherited Search: TUiLibTreeSearchBox
-      Width = 620
-    end
   end
   object btnRefresh: TButton
     Left = 545

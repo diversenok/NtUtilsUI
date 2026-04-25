@@ -313,7 +313,6 @@ var
   i, j: Integer;
   HideRoot: Boolean;
   GroupNode: IEditableNodeProvider;
-  ParentNode: PVirtualNode;
   FlagNode: IFlagNode;
 begin
   // Remove empty groups
@@ -352,20 +351,20 @@ begin
         GroupNode.Hint := BuildHint('Mask', UiLibUIntToHex(Groups[i].Mask,
           NUMERIC_WIDTH_PER_SIZE[Groups[i].Size]));
 
-      ParentNode := Tree.AddChildEx(nil, GroupNode).Node;
+      Tree.AddChild(GroupNode);
     end
     else
-      ParentNode := nil;
+      GroupNode := nil;
 
     // Add nested nodes
     for FlagNode in Groups[i].Nodes do
     begin
-      Tree.AddChildEx(ParentNode, FlagNode);
+      Tree.AddChild(FlagNode, GroupNode);
       Tree.CheckType[FlagNode.Node] := Groups[i].CheckBoxType;
     end;
 
-    if Assigned(ParentNode) then
-      Tree.Expanded[ParentNode] := True;
+    if Assigned(GroupNode) then
+      Tree.Expanded[GroupNode.Node] := True;
   end;
 end;
 

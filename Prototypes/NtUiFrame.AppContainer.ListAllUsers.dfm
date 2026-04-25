@@ -11,15 +11,15 @@ object AppContainerListAllUsersFrame: TAppContainerListAllUsersFrame
   object lblUsers: TLabel
     Left = 3
     Top = 5
-    Width = 59
-    Height = 13
+    Width = 63
+    Height = 15
     Caption = 'User profile:'
   end
   object tbxUser: TUiLibEdit
     Left = 72
     Top = 2
     Width = 447
-    Height = 21
+    Height = 23
     Anchors = [akLeft, akTop, akRight]
     ReadOnly = True
     TabOrder = 1

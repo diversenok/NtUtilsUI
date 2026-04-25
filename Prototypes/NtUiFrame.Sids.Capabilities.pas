@@ -5,7 +5,7 @@ interface
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes,
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, VirtualTrees,
-  NtUtilsUI.VirtualTreeEx, NtUtilsUI.DevirtualizedTree, NtUiCommon.Interfaces,
+  NtUtilsUI.DevirtualizedTree, NtUiCommon.Interfaces,
   NtUtilsUI, NtUtilsUI.Base, NtUtilsUI.DevirtualizedTree.Search;
 
 type
@@ -44,7 +44,7 @@ begin
   NodeInfo := UiLibMakeCapabilityNodes;
   Backend.BeginUpdateAuto;
   Backend.ClearItems;
-  Tree.NoItemsText := 'No items to display';
+  Tree.EmptyListMessage := 'No items to display';
 
   for Category := Low(TCapabilityCategory) to High(TCapabilityCategory) do
   begin
@@ -72,7 +72,7 @@ var
   Output: TArray<TNtUiLibCapability>;
   i, j: Integer;
 begin
-  Nodes := Tree.CheckedNodes.ToArray;
+  Nodes := Tree.CheckedNodes.Nodes;
   SetLength(Output, Length(Nodes));
 
   j := 0;

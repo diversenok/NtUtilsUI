@@ -8,7 +8,7 @@ interface
 
 uses
   Winapi.Windows, System.SysUtils, System.Classes, Vcl.Graphics, Vcl.Controls,
-  Vcl.Forms, Vcl.Dialogs, VirtualTrees, NtUtilsUI.VirtualTreeEx,
+  Vcl.Forms, Vcl.Dialogs, VirtualTrees,
   NtUtilsUI.DevirtualizedTree, NtUiBackend.AppContainers,
   NtUiCommon.Interfaces, NtUtilsUI;
 
@@ -17,7 +17,7 @@ type
     Tree: TDevirtualizedTree;
   private
     FInfo: TRtlxAppContainerInfo;
-    procedure InspectMenu(Node: PVirtualNode);
+    procedure InspectMenu(Node: INodeProvider);
   protected
     procedure Loaded; override;
   public

@@ -15,22 +15,6 @@ object OwnerGroupSecurityFrame: TOwnerGroupSecurityFrame
     ParentShowHint = False
     ShowHint = True
     TabOrder = 0
-    inherited tbxSid: TUiLibEdit
-      Width = 513
-      Height = 21
-    end
-    inherited btnDsPicker: TUiLibButton
-      Left = 575
-      Height = 25
-    end
-    inherited btnCheatsheet: TUiLibButton
-      Left = 546
-      Height = 25
-    end
-    inherited btnChoice: TUiLibButton
-      Left = 517
-      Height = 25
-    end
   end
   object GroupBox: TGroupBox
     Left = 0

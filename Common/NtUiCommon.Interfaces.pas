@@ -86,7 +86,7 @@ type
     FModalResultFilter: TGuid;
     procedure TreeSelectionChanged(Sender: TBaseVirtualTree; Node: PVirtualNode);
     procedure TreeCheckedChanged(Sender: TBaseVirtualTree; Node: PVirtualNode);
-    procedure TreeMainAction(Node: PVirtualNode);
+    procedure TreeMainAction(Node: INodeProvider);
     function GetOnMainActionSet: TNotifyEvent;
     procedure SetOnMainActionSet(const Value: TNotifyEvent);
   public
@@ -143,25 +143,11 @@ end;
 { TTreeNodeInterfaceProvider }
 
 procedure TTreeNodeInterfaceProvider.AddItem;
-var
-  ParentNode: PVirtualNode;
 begin
   if not Attached then
     Exit;
 
-  if Assigned(Parent) then
-    ParentNode := Parent.Node
-  else
-    ParentNode := Tree.RootNode;
-
-  Tree.AddChildEx(ParentNode, Item);
-
-  if Assigned(Parent) then
-  begin
-    Tree.Expanded[Parent.Node] := True;
-    Tree.TreeOptions.PaintOptions := Tree.TreeOptions.PaintOptions
-      + [toShowRoot];
-  end;
+  Tree.AddChild(Item, Parent);
 end;
 
 function TTreeNodeInterfaceProvider.BeginUpdateAuto;
@@ -216,11 +202,7 @@ end;
 procedure TTreeNodeInterfaceProvider.ClearItems;
 begin
   if Attached then
-  begin
     Tree.Clear;
-    Tree.TreeOptions.PaintOptions := Tree.TreeOptions.PaintOptions
-      - [toShowRoot];
-  end;
 end;
 
 constructor TTreeNodeInterfaceProvider.Create;
@@ -374,7 +356,7 @@ end;
 procedure TTreeNodeInterfaceProvider.SetEmptyMessage;
 begin
   if Attached then
-    Tree.NoItemsText := Value;
+    Tree.EmptyListMessage := Value;
 end;
 
 procedure TTreeNodeInterfaceProvider.SetMainActionCaption;
@@ -437,11 +419,9 @@ begin
 end;
 
 procedure TTreeNodeInterfaceProvider.TreeMainAction;
-var
-  Provider: INodeProvider;
 begin
-  if Assigned(FOnMainAction) and Node.TryGetProvider(Provider) then
-    FOnMainAction(Provider);
+  if Assigned(FOnMainAction) then
+    FOnMainAction(Node);
 end;
 
 procedure TTreeNodeInterfaceProvider.TreeSelectionChanged;

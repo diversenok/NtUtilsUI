@@ -118,7 +118,6 @@
         <DCCReference Include="rtl.dcp"/>
         <DCCReference Include="VirtualTreesDD.dcp"/>
         <DCCReference Include="vcl.dcp"/>
-        <DCCReference Include="NtUtilsUI.VirtualTreeEx.pas"/>
         <DCCReference Include="NtUtilsUI.DevirtualizedTree.pas"/>
         <DCCReference Include="NtUtilsUI.StdCtrls.pas"/>
         <DCCReference Include="NtUtilsUI.ListView.pas"/>

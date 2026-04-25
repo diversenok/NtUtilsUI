@@ -9,7 +9,7 @@ interface
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes,
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, VirtualTrees,
-  NtUtilsUI.VirtualTreeEx, NtUtilsUI.DevirtualizedTree,
+  NtUtilsUI.DevirtualizedTree,
   NtUiCommon.Interfaces, NtUiBackend.Sids.WellKnown, NtUtilsUI, NtUtilsUI.Base,
   NtUtilsUI.DevirtualizedTree.Search;
 

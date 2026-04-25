@@ -11,21 +11,22 @@ unit NtUtilsUI.DevirtualizedTree;
 interface
 
 uses
-  VirtualTrees, NtUtilsUI.VirtualTreeEx, Vcl.Graphics, Vcl.Controls,
-  System.Classes, System.Types;
+  System.Types, System.Classes, Vcl.Controls, Vcl.Graphics, Vcl.Menus,
+  VirtualTrees, VirtualTrees.Header, VirtualTrees.Types, NtUtils,
+  DelphiUtils.Arrays;
 
 type
-  PVirtualNode = VirtualTrees.PVirtualNode;
+  TDevirtualizedTree = class;
 
   INodeProvider = interface
-    ['{EF28060A-3354-4E43-BE46-5758144219F4}']
+    ['{B123A5F1-26FD-4AB3-8D0F-FC3AD07ABAD0}']
     procedure Attach(Node: PVirtualNode);
     procedure Detach;
     procedure Initialize;
     function InitializeChildren: Boolean;
     procedure Invalidate;
 
-    function GetTree: TBaseVirtualTree;
+    function GetTree: TDevirtualizedTree;
     function GetNode: PVirtualNode;
     function GetColumnText(Column: TColumnIndex): String;
     function GetHint: String;
@@ -43,7 +44,7 @@ type
     function GetCursor: TCursor;
     function GetEnabledMainActionMenu: Boolean;
 
-    property Tree: TBaseVirtualTree read GetTree;
+    property Tree: TDevirtualizedTree read GetTree;
     property Node: PVirtualNode read GetNode;
     property ColumnText[Column: TColumnIndex]: String read GetColumnText;
     property Hint: String read GetHint;
@@ -69,8 +70,10 @@ type
     function SearchNumber(const Value: UInt64; Signed: Boolean; Column: TColumnIndex): Boolean;
   end;
 
+  TNodeProviderEvent = procedure (Node: INodeProvider) of object;
+
   TVirtualNodeHelper = record helper for TVirtualNode
-  private
+  strict private
     procedure SetProvider(const Value: INodeProvider);
     function GetProvider: INodeProvider;
   public
@@ -82,33 +85,154 @@ type
   end;
 
   TVTVirtualNodeEnumerationHelper = record helper for TVTVirtualNodeEnumeration
-    function Count: Integer;
-    function ToArray: TArray<PVirtualNode>;
-    function CountProviders(const ProviderId: TGuid): Integer;
-    function Providers(const ProviderId: TGuid): TArray<INodeProvider>;
+    function CountNodes: Integer;
+    function Nodes: TArray<PVirtualNode>;
+    function CountProviders: Integer;
+    function Providers: TArray<INodeProvider>;
   end;
 
-  TDevirtualizedTree = class(TVirtualStringTreeEx)
-  protected
-    procedure DoGetText(var pEventArgs: TVSTGetCellTextEventArgs); override;
-    function DoGetNodeHint(Node: PVirtualNode; Column: TColumnIndex; var LineBreakStyle: TVTTooltipLineBreakStyle): string; override;
-    procedure DoBeforeItemErase(Canvas: TCanvas; Node: PVirtualNode; ItemRect: TRect; var Color: TColor; var EraseAction: TItemEraseAction); override;
-    procedure DoPaintText(Node: PVirtualNode; const Canvas: TCanvas; Column: TColumnIndex; TextType: TVSTTextType); override;
-    procedure DoChecked(Node: PVirtualNode); override;
-    procedure DoChange(Node: PVirtualNode); override;
-    procedure DoRemoveFromSelection(Node: PVirtualNode); override;
-    procedure ValidateNodeDataSize(var Size: Integer); override;
-    function DoExpanding(Node: PVirtualNode): Boolean; override;
-    function DoCollapsing(Node: PVirtualNode): Boolean; override;
-    function DoInitChildren(Node: PVirtualNode; var ChildCount: Cardinal): Boolean; override;
-    procedure DoGetCursor(var Cursor: TCursor); override;
-    procedure DoFreeNode(Node: PVirtualNode); override;
-    procedure DoInitNode(Parent, Node: PVirtualNode; var InitStates: TVirtualNodeInitStates); override;
+  TDevirtualizedTreeMenuShortCut = record
+    Menu: TMenuItem;
+    ShiftState: TShiftState;
+    Key: Word;
+    function Matches(ShiftState: TShiftState; Key: Word): Boolean;
+    constructor Create(Item: TMenuItem);
+    class function Collect(Item: TMenuItem): TArray<TDevirtualizedTreeMenuShortCut>; static;
+  end;
+
+  TDevirtualizedTreeDefaultMenu = class
+  strict private
+    FTree: TDevirtualizedTree;
+    FMenu, FFallbackMenu: TPopupMenu;
+    FMenuMainAction: TMenuItem;
+    FMenuSeparator: TMenuItem;
+    FMenuCopy: TMenuItem;
+    FMenuCopyColumn: TMenuItem;
+    FShortcuts: TArray<TDevirtualizedTreeMenuShortCut>;
+    FPopupColumnIndex: Integer;
+    FOnMainAction: TNodeProviderEvent;
+    procedure MenuMainActionClick(Sender: TObject);
+    procedure MenuCopyClick(Sender: TObject);
+    procedure MenuCopyColumnClick(Sender: TObject);
+    function GetMainActionText: String;
+    procedure SetMainActionText(const Value: String);
   public
-    function OverrideMainActionMenuEnabled(Node: PVirtualNode): Boolean; override;
-    function AddChildEx(Parent: PVirtualNode; const Provider: INodeProvider): INodeProvider;
-    function InsertNodeEx(Node: PVirtualNode; Mode: TVTNodeAttachMode; const Provider: INodeProvider): INodeProvider;
+    procedure AttachItemsTo(Menu: TPopupMenu);
+    procedure InvokeShortcuts(Key: Word; Shift: TShiftState);
+    procedure InvokeMainAction;
+    procedure RefreshShortcuts;
+    procedure NotifyPopup(Node: INodeProvider; Menu: TPopupMenu; Column: TColumnIndex);
+    property FallbackMenu: TPopupMenu read FFallbackMenu;
+    property OnMainAction: TNodeProviderEvent read FOnMainAction write FOnMainAction;
+    property MainActionText: String read GetMainActionText write SetMainActionText;
+    constructor Create(Owner: TDevirtualizedTree);
+  end;
+
+  TDevirtualizedTreePopupMode = (pmOnItemsOnly, pmAnywhere);
+
+  TDevirtualizedTreeOptions = class (TStringTreeOptions)
+  strict private
+    FAutoShowRoot: Boolean;
+  public
+    constructor Create(AOwner: TCustomControl); override;
+    procedure AssignTo(Dest: TPersistent); override;
+  published
+    property AutoShowRoot: Boolean read FAutoShowRoot write FAutoShowRoot default True;
+    property AutoOptions default [toAutoDropExpand, toAutoScrollOnExpand, toAutoTristateTracking, toAutoDeleteMovedNodes, toAutoChangeScale];
+    property ExportMode default emSelected;
+    property MiscOptions default [toAcceptOLEDrop, toFullRepaintOnResize, toInitOnSave, toToggleOnDblClick, toWheelPanning];
+    property PaintOptions default [toHideFocusRect, toHotTrack, toShowButtons, toShowDropmark, toThemeAware, toUseBlendedImages, toUseExplorerTheme];
+    property SelectionOptions default [toFullRowSelect, toMultiSelect, toRightClickSelect];
+  end;
+
+  TDevirtualizedTreeColumns = class (TVirtualTreeColumns)
+  public
+    function BeginUpdateAuto: IAutoReleasable;
+  end;
+
+  TDevirtualizedTreeHeader = class (TVTHeader)
+  private
+    function GetColumns: TDevirtualizedTreeColumns;
+    procedure SetColumns(const Value: TDevirtualizedTreeColumns);
+  protected
+    function GetColumnsClass: TVirtualTreeColumnsClass; override;
+  public
+    constructor Create(AOwner: TCustomControl); override;
+  published
+    property Columns: TDevirtualizedTreeColumns read GetColumns write SetColumns stored False;
+    property DefaultHeight default 24;
+    property Height default 24;
+    property Options default [hoColumnResize, hoDblClickResize, hoDrag, hoHotTrack, hoRestrictDrag, hoShowSortGlyphs, hoVisible, hoDisableAnimatedResize, hoHeaderClickAutoSort, hoAutoColumnPopupMenu, hoAutoResizeInclCaption];
+  end;
+
+  TDevirtualizedTree = class (TVirtualStringTree)
+  private
+    FDefaultMenus: TDevirtualizedTreeDefaultMenu;
+    FPopupMenu: TPopupMenu;
+    FPopupMode: TDevirtualizedTreePopupMode;
+    FEmptyListMessage: String;
+    FEmptyListMessageLines: TArray<String>;
+    procedure SetEmptyListMessage(Value: String);
+    function GetMainActionMenuText: String;
+    procedure SetMainActionMenuText(Value: String);
+    procedure SetPopupMenu(Value: TPopupMenu);
+    function GetTreeOptions: TDevirtualizedTreeOptions;
+    procedure SetTreeOptions(Value: TDevirtualizedTreeOptions);
+    function GetHeader: TDevirtualizedTreeHeader;
+    procedure SetHeader(const Value: TDevirtualizedTreeHeader);
+    function GetOnMainAction: TNodeProviderEvent;
+    procedure SetOnMainAction(Value: TNodeProviderEvent);
+  protected
+    procedure DblClick; override;
+    procedure DoAfterPaint(Canvas: TCanvas); override;
+    procedure DoBeforeItemErase(Canvas: TCanvas; Node: PVirtualNode; ItemRect: TRect; var Color: TColor; var EraseAction: TItemEraseAction); override;
+    procedure DoChange(Node: PVirtualNode); override;
+    procedure DoChecked(Node: PVirtualNode); override;
+    function DoCollapsing(Node: PVirtualNode): Boolean; override;
+    function DoCompare(Node1, Node2: PVirtualNode; Column: TColumnIndex): Integer; override;
+    function DoExpanding(Node: PVirtualNode): Boolean; override;
+    procedure DoFreeNode(Node: PVirtualNode); override;
+    procedure DoGetCursor(var Cursor: TCursor); override;
+    function DoGetNodeHint(Node: PVirtualNode; Column: TColumnIndex; var LineBreakStyle: TVTTooltipLineBreakStyle): string; override;
+    function DoGetPopupMenu(Node: PVirtualNode; Column: TColumnIndex; Position: TPoint): TPopupMenu; override;
+    procedure DoGetText(var EventArgs: TVSTGetCellTextEventArgs); override;
+    function DoInitChildren(Node: PVirtualNode; var ChildCount: Cardinal): Boolean; override;
+    procedure DoInitNode(Parent, Node: PVirtualNode; var InitStates: TVirtualNodeInitStates); override;
+    procedure DoPaintText(Node: PVirtualNode; const Canvas: TCanvas; Column: TColumnIndex; TextType: TVSTTextType); override;
+    procedure DoRemoveFromSelection(Node: PVirtualNode); override;
+    function GetHeaderClass: TVTHeaderClass; override;
+    function GetOptionsClass: TTreeOptionsClass; override;
+    procedure KeyDown(var Key: Word; Shift: TShiftState); override;
+    procedure ValidateNodeDataSize(var Size: Integer); override;
+    property ClipboardFormats;
+  public
+    constructor Create(AOwner: TComponent); override;
+    destructor Destroy; override;
+    function AddChild(NewProvider: INodeProvider; [opt] Parent: INodeProvider = nil; AutoExpandParent: Boolean = True): INodeProvider; reintroduce;
     procedure ApplyFilter(const Query: String; UseColumn: TColumnIndex = -1);
+    function BackupSelectionAuto(Comparer: TMapRoutine<INodeProvider, TCondition<INodeProvider>>): IDeferredOperation;
+    function BeginUpdateAuto: IAutoReleasable;
+    function CanMoveSelectedNodesUp: Boolean;
+    function CanMoveSelectedNodesDown: Boolean;
+    procedure Clear; override;
+    procedure DeleteSelectedNodes(SelectSomethingAfter: Boolean = True); reintroduce;
+    procedure EnsureNodeSelected; reintroduce;
+    function InsertNode(NewProvider: INodeProvider; Mode: TVTNodeAttachMode; Existing: INodeProvider): INodeProvider; reintroduce;
+    function MoveSelectedNodesUp: Boolean;
+    function MoveSelectedNodesDown: Boolean;
+    procedure RefreshPopupMenuShortcuts;
+  published
+    property DrawSelectionMode default smBlendedRectangle;
+    property EmptyListMessage: String read FEmptyListMessage write SetEmptyListMessage;
+    property Header: TDevirtualizedTreeHeader read GetHeader write SetHeader;
+    property HintMode default hmHint;
+    property IncrementalSearch default isAll;
+    property MainActionMenuText: String read GetMainActionMenuText write SetMainActionMenuText;
+    property PopupMenu: TPopupMenu read FPopupMenu write SetPopupMenu;
+    property PopupMode: TDevirtualizedTreePopupMode read FPopupMode write FPopupMode default pmOnItemsOnly;
+    property SelectionBlendFactor default 64;
+    property TreeOptions: TDevirtualizedTreeOptions read GetTreeOptions write SetTreeOptions;
+    property OnMainAction: TNodeProviderEvent read GetOnMainAction write SetOnMainAction;
   end;
 
   TNodeProvider = class (TInterfacedObject, INodeProvider)
@@ -147,7 +271,7 @@ type
     function SearchExpression(const UpcasedExpression: String; Column: TColumnIndex): Boolean; virtual;
     function SearchNumber(const Value: UInt64; Signed: Boolean; Column: TColumnIndex): Boolean; virtual;
 
-    function GetTree: TBaseVirtualTree; virtual;
+    function GetTree: TDevirtualizedTree; virtual;
     function GetNode: PVirtualNode; virtual;
     function GetColumnText(Column: TColumnIndex): String; virtual;
     function GetHint: String; virtual;
@@ -185,13 +309,8 @@ type
     constructor Create(InitialColumnCount: Integer = 1);
   end;
 
-  TDVTChangeEvent = procedure(
-    Sender: TDevirtualizedTree;
-    Node: PVirtualNode
-  ) of object;
-
   IEditableNodeProvider = interface (INodeProvider)
-    ['{2C3C26E6-6820-416D-BD44-AFE0D3AD7DC8}']
+    ['{D83BEB6B-B8BE-42D8-B0A1-8BDA54E50742}']
 
     procedure SetColumnText(Column: TColumnIndex; const Value: String);
     procedure SetHint(const Value: String);
@@ -210,26 +329,26 @@ type
     procedure ResetFontStyleForColumn(Column: TColumnIndex);
     procedure ResetCursor;
 
-    function GetOnInitialize: TDVTChangeEvent;
-    function GetOnInitializeChildren: TDVTChangeEvent;
-    function GetOnAttach: TDVTChangeEvent;
-    function GetOnDetach: TDVTChangeEvent;
-    function GetOnChecked: TDVTChangeEvent;
-    function GetOnSelected: TDVTChangeEvent;
-    function GetOnExpanding: TDVTChangeEvent;
-    function GetOnFirstExpanding: TDVTChangeEvent;
-    function GetOnCollapsing: TDVTChangeEvent;
-    procedure SetOnInitialize(Value: TDVTChangeEvent);
-    procedure SetOnInitializeChildren(Value: TDVTChangeEvent);
-    procedure SetOnAttach(Value: TDVTChangeEvent);
-    procedure SetOnDetach(Value: TDVTChangeEvent);
-    procedure SetOnChecked(Value: TDVTChangeEvent);
-    procedure SetOnSelected(Value: TDVTChangeEvent);
-    procedure SetOnExpanding(Value: TDVTChangeEvent);
-    procedure SetOnFirstExpanding(Value: TDVTChangeEvent);
-    procedure SetOnCollapsing(Value: TDVTChangeEvent);
+    function GetOnInitialize: TNodeProviderEvent;
+    function GetOnInitializeChildren: TNodeProviderEvent;
+    function GetOnAttach: TNodeProviderEvent;
+    function GetOnDetach: TNodeProviderEvent;
+    function GetOnChecked: TNodeProviderEvent;
+    function GetOnSelected: TNodeProviderEvent;
+    function GetOnExpanding: TNodeProviderEvent;
+    function GetOnFirstExpanding: TNodeProviderEvent;
+    function GetOnCollapsing: TNodeProviderEvent;
+    procedure SetOnInitialize(Value: TNodeProviderEvent);
+    procedure SetOnInitializeChildren(Value: TNodeProviderEvent);
+    procedure SetOnAttach(Value: TNodeProviderEvent);
+    procedure SetOnDetach(Value: TNodeProviderEvent);
+    procedure SetOnChecked(Value: TNodeProviderEvent);
+    procedure SetOnSelected(Value: TNodeProviderEvent);
+    procedure SetOnExpanding(Value: TNodeProviderEvent);
+    procedure SetOnFirstExpanding(Value: TNodeProviderEvent);
+    procedure SetOnCollapsing(Value: TNodeProviderEvent);
 
-    property Tree: TBaseVirtualTree read GetTree;
+    property Tree: TDevirtualizedTree read GetTree;
     property Node: PVirtualNode read GetNode;
     property ColumnText[Column: TColumnIndex]: String read GetColumnText write SetColumnText;
     property Hint: String read GetHint write SetHint;
@@ -246,46 +365,46 @@ type
     property HasCursor: Boolean read GetHasCursor;
     property Cursor: TCursor read GetCursor write SetCursor;
     property EnabledMainActionMenu: Boolean read GetEnabledMainActionMenu write SetEnabledMainActionMenu;
-    property OnInitialize: TDVTChangeEvent read GetOnInitialize write SetOnInitialize;
-    property OnInitializeChildren: TDVTChangeEvent read GetOnInitializeChildren write SetOnInitializeChildren;
-    property OnAttach: TDVTChangeEvent read GetOnAttach write SetOnAttach;
-    property OnDetach: TDVTChangeEvent read GetOnDetach write SetOnDetach;
-    property OnChecked: TDVTChangeEvent read GetOnChecked write SetOnChecked;
-    property OnSelected: TDVTChangeEvent read GetOnSelected write SetOnSelected;
-    property OnExpanding: TDVTChangeEvent read GetOnExpanding write SetOnExpanding;
-    property OnFirstExpanding: TDVTChangeEvent read GetOnFirstExpanding write SetOnFirstExpanding;
-    property OnCollapsing: TDVTChangeEvent read GetOnCollapsing write SetOnCollapsing;
+    property OnInitialize: TNodeProviderEvent read GetOnInitialize write SetOnInitialize;
+    property OnInitializeChildren: TNodeProviderEvent read GetOnInitializeChildren write SetOnInitializeChildren;
+    property OnAttach: TNodeProviderEvent read GetOnAttach write SetOnAttach;
+    property OnDetach: TNodeProviderEvent read GetOnDetach write SetOnDetach;
+    property OnChecked: TNodeProviderEvent read GetOnChecked write SetOnChecked;
+    property OnSelected: TNodeProviderEvent read GetOnSelected write SetOnSelected;
+    property OnExpanding: TNodeProviderEvent read GetOnExpanding write SetOnExpanding;
+    property OnFirstExpanding: TNodeProviderEvent read GetOnFirstExpanding write SetOnFirstExpanding;
+    property OnCollapsing: TNodeProviderEvent read GetOnCollapsing write SetOnCollapsing;
   end;
 
   TEditableNodeProvider = class (TNodeProvider, IEditableNodeProvider)
   protected
-    FOnInitialize: TDVTChangeEvent;
-    FOnInitializeChildren: TDVTChangeEvent;
-    FOnAttach: TDVTChangeEvent;
-    FOnDetach: TDVTChangeEvent;
-    FOnChecked: TDVTChangeEvent;
-    FOnSelected: TDVTChangeEvent;
-    FOnExpanding, FOnFitstExpanding, FOnCollapsing: TDVTChangeEvent;
+    FOnInitialize: TNodeProviderEvent;
+    FOnInitializeChildren: TNodeProviderEvent;
+    FOnAttach: TNodeProviderEvent;
+    FOnDetach: TNodeProviderEvent;
+    FOnChecked: TNodeProviderEvent;
+    FOnSelected: TNodeProviderEvent;
+    FOnExpanding, FOnFitstExpanding, FOnCollapsing: TNodeProviderEvent;
     FPreviouslySelected, FPreviouslySelectedValid: Boolean;
 
-    function GetOnInitialize: TDVTChangeEvent;
-    function GetOnInitializeChildren: TDVTChangeEvent;
-    function GetOnAttach: TDVTChangeEvent; virtual;
-    function GetOnDetach: TDVTChangeEvent; virtual;
-    function GetOnChecked: TDVTChangeEvent; virtual;
-    function GetOnSelected: TDVTChangeEvent; virtual;
-    function GetOnExpanding: TDVTChangeEvent; virtual;
-    function GetOnFirstExpanding: TDVTChangeEvent;
-    function GetOnCollapsing: TDVTChangeEvent; virtual;
-    procedure SetOnInitialize(Value: TDVTChangeEvent);
-    procedure SetOnInitializeChildren(Value: TDVTChangeEvent);
-    procedure SetOnAttach(Value: TDVTChangeEvent); virtual;
-    procedure SetOnDetach(Value: TDVTChangeEvent); virtual;
-    procedure SetOnChecked(Value: TDVTChangeEvent); virtual;
-    procedure SetOnSelected(Value: TDVTChangeEvent); virtual;
-    procedure SetOnExpanding(Value: TDVTChangeEvent); virtual;
-    procedure SetOnFirstExpanding(Value: TDVTChangeEvent);
-    procedure SetOnCollapsing(Value: TDVTChangeEvent); virtual;
+    function GetOnInitialize: TNodeProviderEvent;
+    function GetOnInitializeChildren: TNodeProviderEvent;
+    function GetOnAttach: TNodeProviderEvent; virtual;
+    function GetOnDetach: TNodeProviderEvent; virtual;
+    function GetOnChecked: TNodeProviderEvent; virtual;
+    function GetOnSelected: TNodeProviderEvent; virtual;
+    function GetOnExpanding: TNodeProviderEvent; virtual;
+    function GetOnFirstExpanding: TNodeProviderEvent;
+    function GetOnCollapsing: TNodeProviderEvent; virtual;
+    procedure SetOnInitialize(Value: TNodeProviderEvent);
+    procedure SetOnInitializeChildren(Value: TNodeProviderEvent);
+    procedure SetOnAttach(Value: TNodeProviderEvent); virtual;
+    procedure SetOnDetach(Value: TNodeProviderEvent); virtual;
+    procedure SetOnChecked(Value: TNodeProviderEvent); virtual;
+    procedure SetOnSelected(Value: TNodeProviderEvent); virtual;
+    procedure SetOnExpanding(Value: TNodeProviderEvent); virtual;
+    procedure SetOnFirstExpanding(Value: TNodeProviderEvent);
+    procedure SetOnCollapsing(Value: TNodeProviderEvent); virtual;
 
     procedure Attach(Value: PVirtualNode); override;
     procedure Detach; override;
@@ -295,16 +414,25 @@ type
     procedure NotifyCollapsing(var HasChildren: Boolean); override;
   end;
 
-// Collect node providers from node enumerator
-function CollectNodeProviders(
-  const NodeEnumeration: TVTVirtualNodeEnumeration;
-  const ProviderId: TGuid
-): TArray<INodeProvider>;
-
 implementation
 
 uses
-  Winapi.Windows, System.SysUtils, NtUtils.SysUtils;
+  Winapi.Windows, Winapi.ShLwApi, System.SysUtils, Vcl.Clipbrd, Vcl.Themes,
+  NtUtils.SysUtils;
+
+{$BOOLEVAL OFF}
+{$IFOPT R+}{$DEFINE R+}{$ENDIF}
+{$IFOPT Q+}{$DEFINE Q+}{$ENDIF}
+
+{ Helper functions }
+
+function NodeOrNil(const Provider: INodeProvider): PVirtualNode;
+begin
+  if Assigned(Provider) then
+    Result := Provider.Node
+  else
+    Result := nil;
+end;
 
 { TVirtualNodeHelper }
 
@@ -358,7 +486,7 @@ end;
 
 { TVTVirtualNodeEnumerationHelper }
 
-function TVTVirtualNodeEnumerationHelper.Count;
+function TVTVirtualNodeEnumerationHelper.CountNodes;
 var
   Node: PVirtualNode;
 begin
@@ -375,33 +503,16 @@ begin
   Result := 0;
 
   for Node in Self do
-    if Node.HasProvider(ProviderId) then
+    if Node.HasProvider then
       Inc(Result);
 end;
 
-function TVTVirtualNodeEnumerationHelper.Providers;
-var
-  Node: PVirtualNode;
-  Provider: INodeProvider;
-  i: Integer;
-begin
-  SetLength(Result, CountProviders(ProviderId));
-
-  i := 0;
-  for Node in Self do
-    if Node.TryGetProvider(ProviderId, Provider) then
-    begin
-      Result[i] := Provider;
-      Inc(i);
-    end;
-end;
-
-function TVTVirtualNodeEnumerationHelper.ToArray;
+function TVTVirtualNodeEnumerationHelper.Nodes;
 var
   Node: PVirtualNode;
   i: Integer;
 begin
-  SetLength(Result, Count);
+  SetLength(Result, CountNodes);
 
   i := 0;
   for Node in Self do
@@ -411,19 +522,303 @@ begin
   end;
 end;
 
+function TVTVirtualNodeEnumerationHelper.Providers;
+var
+  Node: PVirtualNode;
+  Provider: INodeProvider;
+  i: Integer;
+begin
+  SetLength(Result, CountProviders);
+
+  i := 0;
+  for Node in Self do
+    if Node.TryGetProvider(Provider) then
+    begin
+      Result[i] := Provider;
+      Inc(i);
+    end;
+end;
+
+{ TDevirtualizedTreeMenuShortCut }
+
+class function TDevirtualizedTreeMenuShortCut.Collect;
+begin
+  Result := nil;
+
+  // Save the shortcut from the current item
+  if Item.ShortCut <> 0 then
+    Result := [TDevirtualizedTreeMenuShortCut.Create(Item)];
+
+  // Process netsed items recursively
+  for Item in Item do
+    Result := Result + TDevirtualizedTreeMenuShortCut.Collect(Item);
+end;
+
+constructor TDevirtualizedTreeMenuShortCut.Create;
+begin
+  Menu := Item;
+  Key := Item.ShortCut and $FFF;
+  ShiftState := [];
+
+  if BitTest(Item.ShortCut and scCommand) then
+    Include(ShiftState, ssCommand);
+
+  if BitTest(Item.ShortCut and scCtrl) then
+    Include(ShiftState, ssCtrl);
+
+  if BitTest(Item.ShortCut and scShift) then
+    Include(ShiftState, ssShift);
+
+  if BitTest(Item.ShortCut and scAlt) then
+    Include(ShiftState, ssAlt);
+end;
+
+function TDevirtualizedTreeMenuShortCut.Matches;
+begin
+  Result := (Self.ShiftState = ShiftState) and (Self.Key = Key);
+end;
+
+{ TDevirtualizedTreeDefaultMenu }
+
+procedure TDevirtualizedTreeDefaultMenu.AttachItemsTo;
+begin
+  // Note: nil means no menu, so we use our fallback
+  if not Assigned(Menu) then
+    Menu := FFallbackMenu;
+
+  FMenu := Menu;
+
+  // Attach the item for the main action to the top
+  if Assigned(FMenuMainAction.Parent) then
+    FMenuMainAction.Parent.Remove(FMenuMainAction);
+
+  Menu.Items.Insert(0, FMenuMainAction);
+
+  // Attach items for copying text to the bottom of the popup menu
+  FMenuSeparator.SetParentComponent(Menu);
+  FMenuCopy.SetParentComponent(Menu);
+  FMenuCopyColumn.SetParentComponent(Menu);
+
+  RefreshShortcuts;
+end;
+
+constructor TDevirtualizedTreeDefaultMenu.Create;
+begin
+  FTree := Owner;
+  FFallbackMenu := TPopupMenu.Create(FTree);
+
+  FMenuMainAction := TMenuItem.Create(FTree);
+  FMenuMainAction.Caption := 'Inspect...';
+  FMenuMainAction.Default := True;
+  FMenuMainAction.ShortCut := VK_RETURN;
+  FMenuMainAction.Visible := False;
+  FMenuMainAction.OnClick := MenuMainActionClick;
+
+  FMenuSeparator := TMenuItem.Create(FTree);
+  FMenuSeparator.Caption := '-';
+  FMenuSeparator.Visible := False;
+
+  FMenuCopy := TMenuItem.Create(FTree);
+  FMenuCopy.Caption := 'Copy';
+  FMenuCopy.ShortCut := scCtrl or Ord('C');
+  FMenuCopy.OnClick := MenuCopyClick;
+
+  FMenuCopyColumn := TMenuItem.Create(FTree);
+  FMenuCopyColumn.Caption := 'Copy Column';
+  FMenuCopyColumn.OnClick := MenuCopyColumnClick;
+
+  AttachItemsTo(FFallbackMenu);
+end;
+
+function TDevirtualizedTreeDefaultMenu.GetMainActionText;
+begin
+  Result := FMenuMainAction.Caption;
+end;
+
+procedure TDevirtualizedTreeDefaultMenu.InvokeMainAction;
+begin
+  MenuMainActionClick(FTree);
+end;
+
+procedure TDevirtualizedTreeDefaultMenu.InvokeShortcuts;
+var
+  Shortcut: TDevirtualizedTreeMenuShortCut;
+begin
+  inherited;
+
+  // Ignore item-specific shortcuts when they are no items selected
+  if (FTree.SelectedCount <= 0) and (FTree.PopupMode = pmOnItemsOnly) then
+    Exit;
+
+  // Invoke events on all menu items with matching shortcuts
+  for Shortcut in FShortcuts do
+    if Shortcut.Matches(Shift, Key) and Assigned(Shortcut.Menu.OnClick) then
+      Shortcut.Menu.OnClick(FTree);
+end;
+
+
+procedure TDevirtualizedTreeDefaultMenu.MenuCopyClick;
+begin
+  FTree.CopyToClipboard;
+end;
+
+procedure TDevirtualizedTreeDefaultMenu.MenuCopyColumnClick;
+var
+  Nodes: TArray<PVirtualNode>;
+  Texts: TArray<String>;
+  i: Integer;
+begin
+  if not FTree.Header.Columns.IsValidColumn(FPopupColumnIndex) then
+    Exit;
+
+  Nodes := FTree.SelectedNodes.Nodes;
+  SetLength(Texts, Length(Nodes));
+
+  for i := 0 to High(Nodes) do
+    Texts[i] := FTree.Text[Nodes[i], FPopupColumnIndex];
+
+  Clipboard.SetTextBuf(PWideChar(String.Join(#$D#$A, Texts)));
+end;
+
+procedure TDevirtualizedTreeDefaultMenu.MenuMainActionClick;
+var
+  Provider: INodeProvider;
+begin
+  if Assigned(FOnMainAction) and FTree.FocusedNode.TryGetProvider(Provider) then
+    FOnMainAction(Provider);
+end;
+
+procedure TDevirtualizedTreeDefaultMenu.NotifyPopup;
+begin
+  // Allow the main action only a single node that enables it
+  FMenuMainAction.Visible := Assigned(FOnMainAction) and
+    (FTree.SelectedCount = 1) and Node.EnabledMainActionMenu;
+
+  // Enable regular copying when there are nodes to copy
+  FMenuCopy.Visible := FTree.SelectedCount > 0;
+
+  // Enable column-specific copying if there is a column
+  FPopupColumnIndex := Column;
+  FMenuCopyColumn.Visible := (FTree.SelectedCount > 0) and (Column >= 0);
+
+  if FMenuCopyColumn.Visible then
+    FMenuCopyColumn.Caption := 'Copy "' + FTree.Header.Columns[Column].Text + '"';
+
+  // Enable the separator if there are items to separate
+  FMenuSeparator.Visible := (Assigned(Menu) or FMenuMainAction.Visible) and
+    FMenuCopy.Visible;
+end;
+
+procedure TDevirtualizedTreeDefaultMenu.RefreshShortcuts;
+begin
+  if Assigned(FMenu) then
+    FShortcuts := TDevirtualizedTreeMenuShortCut.Collect(FMenu.Items)
+  else
+    FShortcuts := nil;
+end;
+
+procedure TDevirtualizedTreeDefaultMenu.SetMainActionText;
+begin
+  FMenuMainAction.Caption := Value;
+end;
+
+{ TDevirtualizedTreeOptions }
+
+procedure TDevirtualizedTreeOptions.AssignTo;
+begin
+  if Dest is TDevirtualizedTreeOptions then
+    TDevirtualizedTreeOptions(Dest).FAutoShowRoot := FAutoShowRoot;
+
+  inherited;
+end;
+
+constructor TDevirtualizedTreeOptions.Create;
+begin
+  inherited Create(AOwner);
+
+  // Adjust existing defaults
+  AutoOptions := [toAutoDropExpand, toAutoScrollOnExpand,
+    toAutoTristateTracking, toAutoDeleteMovedNodes, toAutoChangeScale];
+  ExportMode := emSelected;
+  MiscOptions := [toAcceptOLEDrop, toFullRepaintOnResize,
+    toInitOnSave, toToggleOnDblClick, toWheelPanning];
+  PaintOptions := [toHideFocusRect, toHotTrack, toShowButtons,
+    toShowDropmark, toThemeAware, toUseBlendedImages, toUseExplorerTheme];
+  SelectionOptions := [toFullRowSelect, toMultiSelect,
+    toRightClickSelect];
+
+  // Choose new option defaults
+  FAutoShowRoot := True;
+end;
+
+{ TDevirtualizedTreeColumns }
+
+function TDevirtualizedTreeColumns.BeginUpdateAuto;
+var
+  WeakRef: IWeak;
+begin
+  // Use a weak reference to verify that the defer didn't outlive the tree
+  WeakRef := Auto.RefWeak(TreeView);
+  BeginUpdate;
+
+  Result := Auto.Defer(
+    procedure
+    begin
+      if WeakRef.HasRef then
+        EndUpdate;
+    end
+  );
+end;
+
+{ TDevirtualizedTreeHeader }
+
+constructor TDevirtualizedTreeHeader.Create;
+begin
+  inherited;
+
+  // Adjust defaults
+  DefaultHeight := 24;
+  Height := 24;
+  Options := [hoColumnResize, hoDblClickResize, hoDrag, hoHotTrack,
+    hoRestrictDrag, hoShowSortGlyphs, hoVisible, hoDisableAnimatedResize,
+    hoHeaderClickAutoSort, hoAutoColumnPopupMenu, hoAutoResizeInclCaption];
+end;
+
+function TDevirtualizedTreeHeader.GetColumns;
+begin
+  Result := TDevirtualizedTreeColumns(inherited Columns);
+end;
+
+function TDevirtualizedTreeHeader.GetColumnsClass;
+begin
+  Result := TDevirtualizedTreeColumns;
+end;
+
+procedure TDevirtualizedTreeHeader.SetColumns;
+begin
+  inherited Columns := Value;
+end;
+
 { TDevirtualizedTree }
 
-function TDevirtualizedTree.AddChildEx;
+function TDevirtualizedTree.AddChild;
+var
+  NewNode: PVirtualNode;
 begin
-  Assert(Assigned(Provider), 'Provider must not be null');
-  Provider.Attach(inherited AddChild(Parent, IInterface(Provider)));
-  Result := Provider;
+  NewNode := inherited AddChild(NodeOrNil(Parent), IInterface(NewProvider));
+  NewProvider.Attach(NewNode);
+  Result := NewProvider;
+
+  if AutoExpandParent and Assigned(Parent) then
+    Expanded[Parent.Node] := True;
+
+  if TreeOptions.AutoShowRoot and Assigned(Parent) then
+    TreeOptions.PaintOptions := TreeOptions.PaintOptions + [toShowRoot];
 end;
 
 procedure TDevirtualizedTree.ApplyFilter;
 var
-  Node, Parent: PVirtualNode;
-  Provider: INodeProvider;
+  Node, Parent: INodeProvider;
   SearchColumns: TColumnsArray;
   Column: TVirtualTreeColumn;
   Matches, IsNumberSearch, IsSignedNumber: Boolean;
@@ -439,9 +834,8 @@ begin
   BeginUpdateAuto;
 
   // Reset visibility
-  for Node in Nodes do
-    if Node.TryGetProvider(Provider) then
-      IsVisible[Node] := Provider.SearchExpression('', -1);
+  for Node in Nodes.Providers do
+    IsVisible[Node.Node] := Node.SearchExpression('', -1);
 
   if Query = '' then
     Exit;
@@ -457,41 +851,271 @@ begin
 
   // Collect nodes that are visible without the search and test each one
   // against the query
-  for Node in VisibleNodes.ToArray do
-    if Node.TryGetProvider(Provider) then
+  for Node in VisibleNodes.Providers do
+  begin
+    Matches := False;
+
+    // At least one coulmn should match
+    for Column in SearchColumns do
     begin
-      Matches := False;
-
-      // At least one coulmn should match
-      for Column in SearchColumns do
-      begin
-        Matches := (IsNumberSearch and
-          Provider.SearchNumber(NumberQuery, IsSignedNumber, Column.Index)) or
-          Provider.SearchExpression(Expression, Column.Index);
-
-        if Matches then
-          Break;
-      end;
+      Matches := (IsNumberSearch and
+        Node.SearchNumber(NumberQuery, IsSignedNumber, Column.Index)) or
+        Node.SearchExpression(Expression, Column.Index);
 
       if Matches then
-      begin
-        // Make the node and all of its parents visible
-        Parent := Node;
-        repeat
-          IsVisible[Parent] := True;
-          Parent := NodeParent[Parent];
-        until not Assigned(Parent);
-      end
-      else
-        IsVisible[Node] := False;
+        Break;
     end;
+
+    if Matches then
+    begin
+      // Make the node and all of its parents visible
+      Parent := Node;
+      repeat
+        IsVisible[Node.Node] := True;
+        Parent := NodeParent[Node.Node].Provider;
+      until not Assigned(Parent);
+    end
+    else
+      IsVisible[Node.Node] := False;
+  end;
+end;
+
+function TDevirtualizedTree.BackupSelectionAuto;
+var
+  WeakRef: IWeak;
+  SelectionConditions: TArray<TCondition<INodeProvider>>;
+  FocusCondition: TCondition<INodeProvider>;
+  Provider: INodeProvider;
+begin
+  // For each selected node, capture necessary data for later comparison
+  SelectionConditions := TArray.Map<INodeProvider, TCondition<INodeProvider>>(
+    SelectedNodes.Providers, Comparer);
+
+  // Same for the focused node
+  if FocusedNode.TryGetProvider(Provider) then
+    FocusCondition := Comparer(Provider)
+  else
+    FocusCondition := nil;
+
+  // Use a weak reference to verify that the defer didn't outlive the tree
+  WeakRef := Auto.RefWeak(Self);
+
+  // Restore selection afterward
+  Result := Auto.Defer(
+    procedure
+    var
+      SelectionCondition: TCondition<INodeProvider>;
+      Node: INodeProvider;
+    begin
+      // Check if the tree is still alive
+      if not WeakRef.HasRef then
+        Exit;
+
+      BeginUpdateAuto;
+
+      // Check new nodes for matching any conditions for selection
+      for Node in Nodes.Providers do
+      begin
+        for SelectionCondition in SelectionConditions do
+          if Assigned(SelectionCondition) and
+            SelectionCondition(Node) then
+          begin
+            Selected[Node.Node] := True;
+            Break;
+          end;
+
+        // Same for the focus
+        if Assigned(FocusCondition) and FocusCondition(Node) then
+          FocusedNode := Node.Node;
+      end;
+
+      // Re-apply sorting
+      Sort(nil, Header.SortColumn, Header.SortDirection);
+    end
+  );
+end;
+
+function TDevirtualizedTree.BeginUpdateAuto;
+var
+  WeakRef: IWeak;
+begin
+  // Use a weak reference to verify that the defer didn't outlive the tree
+  WeakRef := Auto.RefWeak(Self);
+  BeginUpdate;
+
+  Result := Auto.Defer(
+    procedure
+    begin
+      if WeakRef.HasRef then
+        EndUpdate;
+    end
+  );
+end;
+
+function TDevirtualizedTree.CanMoveSelectedNodesDown;
+var
+  Nodes: TArray<PVirtualNode>;
+  Next: PVirtualNode;
+  i: Integer;
+begin
+  Result := False;
+  Nodes := SelectedNodes.Nodes;
+
+  for i := High(Nodes) downto 0 do
+  begin
+    Next := GetNext(Nodes[i]);
+
+    // Check if we can move each node after its next without passing previously
+    // moved
+    if Assigned(Next) and ((i = High(Nodes)) or (Next <> Nodes[i + 1])) then
+      Exit(True);
+  end;
+end;
+
+function TDevirtualizedTree.CanMoveSelectedNodesUp;
+var
+  Nodes: TArray<PVirtualNode>;
+  Previous: PVirtualNode;
+  i: Integer;
+begin
+  Result := False;
+  Nodes := SelectedNodes.Nodes;
+
+  for i := 0 to High(Nodes) do
+  begin
+    Previous := GetPrevious(Nodes[i]);
+
+    // Check if we can move each node before its previous without passing
+    // previously moved
+    if Assigned(Previous) and ((i = 0) or (Previous <> Nodes[i - 1])) then
+      Exit(True);
+  end;
+end;
+
+procedure TDevirtualizedTree.Clear;
+begin
+  inherited;
+
+  if TreeOptions.AutoShowRoot then
+    TreeOptions.PaintOptions := TreeOptions.PaintOptions - [toShowRoot];
+end;
+
+constructor TDevirtualizedTree.Create;
+begin
+  inherited;
+
+  // Always include a menu for copying and inspecting items
+  FDefaultMenus := TDevirtualizedTreeDefaultMenu.Create(Self);
+
+  // Adjust defaults
+  DrawSelectionMode := smBlendedRectangle;
+  HintMode := hmHint;
+  IncrementalSearch := isAll;
+  SelectionBlendFactor := 64;
+  ClipboardFormats.Add('CSV');
+  ClipboardFormats.Add('Plain text');
+  ClipboardFormats.Add('Unicode text');
+end;
+
+procedure TDevirtualizedTree.DblClick;
+begin
+  inherited;
+
+  // Enter, Double Click, and Inspect should all invoke the main action
+  FDefaultMenus.InvokeMainAction;
+end;
+
+procedure TDevirtualizedTree.DeleteSelectedNodes;
+var
+  SelectionLookupStart: PVirtualNode;
+  SelectionCandidate: PVirtualNode;
+begin
+  if SelectedCount <= 0 then
+    Exit;
+
+  BeginUpdateAuto;
+  SelectionCandidate := nil;
+
+  if SelectSomethingAfter then
+  begin
+    // We want the future selection to be in the same area of the tree
+    if Assigned(FocusedNode) then
+      SelectionLookupStart := FocusedNode
+    else
+      SelectionLookupStart := GetFirstSelected;
+
+    // Choose an item below for future selection
+    SelectionCandidate := SelectionLookupStart;
+    while Assigned(SelectionCandidate) and Selected[SelectionCandidate] do
+      SelectionCandidate := GetNextVisible(SelectionCandidate);
+
+    // No items below are suitable; try items above
+    if not Assigned(SelectionCandidate) then
+    begin
+      SelectionCandidate := SelectionLookupStart;
+      while Assigned(SelectionCandidate) and Selected[SelectionCandidate] do
+         SelectionCandidate := GetPreviousVisible(SelectionCandidate);
+    end;
+  end;
+
+  // Perform deletion
+  inherited DeleteSelectedNodes;
+  ClearSelection;
+
+  // Select and focus the candidate
+  if Assigned(SelectionCandidate) then
+    FocusedNode := SelectionCandidate;
+end;
+
+destructor TDevirtualizedTree.Destroy;
+begin
+  FDefaultMenus.Free;
+  inherited;
+end;
+
+procedure TDevirtualizedTree.DoAfterPaint;
+var
+  Sizes: TArray<TSize>;
+  TotalHeight, Offset: Integer;
+  i: Integer;
+begin
+  // Draw the no-items text
+  if (VisibleCount = 0) and (Length(FEmptyListMessageLines) > 0) then
+  begin
+    Canvas.Brush.Style := bsClear;
+    Canvas.Font.Color := StyleServices.GetStyleFontColor(sfListItemTextDisabled);
+
+    // Compute the sizes of each line
+    SetLength(Sizes, Length(FEmptyListMessageLines));
+    TotalHeight := 0;
+
+    for i := 0 to High(FEmptyListMessageLines) do
+    begin
+      Sizes[i] := Canvas.TextExtent(FEmptyListMessageLines[i]);
+      Inc(TotalHeight, Sizes[i].Height);
+    end;
+
+    Offset := 0;
+
+    // Draw the static text in the middle of an empty tree
+    for i := 0 to High(FEmptyListMessageLines) do
+    begin
+      Canvas.TextOut(
+        (ClientWidth - Sizes[i].Width) div 2,
+        (ClientHeight - Sizes[i].Height - TotalHeight) div 2 + Offset,
+        FEmptyListMessageLines[i]);
+      Inc(Offset, Sizes[i].Height);
+    end;
+  end;
+
+  inherited DoAfterPaint(Canvas);
 end;
 
 procedure TDevirtualizedTree.DoBeforeItemErase;
 var
   Provider: INodeProvider;
 begin
-  // Pre-load background color
+  // Preload the background color
   if Node.TryGetProvider(Provider) and Provider.HasColor then
     Color := Provider.Color;
 
@@ -504,21 +1128,13 @@ var
 begin
   inherited;
 
-  if Assigned(Node) then
-  begin
-    // Use the supplied node when available
-
-    if Node.TryGetProvider(Provider) then
-      Provider.NotifySelected;
-  end
-  else
-  begin
-    // Cannot tell which node changed; need to notify all of them
-
-    for Node in Nodes do
-      if Node.TryGetProvider(Provider) then
-        Provider.NotifySelected;
-  end;
+  // If we don't know the node, notify all
+  if not Assigned(Node) then
+    for Provider in Nodes.Providers do
+      Provider.NotifySelected
+  // Otherwise, notify selected
+  else if Node.TryGetProvider(Provider) then
+    Provider.NotifySelected;
 end;
 
 procedure TDevirtualizedTree.DoChecked;
@@ -539,6 +1155,16 @@ begin
 
   if Node.TryGetProvider(Provider) then
     Provider.NotifyCollapsing(Result);
+end;
+
+function TDevirtualizedTree.DoCompare;
+begin
+  if Assigned(OnCompareNodes) then
+    OnCompareNodes(Self, Node1, Node2, Column, Result)
+  else
+    // Fall back to logical text comparison
+    Result := StrCmpLogicalW(PWideChar(inherited Text[Node1, Column]),
+      PWideChar(inherited Text[Node2, Column]));
 end;
 
 function TDevirtualizedTree.DoExpanding;
@@ -563,47 +1189,74 @@ end;
 
 procedure TDevirtualizedTree.DoGetCursor;
 var
+  Node: PVirtualNode;
   Provider: INodeProvider;
 begin
-  if GetNodeAt(ScreenToClient(Mouse.CursorPos)).TryGetProvider(Provider) and
-    Provider.HasCursor then
-    Cursor := Provider.Cursor;
-
   inherited;
+
+  Node := GetNodeAt(ScreenToClient(Mouse.CursorPos));
+
+  if Node.TryGetProvider(Provider) and Provider.HasCursor then
+    Cursor := Provider.Cursor;
 end;
 
 function TDevirtualizedTree.DoGetNodeHint;
 var
   Provider: INodeProvider;
 begin
-  Result := inherited;
+  LineBreakStyle := hlbDefault;
 
   // Override inherited hint with the one provided by the node
-  if not Assigned(OnGetHint) and Node.TryGetProvider(Provider) then
-    Result := Provider.Hint;
+  if Node.TryGetProvider(Provider) then
+    Result := Provider.Hint
+  else
+    Result := inherited;
+end;
+
+function TDevirtualizedTree.DoGetPopupMenu;
+begin
+  Result := inherited DoGetPopupMenu(Node, Column, Position);
+
+  if Header.InHeader(Position) then
+    Exit;
+
+  if (FPopupMode = pmOnItemsOnly) and (SelectedCount = 0) then
+    Exit;
+
+  // Choose a context menu
+  if not Assigned(Result) then
+    if Assigned(FPopupMenu) then
+      Result := FPopupMenu
+    else
+      Result := FDefaultMenus.FallbackMenu;
+
+  // Update visibility of the built-in items
+  FDefaultMenus.NotifyPopup(Node.Provider, Result, Column);
 end;
 
 procedure TDevirtualizedTree.DoGetText;
 var
   Provider: INodeProvider;
 begin
-  // (Copied initialization from the parent)
-  if not (vsInitialized in pEventArgs.Node.States) then
-    InitNode(pEventArgs.Node);
+  // Init if necessary
+  if not (vsInitialized in EventArgs.Node.States) then
+    InitNode(EventArgs.Node);
 
-  // Pre-load the text
-  if pEventArgs.Node.TryGetProvider(Provider) then
-    pEventArgs.CellText := Provider.ColumnText[pEventArgs.Column];
-
-  inherited;
+  // Ask the provider
+  if EventArgs.Node.TryGetProvider(Provider) then
+    EventArgs.CellText := Provider.ColumnText[EventArgs.Column]
+  else
+    inherited;
 end;
 
 function TDevirtualizedTree.DoInitChildren;
 var
   Provider: INodeProvider;
 begin
-  Result := inherited or (Node.TryGetProvider(Provider) and
-    Provider.InitializeChildren);
+  if Node.TryGetProvider(Provider) then
+    Result := Provider.InitializeChildren
+  else
+    Result := inherited;
 end;
 
 procedure TDevirtualizedTree.DoInitNode;
@@ -620,7 +1273,7 @@ procedure TDevirtualizedTree.DoPaintText;
 var
   Provider: INodeProvider;
 begin
-  // Pre-load font styles
+  // Preload the font color and style
   if (TextType = ttNormal) and Node.TryGetProvider(Provider) then
   begin
     if Provider.HasFontColorForColumn[Column] then
@@ -638,73 +1291,174 @@ begin
 end;
 
 procedure TDevirtualizedTree.DoRemoveFromSelection;
-var
-  Provider: INodeProvider;
 begin
-  inherited;
-
-  // Note: do not invoke events on a half-destroyed form
-  if not (csDestroying in ComponentState) and Node.TryGetProvider(Provider) then
-    Provider.NotifySelected;
+  // Fix errors caused by invoking the OnRemoveFromSelection event on a
+  // half-destroyed form
+  if not (csDestroying in ComponentState) then
+    inherited;
 end;
 
-function TDevirtualizedTree.InsertNodeEx;
+procedure TDevirtualizedTree.EnsureNodeSelected;
+begin
+  if toAlwaysSelectNode in TreeOptions.SelectionOptions then
+    inherited EnsureNodeSelected
+
+  // Note: this is not an override method; change purely for local callers
+  else if SelectedCount < 1 then
+    FocusedNode := GetFirstVisible;
+end;
+
+function TDevirtualizedTree.GetHeader;
+begin
+  Result := TDevirtualizedTreeHeader(inherited Header);
+end;
+
+function TDevirtualizedTree.GetHeaderClass;
+begin
+  Result := TDevirtualizedTreeHeader;
+end;
+
+function TDevirtualizedTree.GetMainActionMenuText;
+begin
+  Result := FDefaultMenus.MainActionText;
+end;
+
+function TDevirtualizedTree.GetOnMainAction;
+begin
+  Result := FDefaultMenus.OnMainAction;
+end;
+
+function TDevirtualizedTree.GetOptionsClass;
+begin
+  Result := TDevirtualizedTreeOptions;
+end;
+
+function TDevirtualizedTree.GetTreeOptions;
+begin
+  Result := TDevirtualizedTreeOptions(inherited TreeOptions);
+end;
+
+function TDevirtualizedTree.InsertNode;
 var
   NewNode: PVirtualNode;
 begin
-  Assert(Assigned(Provider), 'Provider must not be null');
-
   // Note: InsertNode doesn't have an overload that takes an interface as a
   // parameter like AddNode does. Reproduce AddNode's behavior by adding the
   // provider as a pointer and then adjusting its lifetime.
-  NewNode := inherited InsertNode(Node, Mode, Pointer(Provider));
+  NewNode := inherited InsertNode(NodeOrNil(Existing), Mode, Pointer(NewProvider));
+  NewProvider._AddRef;
   Include(NewNode.States, vsReleaseCallOnUserDataRequired);
-  Provider._AddRef;
 
   // Notify the provider of completion
-  Provider.Attach(NewNode);
-  Result := Provider;
+  NewProvider.Attach(NewNode);
+  Result := NewProvider;
 end;
 
-function TDevirtualizedTree.OverrideMainActionMenuEnabled;
-var
-  Provider: INodeProvider;
+procedure TDevirtualizedTree.KeyDown;
 begin
-  if Node.TryGetProvider(Provider) and not Provider.EnabledMainActionMenu then
-    Result := False
-  else
-    Result := inherited;
+  inherited;
+
+  // Process shortcuts on all menu items
+  FDefaultMenus.InvokeShortcuts(Key, Shift);
+end;
+
+function TDevirtualizedTree.MoveSelectedNodesDown;
+var
+  Nodes: TArray<PVirtualNode>;
+  Next: PVirtualNode;
+  i: Integer;
+begin
+  BeginUpdateAuto;
+  Result := False;
+  Nodes := SelectedNodes.Nodes;
+
+  for i := High(Nodes) downto 0 do
+  begin
+    Next := GetNext(Nodes[i]);
+
+    // Move each node after its next without passing previously moved
+    if Assigned(Next) and ((i = High(Nodes)) or (Next <> Nodes[i + 1])) then
+    begin
+      MoveTo(Nodes[i], Next, amInsertAfter, False);
+      Result := True;
+    end;
+  end;
+end;
+
+function TDevirtualizedTree.MoveSelectedNodesUp;
+var
+  Nodes: TArray<PVirtualNode>;
+  Previous: PVirtualNode;
+  i: Integer;
+begin
+  BeginUpdateAuto;
+  Result := False;
+  Nodes := SelectedNodes.Nodes;
+
+  for i := 0 to High(Nodes) do
+  begin
+    Previous := GetPrevious(Nodes[i]);
+
+    // Move each node before its previous without passing previously moved
+    if Assigned(Previous) and ((i = 0) or (Previous <> Nodes[i - 1])) then
+    begin
+      MoveTo(Nodes[i], Previous, amInsertBefore, False);
+      Result := True;
+    end;
+  end;
+end;
+
+procedure TDevirtualizedTree.RefreshPopupMenuShortcuts;
+begin
+  FDefaultMenus.RefreshShortcuts;
+end;
+
+procedure TDevirtualizedTree.SetEmptyListMessage;
+begin
+  if FEmptyListMessage <> Value then
+  begin
+    FEmptyListMessage := Value;
+    FEmptyListMessageLines := Value.Split([#$D#$A]);
+    Invalidate;
+  end;
+end;
+
+procedure TDevirtualizedTree.SetHeader;
+begin
+  inherited Header := Value;
+end;
+
+procedure TDevirtualizedTree.SetMainActionMenuText;
+begin
+  FDefaultMenus.MainActionText := Value;
+end;
+
+procedure TDevirtualizedTree.SetOnMainAction;
+begin
+  FDefaultMenus.OnMainAction := Value;
+end;
+
+procedure TDevirtualizedTree.SetPopupMenu;
+begin
+  if FPopupMenu <> Value then
+  begin
+    FPopupMenu := Value;
+
+    // Note: attaching to nil moves items back to the fallback menu
+    if not (csDesigning in ComponentState) then
+      FDefaultMenus.AttachItemsTo(FPopupMenu);
+  end;
+end;
+
+procedure TDevirtualizedTree.SetTreeOptions;
+begin
+  inherited TreeOptions := Value;
 end;
 
 procedure TDevirtualizedTree.ValidateNodeDataSize;
 begin
   inherited;
   Size := SizeOf(INodeProvider);
-end;
-
-{ Functions }
-
-function CollectNodeProviders;
-var
-  Node: PVirtualNode;
-  Provider: INodeProvider;
-  Count: Integer;
-begin
-  Count := 0;
-
-  for Node in NodeEnumeration do
-    if Node.HasProvider(ProviderId) then
-      Inc(Count);
-
-  SetLength(Result, Count);
-  Count := 0;
-
-  for Node in NodeEnumeration do
-    if Node.TryGetProvider(ProviderId, Provider) then
-    begin
-      Result[Count] := Provider;
-      Inc(Count);
-    end;
 end;
 
 { TNodeProvider }
@@ -714,16 +1468,15 @@ var
   FBaseTree: TBaseVirtualTree;
 begin
   FNode := Value;
+  FTree := nil;
 
   if Assigned(Value) then
   begin
     FBaseTree := TreeFromNode(Value);
 
     if FBaseTree is TDevirtualizedTree then
-      FTree :=  TDevirtualizedTree(FBaseTree);
-  end
-  else
-    FTree := nil;
+      FTree := TDevirtualizedTree(FBaseTree);
+  end;
 end;
 
 function TNodeProvider.Attached;
@@ -1090,13 +1843,13 @@ begin
   inherited;
 
   if Assigned(FOnAttach) and Attached then
-    FOnAttach(FTree, FNode);
+    FOnAttach(Self);
 end;
 
 procedure TEditableNodeProvider.Detach;
 begin
   if Assigned(FOnDetach) and Attached then
-    FOnDetach(FTree, FNode);
+    FOnDetach(Self);
 
   inherited;
 end;
@@ -1151,7 +1904,7 @@ begin
   inherited;
 
   if Assigned(FOnChecked) and Attached then
-    FOnChecked(FTree, FNode);
+    FOnChecked(Self);
 end;
 
 procedure TEditableNodeProvider.NotifyCollapsing;
@@ -1159,7 +1912,7 @@ begin
   inherited;
 
   if Assigned(FOnCollapsing) and Attached then
-    FOnCollapsing(FTree, FNode);
+    FOnCollapsing(Self);
 end;
 
 procedure TEditableNodeProvider.NotifyExpanding;
@@ -1167,7 +1920,7 @@ begin
   inherited;
 
   if Assigned(FOnExpanding) and Attached then
-    FOnExpanding(FTree, FNode);
+    FOnExpanding(Self);
 end;
 
 procedure TEditableNodeProvider.NotifySelected;
@@ -1186,7 +1939,7 @@ begin
   FPreviouslySelected := vsSelected in FNode.States;
 
   if Assigned(FOnSelected) then
-    FOnSelected(FTree, FNode);
+    FOnSelected(Self);
 end;
 
 procedure TEditableNodeProvider.SetOnAttach;

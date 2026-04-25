@@ -8,7 +8,7 @@ interface
 
 uses
   System.SysUtils, System.Classes, Vcl.Graphics, Vcl.Controls, Vcl.Forms,
-  Vcl.Dialogs, VirtualTrees, NtUtilsUI.VirtualTreeEx,
+  Vcl.Dialogs, VirtualTrees,
   NtUtilsUI.DevirtualizedTree, NtUiCommon.Interfaces, NtUiBackend.UserProfiles,
   NtUtilsUI, NtUtilsUI.Base, NtUtilsUI.DevirtualizedTree.Search;
 

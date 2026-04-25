@@ -18,16 +18,9 @@ object UserProfilesFrame: TUserProfilesFrame
       'CSV'
       'Plain text'
       'Unicode text')
+    EmptyListMessage = ''
     Header.AutoSizeIndex = 0
-    Header.DefaultHeight = 24
-    Header.Height = 24
-    Header.Options = [hoColumnResize, hoDblClickResize, hoDrag, hoHotTrack, hoRestrictDrag, hoShowSortGlyphs, hoVisible, hoDisableAnimatedResize, hoHeaderClickAutoSort, hoAutoColumnPopupMenu, hoAutoResizeInclCaption]
     TabOrder = 0
-    TreeOptions.AutoOptions = [toAutoDropExpand, toAutoScrollOnExpand, toAutoTristateTracking, toAutoDeleteMovedNodes, toAutoChangeScale]
-    TreeOptions.ExportMode = emSelected
-    TreeOptions.MiscOptions = [toAcceptOLEDrop, toFullRepaintOnResize, toInitOnSave, toToggleOnDblClick, toWheelPanning]
-    TreeOptions.PaintOptions = [toHideFocusRect, toHotTrack, toShowButtons, toShowDropmark, toThemeAware, toUseBlendedImages, toUseExplorerTheme]
-    TreeOptions.SelectionOptions = [toFullRowSelect, toMultiSelect, toRightClickSelect]
     Touch.InteractiveGestures = [igPan, igPressAndTap]
     Touch.InteractiveGestureOptions = [igoPanSingleFingerHorizontal, igoPanSingleFingerVertical, igoPanInertia, igoPanGutter, igoParentPassthrough]
     Columns = <

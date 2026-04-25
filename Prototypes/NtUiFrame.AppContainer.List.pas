@@ -8,7 +8,7 @@ interface
 
 uses
   Vcl.Controls, System.Classes, Vcl.Forms, VirtualTrees,
-  NtUtilsUI.VirtualTreeEx, NtUtilsUI.DevirtualizedTree, NtUtils,
+  NtUtilsUI.DevirtualizedTree, NtUtils,
   NtUiCommon.Interfaces, NtUiBackend.AppContainers, Vcl.Menus,
   NtUtilsUI, NtUtilsUI.Base, NtUtilsUI.DevirtualizedTree.Search;
 
@@ -85,7 +85,7 @@ begin
 
   if Assigned(NtUiLibShowAppContainer) then
   begin
-    Tree.PopupMenuEx := PopupMenu;
+    Tree.PopupMenu := PopupMenu;
     Backend.OnMainActionSet := FrameMainActionSet;
   end;
 end;

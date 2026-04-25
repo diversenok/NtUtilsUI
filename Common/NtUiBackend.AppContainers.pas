@@ -212,14 +212,14 @@ begin
   else
     Node.ColumnText[1] := 'Parent AppContainer';
 
-  Tree.AddChildEx(nil, Node);
+  Tree.AddChild(Node);
 
   // SID
   Node := TEditableNodeProvider.Create(2);
   Node.EnabledMainActionMenu := False;
   Node.ColumnText[0] := 'SID';
   Node.ColumnText[1] := RtlxSidToStringNoError(Info.Sid);
-  Tree.AddChildEx(nil, Node);
+  Tree.AddChild(Node);
 
   // Parent SID
   Node := TEditableNodeProvider.Create(2);
@@ -247,28 +247,28 @@ begin
   else
     Node.ColumnText[1] := 'N/A';
 
-  Tree.AddChildEx(nil, Node);
+  Tree.AddChild(Node);
 
   // Full moniker
   Node := TEditableNodeProvider.Create(2);
   Node.EnabledMainActionMenu := False;
   Node.ColumnText[0] := 'Full Moniker';
   Node.ColumnText[1] := Info.FullMoniker;
-  Tree.AddChildEx(nil, Node);
+  Tree.AddChild(Node);
 
   // Display name
   Node := TEditableNodeProvider.Create(2);
   Node.EnabledMainActionMenu := False;
   Node.ColumnText[0] := 'Display Name';
   Node.ColumnText[1] := Info.DisplayName;
-  Tree.AddChildEx(nil, Node);
+  Tree.AddChild(Node);
 
   // Friendly name
   Node := TEditableNodeProvider.Create(2);
   Node.EnabledMainActionMenu := False;
   Node.ColumnText[0] := 'Friendly Name';
   Node.ColumnText[1] := Info.FriendlyName;
-  Tree.AddChildEx(nil, Node);
+  Tree.AddChild(Node);
 
   // Registry path
   if RtlxQueryStoragePathAppContainer(Info, Path).IsSuccess then
@@ -277,7 +277,7 @@ begin
     Node.EnabledMainActionMenu := False;
     Node.ColumnText[0] := 'Registry Path';
     Node.ColumnText[1] := Path;
-    Tree.AddChildEx(nil, Node);
+    Tree.AddChild(Node);
   end;
 
   // File path
@@ -295,7 +295,7 @@ begin
     Node.Hint := Status.ToString;
   end;
 
-  Tree.AddChildEx(nil, Node);
+  Tree.AddChild(Node);
 end;
 
 procedure UiLibInspectAppContainerProperty;
