@@ -8,16 +8,12 @@ object FrameGroups: TFrameGroups
   ParentShowHint = False
   ShowHint = True
   TabOrder = 0
-  object VST: TDevirtualizedTree
+  object VST: TUiLibTree
     Left = 0
     Top = 0
     Width = 493
     Height = 304
     Align = alClient
-    ClipboardFormats.Strings = (
-      'CSV'
-      'Plain text'
-      'Unicode text')
     EmptyListMessage = 'No items to display'
     Header.AutoSizeIndex = 0
     TabOrder = 0

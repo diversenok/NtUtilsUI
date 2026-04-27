@@ -188,7 +188,7 @@ object AceFrame: TAceFrame
       ParentShowHint = False
       ShowHint = True
       TabOrder = 1
-      inherited Tree: TDevirtualizedTree
+      inherited Tree: TUiLibTree
         Width = 256
         Height = 207
         Columns = <
@@ -221,7 +221,7 @@ object AceFrame: TAceFrame
       ParentShowHint = False
       ShowHint = True
       TabOrder = 0
-      inherited Tree: TDevirtualizedTree
+      inherited Tree: TUiLibTree
         Width = 338
         Height = 207
         Columns = <

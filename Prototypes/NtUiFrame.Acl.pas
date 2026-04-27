@@ -9,14 +9,14 @@ interface
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes,
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, VirtualTrees,
-  NtUtilsUI.DevirtualizedTree, NtUtils, Vcl.StdCtrls,
+  NtUtilsUI.Tree, NtUtils, Vcl.StdCtrls,
   Ntapi.WinNt, Vcl.Menus, Vcl.ExtCtrls, NtUiCommon.Interfaces,
   NtUtils.Security.Acl, NtUtilsUI, NtUtilsUI.StdCtrls,
-  NtUtilsUI.Base, NtUtilsUI.DevirtualizedTree.Search;
+  NtUtilsUI.Base, NtUtilsUI.Tree.Search;
 
 type
   TAclFrame = class(TFrame, ICanShowEmptyMessage)
-    Tree: TDevirtualizedTree;
+    Tree: TUiLibTree;
     btnUp: TUiLibButton;
     btnDown: TUiLibButton;
     btnCanonicalize: TUiLibButton;

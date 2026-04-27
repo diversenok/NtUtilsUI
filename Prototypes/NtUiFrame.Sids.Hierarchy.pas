@@ -9,17 +9,15 @@ interface
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes,
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, VirtualTrees,
-  NtUtilsUI.DevirtualizedTree,
+  NtUtilsUI.Tree,
   NtUiBackend.Sids.Hierarchy, NtUiCommon.Interfaces, NtUtilsUI, NtUtilsUI.Base,
-  NtUtilsUI.DevirtualizedTree.Search;
+  NtUtilsUI.Tree.Search;
 
 type
   TSidHierarchyFrame = class(TFrame, IHasDefaultCaption, IDelayedLoad)
-    Tree: TDevirtualizedTree;
+    Tree: TUiLibTree;
     SearchBox: TUiLibTreeSearchBox;
   private
-    Backend: TTreeNodeInterfaceProvider;
-    BackendRef: IUnknown;
     function GetDefaultCaption: String;
   protected
     procedure CreateWnd; override;
@@ -36,7 +34,7 @@ implementation
 
 procedure TSidHierarchyFrame.DelayedLoad;
 begin
-  NtUiLibAddSidHierarchyNodes(Backend);
+  NtUiLibAddSidHierarchyNodes(Tree);
 end;
 
 function TSidHierarchyFrame.GetDefaultCaption;
@@ -48,8 +46,6 @@ procedure TSidHierarchyFrame.CreateWnd;
 begin
   inherited;
   SearchBox.AttachToTree(Tree);
-  Backend := TTreeNodeInterfaceProvider.Create(Tree);
-  BackendRef := Backend; // Make an owning reference
 end;
 
 end.

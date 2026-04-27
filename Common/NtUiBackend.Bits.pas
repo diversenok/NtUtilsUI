@@ -7,7 +7,7 @@ unit NtUiBackend.Bits;
 interface
 
 uses
-  Ntapi.WinNt, NtUtils.SysUtils, NtUtilsUI.DevirtualizedTree;
+  Ntapi.WinNt, NtUtils.SysUtils, NtUtilsUI.Tree;
 
 type
   IFlagNode = interface (INodeProvider)
@@ -22,7 +22,7 @@ type
 
 // Collect and add tree nodes for known flags of a numeric type
 procedure UiLibAddBitNodes(
-  Tree: TDevirtualizedTree;
+  Tree: TUiLibTree;
   ATypeInfo: Pointer;
   out TypeSize: TIntegerSize;
   out FullMask: UInt64
@@ -30,7 +30,7 @@ procedure UiLibAddBitNodes(
 
 // Collect and add tree nodes for an access mask type
 procedure UiLibAddAccessMaskNodes(
-  Tree: TDevirtualizedTree;
+  Tree: TUiLibTree;
   ATypeInfo: Pointer;
   const GenericMapping: TGenericMapping;
   out FullMask: UInt64;
@@ -306,7 +306,7 @@ begin
 end;
 
 procedure UiLibAddNodeGroups(
-  Tree: TDevirtualizedTree;
+  Tree: TUiLibTree;
   var Groups: TArray<TNodeGroup>
 );
 var

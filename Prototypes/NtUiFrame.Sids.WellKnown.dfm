@@ -6,7 +6,7 @@ object WellKnownSidsFrame: TWellKnownSidsFrame
   Constraints.MinHeight = 120
   Constraints.MinWidth = 300
   TabOrder = 0
-  object Tree: TDevirtualizedTree
+  object Tree: TUiLibTree
     AlignWithMargins = True
     Left = 0
     Top = 24
@@ -16,10 +16,6 @@ object WellKnownSidsFrame: TWellKnownSidsFrame
     Margins.Right = 0
     Margins.Bottom = 0
     Align = alClient
-    ClipboardFormats.Strings = (
-      'CSV'
-      'Plain text'
-      'Unicode text')
     EmptyListMessage = 'Unable to enumerate'
     Header.AutoSizeIndex = 0
     Header.MainColumn = 1

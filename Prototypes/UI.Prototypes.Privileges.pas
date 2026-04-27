@@ -5,7 +5,7 @@ interface
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes,
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, VirtualTrees,
-  NtUtilsUI.DevirtualizedTree, Ntapi.WinNt, Ntapi.ntseapi, NtUtils,
+  NtUtilsUI.Tree, Ntapi.WinNt, Ntapi.ntseapi, NtUtils,
   NtUtils.Lsa, DelphiUtils.Arrays;
 
 const
@@ -29,7 +29,7 @@ type
   end;
 
   TFramePrivileges = class(TFrame)
-    VST: TDevirtualizedTree;
+    VST: TUiLibTree;
     procedure VSTChecked(Sender: TBaseVirtualTree; Node: PVirtualNode);
   private
     FColoringUnChecked, FCheckedColoring: TPrivilegeColoring;

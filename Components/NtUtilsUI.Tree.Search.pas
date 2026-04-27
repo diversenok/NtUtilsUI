@@ -1,4 +1,4 @@
-unit NtUtilsUI.DevirtualizedTree.Search;
+unit NtUtilsUI.Tree.Search;
 
 {
   This module contains the full runtime component definition for the tree view
@@ -12,7 +12,7 @@ interface
 uses
   System.Classes, Vcl.ExtCtrls, VirtualTrees, DelphiUtils.AutoObjects,
   NtUtilsUI.Base, NtUtilsUI.StdCtrls, NtUtilsUI.SearchBox,
-  NtUtilsUI.DevirtualizedTree;
+  NtUtilsUI.Tree;
 
 type
   TUiLibTreeSearchBox = class (TUiLibControl)
@@ -21,7 +21,7 @@ type
     FColumnsBox: TUiLibComboBox;
     FSplitter: TSplitter;
     FEscShortCut: TUiLibShortCut;
-    FTree: TDevirtualizedTree;
+    FTree: TUiLibTree;
     FTreeWeakRef: IWeak;
     FColumnIndexes: TArray<TColumnIndex>;
     function HasTree: Boolean;
@@ -35,7 +35,7 @@ type
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
-    procedure AttachToTree(Tree: TDevirtualizedTree);
+    procedure AttachToTree(Tree: TUiLibTree);
   end;
 
 implementation

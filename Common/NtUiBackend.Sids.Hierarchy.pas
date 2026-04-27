@@ -7,7 +7,7 @@ unit NtUiBackend.Sids.Hierarchy;
 interface
 
 uses
-  NtUtils, NtUtilsUI.DevirtualizedTree, NtUiBackend.Sids, NtUiCommon.Interfaces;
+  NtUtils, NtUtilsUI.Tree, NtUiBackend.Sids, NtUiCommon.Interfaces;
 
 type
   TSidHierarchyPlaceholder = (
@@ -34,7 +34,7 @@ type
 
 // Add SID hierarchy nodes to a tree control
 procedure NtUiLibAddSidHierarchyNodes(
-  Tree: TTreeNodeInterfaceProvider
+  Tree: TUiLibTree
 );
 
 implementation
@@ -480,12 +480,12 @@ begin
 
   // Attache them to the tree
   Tree.BeginUpdateAuto;
-  Tree.ClearItems;
+  Tree.Clear;
 
   // Note: since nodes are pre-ordered, if the parent exists, it has already
   // been attached
   for i := 0 to High(Nodes) do
-    Tree.AddItem(Nodes[i], Parents[i]);
+    Tree.AddChild(Nodes[i], Parents[i]);
 end;
 
 end.

@@ -1,8 +1,8 @@
-unit NtUtilsUI.DevirtualizedTree;
+unit NtUtilsUI.Tree;
 
 {
   This module contains a (stripped down) design-time component definition for
-  TDevirtualizedTree.
+  TUiLibTree.
 
   NOTE: Keep the published interface in sync with the runtime definition!
 }
@@ -19,9 +19,9 @@ type
 
   TNodeProviderEvent = procedure (Node: INodeProvider) of object;
 
-  TDevirtualizedTreePopupMode = (pmOnItemsOnly, pmAnywhere);
+  TUiLibTreePopupMode = (pmOnItemsOnly, pmAnywhere);
 
-  TDevirtualizedTreeOptions = class (TStringTreeOptions)
+  TUiLibTreeOptions = class (TStringTreeOptions)
   strict private
     FAutoShowRoot: Boolean;
   public
@@ -36,55 +36,55 @@ type
     property SelectionOptions default [toFullRowSelect, toMultiSelect, toRightClickSelect];
   end;
 
-  TDevirtualizedTreeColumns = class (TVirtualTreeColumns)
+  TUiLibTreeColumns = class (TVirtualTreeColumns)
   end;
 
-  TDevirtualizedTreeHeader = class (TVTHeader)
+  TUiLibTreeHeader = class (TVTHeader)
   private
-    function GetColumns: TDevirtualizedTreeColumns;
-    procedure SetColumns(const Value: TDevirtualizedTreeColumns);
+    function GetColumns: TUiLibTreeColumns;
+    procedure SetColumns(const Value: TUiLibTreeColumns);
   protected
     function GetColumnsClass: TVirtualTreeColumnsClass; override;
   public
     constructor Create(AOwner: TCustomControl); override;
   published
-    property Columns: TDevirtualizedTreeColumns read GetColumns write SetColumns stored False;
+    property Columns: TUiLibTreeColumns read GetColumns write SetColumns stored False;
     property DefaultHeight default 24;
     property Height default 24;
     property Options default [hoColumnResize, hoDblClickResize, hoDrag, hoHotTrack, hoRestrictDrag, hoShowSortGlyphs, hoVisible, hoDisableAnimatedResize, hoHeaderClickAutoSort, hoAutoColumnPopupMenu, hoAutoResizeInclCaption];
   end;
 
-  TDevirtualizedTree = class (TVirtualStringTree)
+  TUiLibTree = class (TVirtualStringTree)
   private
     FPopupMenu: TPopupMenu;
-    FPopupMode: TDevirtualizedTreePopupMode;
+    FPopupMode: TUiLibTreePopupMode;
     FEmptyListMessage: String;
     FEmptyListMessageLines: TArray<String>;
     FMainActionMenuText: String;
     FOnMainAction: TNodeProviderEvent;
     procedure SetEmptyListMessage(Value: String);
-    function GetTreeOptions: TDevirtualizedTreeOptions;
-    procedure SetTreeOptions(Value: TDevirtualizedTreeOptions);
-    function GetHeader: TDevirtualizedTreeHeader;
-    procedure SetHeader(const Value: TDevirtualizedTreeHeader);
+    function GetTreeOptions: TUiLibTreeOptions;
+    procedure SetTreeOptions(Value: TUiLibTreeOptions);
+    function GetHeader: TUiLibTreeHeader;
+    procedure SetHeader(const Value: TUiLibTreeHeader);
   protected
     procedure DoAfterPaint(Canvas: TCanvas); override;
     function GetHeaderClass: TVTHeaderClass; override;
     function GetOptionsClass: TTreeOptionsClass; override;
-    property ClipboardFormats;
   public
     constructor Create(AOwner: TComponent); override;
   published
+    property ClipboardFormats stored False;
     property DrawSelectionMode default smBlendedRectangle;
     property EmptyListMessage: String read FEmptyListMessage write SetEmptyListMessage;
-    property Header: TDevirtualizedTreeHeader read GetHeader write SetHeader;
+    property Header: TUiLibTreeHeader read GetHeader write SetHeader;
     property HintMode default hmHint;
     property IncrementalSearch default isAll;
     property MainActionMenuText: String read FMainActionMenuText write FMainActionMenuText;
     property PopupMenu: TPopupMenu read FPopupMenu write FPopupMenu;
-    property PopupMode: TDevirtualizedTreePopupMode read FPopupMode write FPopupMode default pmOnItemsOnly;
+    property PopupMode: TUiLibTreePopupMode read FPopupMode write FPopupMode default pmOnItemsOnly;
     property SelectionBlendFactor default 64;
-    property TreeOptions: TDevirtualizedTreeOptions read GetTreeOptions write SetTreeOptions;
+    property TreeOptions: TUiLibTreeOptions read GetTreeOptions write SetTreeOptions;
     property OnMainAction: TNodeProviderEvent read FOnMainAction write FOnMainAction;
   end;
 
@@ -97,20 +97,20 @@ uses
 
 procedure Register;
 begin
-  RegisterComponents('NtUtilsUI', [TDevirtualizedTree]);
+  RegisterComponents('NtUtilsUI', [TUiLibTree]);
 end;
 
-{ TDevirtualizedTreeOptions }
+{ TUiLibTreeOptions }
 
-procedure TDevirtualizedTreeOptions.AssignTo;
+procedure TUiLibTreeOptions.AssignTo;
 begin
-  if Dest is TDevirtualizedTreeOptions then
-    TDevirtualizedTreeOptions(Dest).FAutoShowRoot := FAutoShowRoot;
+  if Dest is TUiLibTreeOptions then
+    TUiLibTreeOptions(Dest).FAutoShowRoot := FAutoShowRoot;
 
   inherited;
 end;
 
-constructor TDevirtualizedTreeOptions.Create;
+constructor TUiLibTreeOptions.Create;
 begin
   inherited Create(AOwner);
 
@@ -129,9 +129,9 @@ begin
   FAutoShowRoot := True;
 end;
 
-{ TDevirtualizedTreeHeader }
+{ TUiLibTreeHeader }
 
-constructor TDevirtualizedTreeHeader.Create;
+constructor TUiLibTreeHeader.Create;
 begin
   inherited;
 
@@ -143,24 +143,24 @@ begin
     hoHeaderClickAutoSort, hoAutoColumnPopupMenu, hoAutoResizeInclCaption];
 end;
 
-function TDevirtualizedTreeHeader.GetColumns;
+function TUiLibTreeHeader.GetColumns;
 begin
-  Result := TDevirtualizedTreeColumns(inherited Columns);
+  Result := TUiLibTreeColumns(inherited Columns);
 end;
 
-function TDevirtualizedTreeHeader.GetColumnsClass;
+function TUiLibTreeHeader.GetColumnsClass;
 begin
-  Result := TDevirtualizedTreeColumns;
+  Result := TUiLibTreeColumns;
 end;
 
-procedure TDevirtualizedTreeHeader.SetColumns;
+procedure TUiLibTreeHeader.SetColumns;
 begin
   inherited Columns := Value;
 end;
 
-{ TDevirtualizedTree }
+{ TUiLibTree }
 
-constructor TDevirtualizedTree.Create;
+constructor TUiLibTree.Create;
 begin
   inherited;
 
@@ -174,7 +174,7 @@ begin
   ClipboardFormats.Add('Unicode text');
 end;
 
-procedure TDevirtualizedTree.DoAfterPaint;
+procedure TUiLibTree.DoAfterPaint;
 var
   Sizes: TArray<TSize>;
   TotalHeight, Offset: Integer;
@@ -212,27 +212,27 @@ begin
   inherited DoAfterPaint(Canvas);
 end;
 
-function TDevirtualizedTree.GetHeader;
+function TUiLibTree.GetHeader;
 begin
-  Result := TDevirtualizedTreeHeader(inherited Header);
+  Result := TUiLibTreeHeader(inherited Header);
 end;
 
-function TDevirtualizedTree.GetHeaderClass;
+function TUiLibTree.GetHeaderClass;
 begin
-  Result := TDevirtualizedTreeHeader;
+  Result := TUiLibTreeHeader;
 end;
 
-function TDevirtualizedTree.GetOptionsClass;
+function TUiLibTree.GetOptionsClass;
 begin
-  Result := TDevirtualizedTreeOptions;
+  Result := TUiLibTreeOptions;
 end;
 
-function TDevirtualizedTree.GetTreeOptions;
+function TUiLibTree.GetTreeOptions;
 begin
-  Result := TDevirtualizedTreeOptions(inherited TreeOptions);
+  Result := TUiLibTreeOptions(inherited TreeOptions);
 end;
 
-procedure TDevirtualizedTree.SetEmptyListMessage;
+procedure TUiLibTree.SetEmptyListMessage;
 begin
   if FEmptyListMessage <> Value then
   begin
@@ -242,12 +242,12 @@ begin
   end;
 end;
 
-procedure TDevirtualizedTree.SetHeader;
+procedure TUiLibTree.SetHeader;
 begin
   inherited Header := Value;
 end;
 
-procedure TDevirtualizedTree.SetTreeOptions;
+procedure TUiLibTree.SetTreeOptions;
 begin
   inherited TreeOptions := Value;
 end;

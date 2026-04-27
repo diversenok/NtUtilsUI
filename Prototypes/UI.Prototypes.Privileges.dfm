@@ -4,7 +4,7 @@ object FramePrivileges: TFramePrivileges
   Width = 446
   Height = 294
   TabOrder = 0
-  object VST: TDevirtualizedTree
+  object VST: TUiLibTree
     Left = 0
     Top = 0
     Width = 446

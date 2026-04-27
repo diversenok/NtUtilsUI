@@ -7,7 +7,7 @@ unit NtUiBackend.Sids.Sam;
 interface
 
 uses
-  NtUtils, NtUtilsUI.DevirtualizedTree, NtUiBackend.Sids,
+  NtUtils, NtUtilsUI.Tree, NtUiBackend.Sids,
   DelphiApi.Reflection;
 
 type

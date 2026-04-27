@@ -7,7 +7,7 @@ unit NtUiBackend.Sids.Capabilities;
 interface
 
 uses
-  NtUtilsUI.DevirtualizedTree, NtUtils;
+  NtUtilsUI.Tree, NtUtils;
 
 const
   colName = 0;

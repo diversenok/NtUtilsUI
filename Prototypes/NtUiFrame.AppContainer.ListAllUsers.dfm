@@ -51,7 +51,7 @@ object AppContainerListAllUsersFrame: TAppContainerListAllUsersFrame
     ParentShowHint = False
     ShowHint = True
     TabOrder = 0
-    inherited Tree: TDevirtualizedTree
+    inherited Tree: TUiLibTree
       Height = 385
     end
   end

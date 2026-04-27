@@ -9,12 +9,12 @@ interface
 uses
   Winapi.Windows, System.SysUtils, System.Classes, Vcl.Graphics, Vcl.Controls,
   Vcl.Forms, Vcl.Dialogs, VirtualTrees,
-  NtUtilsUI.DevirtualizedTree, NtUiBackend.AppContainers,
+  NtUtilsUI.Tree, NtUiBackend.AppContainers,
   NtUiCommon.Interfaces, NtUtilsUI;
 
 type
   TAppContainerViewFrame = class(TFrame, IHasDefaultCaption)
-    Tree: TDevirtualizedTree;
+    Tree: TUiLibTree;
   private
     FInfo: TRtlxAppContainerInfo;
     procedure InspectMenu(Node: INodeProvider);

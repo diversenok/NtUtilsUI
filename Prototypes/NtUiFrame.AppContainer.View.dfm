@@ -8,7 +8,7 @@ object AppContainerViewFrame: TAppContainerViewFrame
   ParentShowHint = False
   ShowHint = True
   TabOrder = 0
-  object Tree: TDevirtualizedTree
+  object Tree: TUiLibTree
     Left = 0
     Top = 0
     Width = 620

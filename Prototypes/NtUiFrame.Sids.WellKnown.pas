@@ -9,17 +9,15 @@ interface
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes,
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, VirtualTrees,
-  NtUtilsUI.DevirtualizedTree,
+  NtUtilsUI.Tree,
   NtUiCommon.Interfaces, NtUiBackend.Sids.WellKnown, NtUtilsUI, NtUtilsUI.Base,
-  NtUtilsUI.DevirtualizedTree.Search;
+  NtUtilsUI.Tree.Search;
 
 type
   TWellKnownSidsFrame = class(TFrame, IHasDefaultCaption, IDelayedLoad)
-    Tree: TDevirtualizedTree;
+    Tree: TUiLibTree;
     SearchBox: TUiLibTreeSearchBox;
   private
-    Backend: TTreeNodeInterfaceProvider;
-    BackendRef: IUnknown;
     function GetDefaultCaption: String;
   protected
     procedure CreateWnd; override;
@@ -36,11 +34,11 @@ procedure TWellKnownSidsFrame.DelayedLoad;
 var
   Provider: IWellKnownSidNode;
 begin
-  Backend.BeginUpdateAuto;
-  Backend.ClearItems;
+  Tree.BeginUpdateAuto;
+  Tree.Clear;
 
   for Provider in NtUiLibMakeWellKnownSidNodes do
-    Backend.AddItem(Provider);
+    Tree.AddChild(Provider);
 end;
 
 function TWellKnownSidsFrame.GetDefaultCaption;
@@ -52,8 +50,6 @@ procedure TWellKnownSidsFrame.CreateWnd;
 begin
   inherited;
   SearchBox.AttachToTree(Tree);
-  Backend := TTreeNodeInterfaceProvider.Create(Tree);
-  BackendRef := Backend; // Make an owning reference
 end;
 
 end.

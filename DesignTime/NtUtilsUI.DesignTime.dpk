@@ -35,14 +35,14 @@ requires
   vcl;
 
 contains
-  NtUtilsUI.DevirtualizedTree in 'NtUtilsUI.DevirtualizedTree.pas',
+  NtUtilsUI.Tree in 'NtUtilsUI.Tree.pas',
   NtUtilsUI.StdCtrls in 'NtUtilsUI.StdCtrls.pas',
   NtUtilsUI.ListView in 'NtUtilsUI.ListView.pas',
   NtUtilsUI.Base in 'NtUtilsUI.Base.pas',
   NtUtilsUI.Sid.Integrity in 'NtUtilsUI.Sid.Integrity.pas',
   NtUtilsUI.Forms in 'NtUtilsUI.Forms.pas',
   NtUtilsUI.SearchBox in 'NtUtilsUI.SearchBox.pas',
-  NtUtilsUI.DevirtualizedTree.Search in 'NtUtilsUI.DevirtualizedTree.Search.pas',
+  NtUtilsUI.Tree.Search in 'NtUtilsUI.Tree.Search.pas',
   NtUtilsUI.Guid in 'NtUtilsUI.Guid.pas',
   NtUtilsUI.Number in 'NtUtilsUI.Number.pas',
   NtUtilsUI.Sid.Trust in 'NtUtilsUI.Sid.Trust.pas';

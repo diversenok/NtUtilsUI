@@ -9,13 +9,13 @@ interface
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes,
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, VirtualTrees,
-  NtUtilsUI.DevirtualizedTree, Vcl.StdCtrls,
+  NtUtilsUI.Tree, Vcl.StdCtrls,
   Vcl.ExtCtrls, Ntapi.WinNt, DelphiUtils.AutoObjects, NtUiCommon.Interfaces,
   NtUiBackend.Bits, NtUtils.SysUtils, NtUtilsUI, NtUtilsUI.StdCtrls;
 
 type
   TBitsFrame = class(TFrame, IHasDefaultCaption)
-    Tree: TDevirtualizedTree;
+    Tree: TUiLibTree;
     BottomPanel: TPanel;
     tbxValue: TUiLibEdit;
     btnClear: TButton;

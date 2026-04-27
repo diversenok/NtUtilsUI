@@ -8,16 +8,12 @@ object UserProfilesFrame: TUserProfilesFrame
   ParentShowHint = False
   ShowHint = True
   TabOrder = 0
-  object Tree: TDevirtualizedTree
+  object Tree: TUiLibTree
     Left = 0
     Top = 26
     Width = 700
     Height = 224
     Align = alClient
-    ClipboardFormats.Strings = (
-      'CSV'
-      'Plain text'
-      'Unicode text')
     EmptyListMessage = ''
     Header.AutoSizeIndex = 0
     TabOrder = 0

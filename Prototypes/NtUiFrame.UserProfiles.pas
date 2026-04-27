@@ -9,14 +9,14 @@ interface
 uses
   System.SysUtils, System.Classes, Vcl.Graphics, Vcl.Controls, Vcl.Forms,
   Vcl.Dialogs, VirtualTrees,
-  NtUtilsUI.DevirtualizedTree, NtUiCommon.Interfaces, NtUiBackend.UserProfiles,
-  NtUtilsUI, NtUtilsUI.Base, NtUtilsUI.DevirtualizedTree.Search;
+  NtUtilsUI.Tree, NtUiCommon.Interfaces, NtUiBackend.UserProfiles,
+  NtUtilsUI, NtUtilsUI.Base, NtUtilsUI.Tree.Search;
 
 type
   TUserProfilesFrame = class(TFrame, IHasDefaultCaption,
     IAllowsDefaultNodeAction, IHasModalResult, IHasModalResultObservation)
   published
-    Tree: TDevirtualizedTree;
+    Tree: TUiLibTree;
     SearchBox: TUiLibTreeSearchBox;
   private
     Backend: TTreeNodeInterfaceProvider;
@@ -32,7 +32,7 @@ type
 implementation
 
 uses
-  NtUtils, NtUtils.Profiles, NtUiCommon.Prototypes;
+  NtUtils, NtUtils.Profiles, NtUiCommon.Prototypes, NtUiLib.Errors;
 
 {$R *.dfm}
 
@@ -50,16 +50,20 @@ var
   Status: TNtxStatus;
 begin
   Status := UiLibEnumerateProfiles(Providers);
-  Backend.SetStatus(Status);
+
+  if Status.IsSuccess then
+    Tree.EmptyListMessage := 'No items to display'
+  else
+    Tree.EmptyListMessage := 'Unable to query:'#$D#$A + Status.ToString;
 
   if not Status.IsSuccess then
     Exit;
 
-  Backend.BeginUpdateAuto;
-  Backend.ClearItems;
+  Tree.BeginUpdateAuto;
+  Tree.Clear;
 
   for Provider in Providers do
-    Backend.AddItem(Provider);
+    Tree.AddChild(Provider);
 end;
 
 procedure TUserProfilesFrame.Loaded;

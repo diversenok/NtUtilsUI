@@ -5,17 +5,15 @@ interface
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes,
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, VirtualTrees,
-  NtUtilsUI.DevirtualizedTree,
+  NtUtilsUI.Tree,
   NtUiCommon.Interfaces, NtUtilsUI, NtUtilsUI.Base,
-  NtUtilsUI.DevirtualizedTree.Search;
+  NtUtilsUI.Tree.Search;
 
 type
   TSamSidsFrame = class(TFrame, IHasDefaultCaption, IDelayedLoad)
-    Tree: TDevirtualizedTree;
+    Tree: TUiLibTree;
     SearchBox: TUiLibTreeSearchBox;
   private
-    Backend: TTreeNodeInterfaceProvider;
-    BackendRef: IUnknown;
     function GetDefaultCaption: String;
   protected
     procedure CreateWnd; override;
@@ -27,7 +25,7 @@ type
 implementation
 
 uses
-  NtUtils, NtUiBackend.Sids.Sam;
+  NtUtils, NtUiBackend.Sids.Sam, NtUiLib.Errors;
 
 {$R *.dfm}
 
@@ -41,31 +39,31 @@ var
 begin
   Status := NtUiLibCollectSamNodes(Nodes);
 
-  Backend.BeginUpdateAuto;
-  Backend.ClearItems;
+  Tree.BeginUpdateAuto;
+  Tree.Clear;
 
   if not Status.IsSuccess then
   begin
-    Backend.SetStatus(Status);
+    Tree.EmptyListMessage := 'Unable to query:'#$D#$A + Status.ToString;
     Exit;
   end;
 
   for i := 0 to High(Nodes) do
   begin
     // Domain
-    Backend.AddItem(Nodes[i].Domain);
+    Tree.AddChild(Nodes[i].Domain);
 
     // Groups
     for j := 0 to High(Nodes[i].Groups) do
-      Backend.AddItem(Nodes[i].Groups[j], Nodes[i].Domain);
+      Tree.AddChild(Nodes[i].Groups[j], Nodes[i].Domain);
 
     // Aliases
     for j := 0 to High(Nodes[i].Aliases) do
-      Backend.AddItem(Nodes[i].Aliases[j], Nodes[i].Domain);
+      Tree.AddChild(Nodes[i].Aliases[j], Nodes[i].Domain);
 
     // Users
     for j := 0 to High(Nodes[i].Users) do
-      Backend.AddItem(Nodes[i].Users[j], Nodes[i].Domain);
+      Tree.AddChild(Nodes[i].Users[j], Nodes[i].Domain);
   end;
 end;
 
@@ -78,8 +76,6 @@ procedure TSamSidsFrame.CreateWnd;
 begin
   inherited;
   SearchBox.AttachToTree(Tree);
-  Backend := TTreeNodeInterfaceProvider.Create(Tree);
-  BackendRef := Backend; // Make an owning reference
 end;
 
 end.

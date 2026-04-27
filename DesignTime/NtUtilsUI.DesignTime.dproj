@@ -118,14 +118,14 @@
         <DCCReference Include="rtl.dcp"/>
         <DCCReference Include="VirtualTreesDD.dcp"/>
         <DCCReference Include="vcl.dcp"/>
-        <DCCReference Include="NtUtilsUI.DevirtualizedTree.pas"/>
+        <DCCReference Include="NtUtilsUI.Tree.pas"/>
         <DCCReference Include="NtUtilsUI.StdCtrls.pas"/>
         <DCCReference Include="NtUtilsUI.ListView.pas"/>
         <DCCReference Include="NtUtilsUI.Base.pas"/>
         <DCCReference Include="NtUtilsUI.Sid.Integrity.pas"/>
         <DCCReference Include="NtUtilsUI.Forms.pas"/>
         <DCCReference Include="NtUtilsUI.SearchBox.pas"/>
-        <DCCReference Include="NtUtilsUI.DevirtualizedTree.Search.pas"/>
+        <DCCReference Include="NtUtilsUI.Tree.Search.pas"/>
         <DCCReference Include="NtUtilsUI.Guid.pas"/>
         <DCCReference Include="NtUtilsUI.Number.pas"/>
         <DCCReference Include="NtUtilsUI.Sid.Trust.pas"/>

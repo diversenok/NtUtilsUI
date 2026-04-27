@@ -3,7 +3,7 @@ unit NtUiBackend.Sids;
 interface
 
 uses
-  NtUtilsUI.DevirtualizedTree, NtUtils.Lsa.Sid;
+  NtUtilsUI.Tree, NtUtils.Lsa.Sid;
 
 type
   ISidNode = interface (INodeProvider)

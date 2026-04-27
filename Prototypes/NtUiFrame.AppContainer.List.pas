@@ -8,9 +8,9 @@ interface
 
 uses
   Vcl.Controls, System.Classes, Vcl.Forms, VirtualTrees,
-  NtUtilsUI.DevirtualizedTree, NtUtils,
+  NtUtilsUI.Tree, NtUtils,
   NtUiCommon.Interfaces, NtUiBackend.AppContainers, Vcl.Menus,
-  NtUtilsUI, NtUtilsUI.Base, NtUtilsUI.DevirtualizedTree.Search;
+  NtUtilsUI, NtUtilsUI.Base, NtUtilsUI.Tree.Search;
 
 type
   TAppContainerListFrame = class (TFrame, IHasDefaultCaption,
@@ -22,7 +22,7 @@ type
       const HitInfo: THitInfo);
   published
     SearchBox: TUiLibTreeSearchBox;
-    Tree: TDevirtualizedTree;
+    Tree: TUiLibTree;
     procedure FrameMainActionSet(Sender: TObject);
   private
     Backend: TTreeNodeInterfaceProvider;
@@ -38,7 +38,8 @@ type
 implementation
 
 uses
-  NtUtils.Errors, NtUiCommon.Prototypes, System.SysUtils, Winapi.Windows;
+  NtUtils.Errors, NtUiCommon.Prototypes, System.SysUtils, Winapi.Windows,
+  NtUiLib.Errors;
 
 {$BOOLEVAL OFF}
 {$IFOPT R+}{$DEFINE R+}{$ENDIF}
@@ -50,16 +51,15 @@ uses
 
 procedure TAppContainerListFrame.cmInspectClick(Sender: TObject);
 var
-  NodeProvider: INodeProvider;
+  Node: PVirtualNode;
   AppContainerNode: IAppContainerNode;
 begin
   if not Assigned(NtUiLibShowAppContainer) then
     Exit;
 
-  NodeProvider := Backend.FocusedNode;
+  Node := Tree.HighlightedNode;
 
-  if Assigned(NodeProvider) and NodeProvider.QueryInterface(IAppContainerNode,
-    AppContainerNode).IsSuccess then
+  if Node.TryGetProvider(IAppContainerNode, AppContainerNode) then
     NtUiLibShowAppContainer(AppContainerNode.Info);
 end;
 
@@ -96,24 +96,28 @@ var
   Parent, Child: IAppContainerNode;
   Status: TNtxStatus;
 begin
-  Backend.BeginUpdateAuto;
-  Backend.ClearItems;
+  Tree.BeginUpdateAuto;
+  Tree.Clear;
 
   // Enumerate parent AppContainers
   Status := UiLibEnumerateAppContainers(Parents, User);
-  Backend.SetStatus(Status);
+
+  if Status.IsSuccess then
+    Tree.EmptyListMessage := 'No items to display'
+  else
+    Tree.EmptyListMessage := 'Unable to query:'#$D#$A + Status.ToString;
 
   if not Status.IsSuccess then
     Exit;
 
   for Parent in Parents do
   begin
-    Backend.AddItem(Parent);
+    Tree.AddChild(Parent);
 
     // Enumerate child AppContainers
     if UiLibEnumerateAppContainers(Children, User, Parent.Info.Sid).IsSuccess then
       for Child in Children do
-        Backend.AddItem(Child, Parent);
+        Tree.AddChild(Child, Parent);
   end;
 end;
 

@@ -12,7 +12,7 @@ object CapabilityListFrame: TCapabilityListFrame
     Align = alTop
     TabOrder = 1
   end
-  object Tree: TDevirtualizedTree
+  object Tree: TUiLibTree
     AlignWithMargins = True
     Left = 0
     Top = 26
@@ -23,10 +23,6 @@ object CapabilityListFrame: TCapabilityListFrame
     Margins.Right = 0
     Margins.Bottom = 0
     Align = alClient
-    ClipboardFormats.Strings = (
-      'CSV'
-      'Plain text'
-      'Unicode text')
     EmptyListMessage = 'Not initialized'
     Header.AutoSizeIndex = 0
     TabOrder = 0

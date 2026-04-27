@@ -1,4 +1,4 @@
-unit NtUtilsUI.DevirtualizedTree.Search;
+unit NtUtilsUI.Tree.Search;
 
 {
   This module contains a (stripped down) design-time component definition for

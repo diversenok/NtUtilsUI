@@ -7,7 +7,7 @@ unit NtUiBackend.UserProfiles;
 interface
 
 uses
-  NtUtilsUI.DevirtualizedTree, NtUtils.Profiles, NtUtils,
+  NtUtilsUI.Tree, NtUtils.Profiles, NtUtils,
   NtUiCommon.Prototypes;
 
 const

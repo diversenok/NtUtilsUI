@@ -7,7 +7,7 @@ unit NtUiBackend.Acl;
 interface
 
 uses
-  Ntapi.WinNt, NtUtilsUI.DevirtualizedTree, NtUtils, NtUtils.Security.Acl;
+  Ntapi.WinNt, NtUtilsUI.Tree, NtUtils, NtUtils.Security.Acl;
 
 type
   IAceNode = interface (INodeProvider)
@@ -27,37 +27,37 @@ function UiLibMakeAceNode(
 
 // Make sure ACE-specific columns are visible in the tree
 procedure UiLibUnhideAceSpecificColumns(
-  Tree: TDevirtualizedTree;
+  Tree: TUiLibTree;
   const Ace: TAceData
 );
 
 // Add a new ACE node to the ACL tree control preserving canonical order
 procedure UiLibInsertAceNode(
-  Tree: TDevirtualizedTree;
+  Tree: TUiLibTree;
   const Ace: TAceData;
   AccessMaskType: Pointer
 );
 
 // Add a collection of ACE nodes to the ACL tree control
 procedure UiLibLoadAceNodes(
-  Tree: TDevirtualizedTree;
+  Tree: TUiLibTree;
   const Aces: TArray<TAceData>;
   AccessMaskType: Pointer
 );
 
 // Check if an ACL requires canonicalization
 function UiLibIsCanonicalAcl(
-  Tree: TDevirtualizedTree
+  Tree: TUiLibTree
 ): Boolean;
 
 // Reorder ACEs in an ACL control
 procedure UiLibCanonicalizeAcl(
-  Tree: TDevirtualizedTree
+  Tree: TUiLibTree
 );
 
 // Collect all ACEs from an ACL control
 function UiLibCollectAces(
-  Tree: TDevirtualizedTree
+  Tree: TUiLibTree
 ): TArray<TAceData>;
 
 implementation
@@ -249,7 +249,7 @@ begin
 end;
 
 function UiLibChooseAceIndex(
-  Tree: TDevirtualizedTree;
+  Tree: TUiLibTree;
   Category: TAceCategory
 ): INodeProvider;
 var

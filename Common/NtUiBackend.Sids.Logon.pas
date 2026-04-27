@@ -4,7 +4,7 @@ interface
 
 uses
   Ntapi.WinNt, Ntapi.NtSecApi, NtUtils, NtUiBackend.Sids,
-  NtUtilsUI.DevirtualizedTree;
+  NtUtilsUI.Tree;
 
 type
   ILogonSessionErrorNode = interface (INodeProvider)

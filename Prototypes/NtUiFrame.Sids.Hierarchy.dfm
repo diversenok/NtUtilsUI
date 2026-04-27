@@ -6,7 +6,7 @@ object SidHierarchyFrame: TSidHierarchyFrame
   Constraints.MinHeight = 120
   Constraints.MinWidth = 300
   TabOrder = 0
-  object Tree: TDevirtualizedTree
+  object Tree: TUiLibTree
     AlignWithMargins = True
     Left = 0
     Top = 24
@@ -16,10 +16,6 @@ object SidHierarchyFrame: TSidHierarchyFrame
     Margins.Right = 0
     Margins.Bottom = 0
     Align = alClient
-    ClipboardFormats.Strings = (
-      'CSV'
-      'Plain text'
-      'Unicode text')
     EmptyListMessage = 'Not initialized'
     Header.AutoSizeIndex = 0
     Header.Options = [hoColumnResize, hoDblClickResize, hoDrag, hoHotTrack, hoRestrictDrag, hoShowSortGlyphs, hoVisible, hoDisableAnimatedResize, hoAutoColumnPopupMenu, hoAutoResizeInclCaption]

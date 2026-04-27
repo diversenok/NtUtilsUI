@@ -7,7 +7,7 @@ unit NtUiCommon.Interfaces;
 interface
 
 uses
-  NtUtilsUI.DevirtualizedTree, VirtualTrees, System.Classes,
+  NtUtilsUI.Tree, VirtualTrees, System.Classes,
   DelphiUtils.AutoObjects, NtUtils, NtUtilsUI;
 
 type
@@ -26,8 +26,6 @@ type
   end;
 
   { Tree interfaces }
-
-  TNodeProviderEvent = procedure (const Node: INodeProvider) of object;
 
   // Indicates a component that allows controlling default tree menu action
   IAllowsDefaultNodeAction = interface
@@ -62,50 +60,31 @@ type
 
 type
   TTreeEventSubscription = set of (
-    teSelectionChange,
-    teCheckedChange
+    teSelectionChange
   );
 
   TBaseTreeExtension = class abstract (TInterfacedObject)
   private
-    [Weak] FTree: TDevirtualizedTree;
+    [Weak] FTree: TUiLibTree;
   protected
     function Attached: Boolean;
-    property Tree: TDevirtualizedTree read FTree;
-    constructor Create(Tree: TDevirtualizedTree);
+    property Tree: TUiLibTree read FTree;
+    constructor Create(Tree: TUiLibTree);
   end;
 
   TTreeNodeInterfaceProvider = class (TBaseTreeExtension, ICanShowEmptyMessage,
     IAllowsDefaultNodeAction, IHasModalResult, IHasModalResultObservation)
   private
-    FOnNodeSelectionChange: TNotifyEvent;
-    FOnNodeCheckedChange: TNotifyEvent;
     FOnModalResultChange: TNotifyEvent;
     FOnMainAction: TNodeProviderEvent;
     FOnMainActionSet: TNotifyEvent;
     FModalResultFilter: TGuid;
     procedure TreeSelectionChanged(Sender: TBaseVirtualTree; Node: PVirtualNode);
-    procedure TreeCheckedChanged(Sender: TBaseVirtualTree; Node: PVirtualNode);
     procedure TreeMainAction(Node: INodeProvider);
     function GetOnMainActionSet: TNotifyEvent;
     procedure SetOnMainActionSet(const Value: TNotifyEvent);
   public
-    procedure SetStatus(const Status: TNtxStatus);
     procedure SetEmptyMessage(const Value: String);
-    function NodeCount(const ProviderId: TGuid): Cardinal;
-    function Nodes(const ProviderId: TGuid): TArray<INodeProvider>;
-    function SelectedNodeCount(const ProviderId: TGuid): Cardinal;
-    function SelectedNodes(const ProviderId: TGuid): TArray<INodeProvider>;
-    function CheckedNodeCount(const ProviderId: TGuid): Cardinal;
-    function CheckedNodes(const ProviderId: TGuid): TArray<INodeProvider>;
-    function FocusedNode: INodeProvider;
-    function BeginUpdateAuto: IAutoReleasable;
-    procedure ClearItems;
-    procedure AddItem(const Item: INodeProvider; const Parent: INodeProvider = nil);
-    function GetOnSelectionChange: TNotifyEvent;
-    procedure SetOnSelectionChange(const Callback: TNotifyEvent);
-    function GetOnCheckedChange: TNotifyEvent;
-    procedure SetOnCheckedChange(const Callback: TNotifyEvent);
     function GetOnMainAction: TNodeProviderEvent;
     procedure SetOnMainAction(const Value: TNodeProviderEvent);
     function GetMainActionCaption: String;
@@ -116,7 +95,7 @@ type
     function GetOnModalResultChanged: TNotifyEvent;
     procedure SetOnModalResultChanged(const Callback: TNotifyEvent);
     property ModalResultFilter: TGuid read FModalResultFilter write FModalResultFilter;
-    constructor Create(Tree: TDevirtualizedTree; SubscribeTo: TTreeEventSubscription = []);
+    constructor Create(Tree: TUiLibTree; SubscribeTo: TTreeEventSubscription = []);
   end;
 
 implementation
@@ -142,69 +121,6 @@ end;
 
 { TTreeNodeInterfaceProvider }
 
-procedure TTreeNodeInterfaceProvider.AddItem;
-begin
-  if not Attached then
-    Exit;
-
-  Tree.AddChild(Item, Parent);
-end;
-
-function TTreeNodeInterfaceProvider.BeginUpdateAuto;
-begin
-  if not Attached then
-    Exit(nil);
-
-  Tree.BeginUpdate;
-
-  Result := Auto.Defer(
-    procedure
-    begin
-      // This will capture the entire object with its weak tree reference
-      if Attached then
-        Tree.EndUpdate;
-    end
-  );
-end;
-
-function TTreeNodeInterfaceProvider.CheckedNodeCount;
-var
-  Node: PVirtualNode;
-begin
-  Result := 0;
-
-  if Attached then
-    for Node in FTree.CheckedNodes do
-      if Node.HasProvider(ProviderId) then
-        Inc(Result);
-end;
-
-function TTreeNodeInterfaceProvider.CheckedNodes;
-var
-  Node: PVirtualNode;
-  Provider: INodeProvider;
-  Count: Cardinal;
-begin
-  if not Attached then
-    Exit(nil);
-
-  Count := 0;
-  SetLength(Result, CheckedNodeCount(ProviderId));
-
-  for Node in FTree.CheckedNodes do
-    if Node.TryGetProvider(ProviderId, Provider) then
-    begin
-      Result[Count] := Provider;
-      Inc(Count);
-    end;
-end;
-
-procedure TTreeNodeInterfaceProvider.ClearItems;
-begin
-  if Attached then
-    Tree.Clear;
-end;
-
 constructor TTreeNodeInterfaceProvider.Create;
 begin
   inherited Create(Tree);
@@ -218,20 +134,8 @@ begin
       Tree.OnRemoveFromSelection := TreeSelectionChanged;
     end;
 
-    // Check state event
-    if teCheckedChange in SubscribeTo then
-      Tree.OnChecked := TreeCheckedChanged;
-
     FModalResultFilter := INodeProvider;
   end;
-end;
-
-function TTreeNodeInterfaceProvider.FocusedNode;
-begin
-  if Attached and (FTree.SelectedCount = 1) then
-    Result := FTree.FocusedNode.Provider
-  else
-    Result := nil;
 end;
 
 function TTreeNodeInterfaceProvider.GetHasModalResult;
@@ -264,11 +168,6 @@ begin
     Exit(nil);
 end;
 
-function TTreeNodeInterfaceProvider.GetOnCheckedChange;
-begin
-  Result := FOnNodeCheckedChange;
-end;
-
 function TTreeNodeInterfaceProvider.GetOnMainAction;
 begin
   Result := FOnMainAction;
@@ -284,75 +183,6 @@ begin
   Result := FOnModalResultChange;
 end;
 
-function TTreeNodeInterfaceProvider.GetOnSelectionChange;
-begin
-  Result := FOnNodeSelectionChange;
-end;
-
-function TTreeNodeInterfaceProvider.NodeCount;
-var
-  Node: PVirtualNode;
-begin
-  Result := 0;
-
-  if Attached then
-    for Node in FTree.Nodes do
-      if Node.HasProvider(ProviderId) then
-        Inc(Result);
-end;
-
-function TTreeNodeInterfaceProvider.Nodes;
-var
-  Node: PVirtualNode;
-  Provider: INodeProvider;
-  Count: Cardinal;
-begin
-  if not Attached then
-    Exit(nil);
-
-  Count := 0;
-  SetLength(Result, NodeCount(ProviderId));
-
-  for Node in FTree.Nodes do
-    if Node.TryGetProvider(ProviderId, Provider) then
-    begin
-      Result[Count] := Provider;
-      Inc(Count);
-    end;
-end;
-
-function TTreeNodeInterfaceProvider.SelectedNodeCount;
-var
-  Node: PVirtualNode;
-begin
-  Result := 0;
-
-  if Attached then
-    for Node in FTree.SelectedNodes do
-      if Node.HasProvider(ProviderId) then
-        Inc(Result);
-end;
-
-function TTreeNodeInterfaceProvider.SelectedNodes;
-var
-  Node: PVirtualNode;
-  Provider: INodeProvider;
-  Count: Cardinal;
-begin
-  if not Attached then
-    Exit(nil);
-
-  Count := 0;
-  SetLength(Result, SelectedNodeCount(ProviderId));
-
-  for Node in FTree.SelectedNodes do
-    if Node.TryGetProvider(ProviderId, Provider) then
-    begin
-      Result[Count] := Provider;
-      Inc(Count);
-    end;
-end;
-
 procedure TTreeNodeInterfaceProvider.SetEmptyMessage;
 begin
   if Attached then
@@ -363,11 +193,6 @@ procedure TTreeNodeInterfaceProvider.SetMainActionCaption;
 begin
   if Attached then
     FTree.MainActionMenuText := Value;
-end;
-
-procedure TTreeNodeInterfaceProvider.SetOnCheckedChange;
-begin
-  FOnNodeCheckedChange := Callback;
 end;
 
 procedure TTreeNodeInterfaceProvider.SetOnMainAction;
@@ -396,28 +221,6 @@ begin
   FOnModalResultChange := Callback;
 end;
 
-procedure TTreeNodeInterfaceProvider.SetOnSelectionChange;
-begin
-  FOnNodeSelectionChange := Callback;
-end;
-
-procedure TTreeNodeInterfaceProvider.SetStatus;
-begin
-  if not Attached then
-    Exit;
-
-  if Status.IsSuccess then
-    SetEmptyMessage('No items to display')
-  else
-    SetEmptyMessage('Unable to query:'#$D#$A + Status.ToString);
-end;
-
-procedure TTreeNodeInterfaceProvider.TreeCheckedChanged;
-begin
-  if Assigned(FOnNodeCheckedChange) then
-    FOnNodeCheckedChange(Sender);
-end;
-
 procedure TTreeNodeInterfaceProvider.TreeMainAction;
 begin
   if Assigned(FOnMainAction) then
@@ -426,9 +229,6 @@ end;
 
 procedure TTreeNodeInterfaceProvider.TreeSelectionChanged;
 begin
-  if Assigned(FOnNodeSelectionChange) then
-    FOnNodeSelectionChange(Sender);
-
   if Assigned(FOnModalResultChange) then
     FOnModalResultChange(Sender);
 end;

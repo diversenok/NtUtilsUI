@@ -6,7 +6,7 @@ uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes,
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, VirtualTrees,
   VirtualTrees.Types, NtUtils, NtUtils.Lsa.Sid, Vcl.Menus, DelphiUtils.Arrays,
-  Ntapi.ntseapi, NtUtilsUI.DevirtualizedTree;
+  Ntapi.ntseapi, NtUtilsUI.Tree;
 
 const
   colFriendly = 0;
@@ -41,7 +41,7 @@ type
   );
 
   TFrameGroups = class(TFrame)
-    VST: TDevirtualizedTree;
+    VST: TUiLibTree;
   private
     FDefaultAction: TDefaultAction;
     FViewingMode: TGroupViewingMode;
@@ -251,11 +251,7 @@ var
   NewGroup: TGroup;
   Lookup: TTranslatedName;
 begin
-  if VST.SelectedCount <> 1 then
-    Exit;
-
-  VST.BeginUpdateAuto;
-  Node := VST.FocusedNode;
+  Node := VST.HighlightedNode;
 
   if not Node.TryGetProvider(IGroup, Provider) then
     Exit;
@@ -269,8 +265,8 @@ begin
   else if not LsaxLookupSid(NewGroup.Sid, Lookup).IsSuccess then
     Lookup := Default(TTranslatedName);
 
+  // Replace the node data
   Node.Provider := TGroupNodeData.Create(NewGroup, Lookup, FViewingMode);
-  VST.InvalidateNode(Node);
 end;
 
 procedure TFrameGroups.EditSelectedGroups;
@@ -302,8 +298,6 @@ begin
     // Reuse SID lookup
     Node.Provider := TGroupNodeData.Create(NewGroup, Provider.Lookup,
       FViewingMode);
-
-    VST.InvalidateNode(Node);
   end;
 end;
 

@@ -12,7 +12,7 @@ object LogonSidsFrame: TLogonSidsFrame
     Align = alTop
     TabOrder = 0
   end
-  object Tree: TDevirtualizedTree
+  object Tree: TUiLibTree
     AlignWithMargins = True
     Left = 0
     Top = 24
@@ -22,10 +22,6 @@ object LogonSidsFrame: TLogonSidsFrame
     Margins.Right = 0
     Margins.Bottom = 0
     Align = alClient
-    ClipboardFormats.Strings = (
-      'CSV'
-      'Plain text'
-      'Unicode text')
     EmptyListMessage = 'Not initialized'
     Header.AutoSizeIndex = 0
     Header.MainColumn = 1

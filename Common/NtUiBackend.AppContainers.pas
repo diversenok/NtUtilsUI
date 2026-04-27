@@ -7,7 +7,7 @@ unit NtUiBackend.AppContainers;
 interface
 
 uses
-  NtUtilsUI.DevirtualizedTree, NtUtils.Security.AppContainer, NtUtils;
+  NtUtilsUI.Tree, NtUtils.Security.AppContainer, NtUtils;
 
 const
   colFriendlyName = 0;
@@ -53,7 +53,7 @@ function UiLibEnumerateAppContainers(
 
 // Add property nodes for AppContainer
 procedure UiLibMakeAppContainerPropertyNodes(
-  Tree: TDevirtualizedTree;
+  Tree: TUiLibTree;
   const Info: TRtlxAppContainerInfo
 );
 

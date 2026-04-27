@@ -8,14 +8,14 @@ interface
 
 uses
   System.SysUtils, System.Classes, Vcl.Graphics, Vcl.Controls, Vcl.Forms,
-  Vcl.Dialogs, Vcl.StdCtrls, NtUtilsUI.DevirtualizedTree, NtUtilsUI;
+  Vcl.Dialogs, Vcl.StdCtrls, NtUtilsUI.Tree, NtUtilsUI;
 
 type
   TFrameHostDialog = class(TUiLibChildForm)
     btnClose: TButton;
     btnSelect: TButton;
     procedure btnCloseClick(Sender: TObject);
-    procedure DefaultActionChosen(const Node: INodeProvider);
+    procedure DefaultActionChosen(Node: INodeProvider);
     procedure btnSelectClick(Sender: TObject);
   private
     FFrame: TWinControl;

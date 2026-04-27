@@ -5,17 +5,15 @@ interface
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes,
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, VirtualTrees,
-  NtUtilsUI.DevirtualizedTree, NtUiCommon.Interfaces,
-  NtUtilsUI, NtUtilsUI.Base, NtUtilsUI.DevirtualizedTree.Search;
+  NtUtilsUI.Tree, NtUiCommon.Interfaces,
+  NtUtilsUI, NtUtilsUI.Base, NtUtilsUI.Tree.Search;
 
 type
   TCapabilityListFrame = class(TFrame, IHasDefaultCaption, IHasModalResult,
     IDelayedLoad)
     SearchBox: TUiLibTreeSearchBox;
-    Tree: TDevirtualizedTree;
+    Tree: TUiLibTree;
   private
-    Backend: TTreeNodeInterfaceProvider;
-    BackendRef: IUnknown;
     UseCheckboxes: Boolean;
     function GetDefaultCaption: String;
     function GetModalResult: IInterface;
@@ -42,17 +40,17 @@ var
   i: Integer;
 begin
   NodeInfo := UiLibMakeCapabilityNodes;
-  Backend.BeginUpdateAuto;
-  Backend.ClearItems;
+  Tree.BeginUpdateAuto;
+  Tree.Clear;
   Tree.EmptyListMessage := 'No items to display';
 
   for Category := Low(TCapabilityCategory) to High(TCapabilityCategory) do
   begin
-    Backend.AddItem(NodeInfo[Category].Group);
+    Tree.AddChild(NodeInfo[Category].Group);
 
     for i := 0 to High(NodeInfo[Category].Items) do
     begin
-      Backend.AddItem(NodeInfo[Category].Items[i], NodeInfo[Category].Group);
+      Tree.AddChild(NodeInfo[Category].Items[i], NodeInfo[Category].Group);
 
       if UseCheckboxes then
         Tree.CheckType[NodeInfo[Category].Items[i].Node] := ctCheckBox;
@@ -95,8 +93,6 @@ procedure TCapabilityListFrame.Loaded;
 begin
   inherited;
   SearchBox.AttachToTree(Tree);
-  Backend := TTreeNodeInterfaceProvider.Create(Tree, [teSelectionChange]);
-  BackendRef := Backend; // Make an owning reference
 end;
 
 function Initializer(ShowCheckboxes: Boolean): TWinControlFactory;
