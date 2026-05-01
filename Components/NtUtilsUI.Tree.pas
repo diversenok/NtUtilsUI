@@ -73,7 +73,7 @@ type
     function Count: Integer;
     function Nodes: TArray<PVirtualNode>;
     function Providers: TArray<INodeProvider>; overload;
-    function Providers<I: INodeProvider>(const IID: TGuid): TArray<I>; overload;
+    function Providers<I: INodeProvider>: TArray<I>; overload;
   end;
 
   TUiLibTreeMenuShortCut = record
@@ -389,7 +389,7 @@ implementation
 
 uses
   Winapi.Windows, Winapi.ShLwApi, System.SysUtils, Vcl.Clipbrd, Vcl.Themes,
-  NtUtils.SysUtils, DelphiUtils.AutoObjects;
+  NtUtils.SysUtils, DelphiUtils.AutoObjects, DelphiUtils.LiteRTTI.Base;
 
 {$BOOLEVAL OFF}
 {$IFOPT R+}{$DEFINE R+}{$ENDIF}
@@ -507,14 +507,16 @@ begin
   end;
 end;
 
-function TVTVirtualNodeEnumerationHelper.Providers<I>(
-  const IID: TGuid
-): TArray<I>;
+function TVTVirtualNodeEnumerationHelper.Providers<I>: TArray<I>;
 var
   Node: PVirtualNode;
   Provider: I;
+  IID: TGuid;
   j: Integer;
 begin
+  if not TryGetIID(TypeInfo(I), IID) then
+    raise EArgumentException.Create('Node provider interface has no IID');
+
   j := 0;
   for Node in Self do
     if Node.TryGetProvider(IID, Provider) then
