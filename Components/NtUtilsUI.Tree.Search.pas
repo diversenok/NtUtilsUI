@@ -62,7 +62,8 @@ begin
   else
     FTreeWeakRef := nil;
 
-  UpdateColumns;
+  if HandleAllocated then
+    UpdateColumns;
 end;
 
 procedure TUiLibTreeSearchBox.ColumnVisibilityChanged;
