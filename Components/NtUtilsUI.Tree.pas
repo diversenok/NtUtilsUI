@@ -51,6 +51,7 @@ type
     procedure NotifyCollapsing(var HasChildren: Boolean);
     function SearchExpression(const UpcasedExpression: String; Column: TColumnIndex): Boolean;
     function SearchNumber(const Value: UInt64; Column: TColumnIndex): Boolean;
+    function SameEntity(Node: INodeProvider): Boolean;
   end;
 
   TNodeProviderEvent = procedure (Node: INodeProvider) of object;
@@ -195,7 +196,7 @@ type
     destructor Destroy; override;
     function AddChild(NewProvider: INodeProvider; [opt] Parent: INodeProvider = nil; AutoExpandParent: Boolean = True): INodeProvider; reintroduce;
     procedure ApplyFilter(const Query: String; UseColumn: TColumnIndex = -1);
-    function BackupSelectionAuto(Comparer: TMapRoutine<INodeProvider, TCondition<INodeProvider>>): IDeferredOperation;
+    function BackupSelectionAuto: IDeferredOperation;
     function BeginUpdateAuto: IAutoReleasable;
     function CanMoveSelectedNodesUp: Boolean;
     function CanMoveSelectedNodesDown: Boolean;
@@ -257,6 +258,7 @@ type
     procedure NotifyFirstExpanding; virtual;
     function SearchExpression(const UpcasedExpression: String; Column: TColumnIndex): Boolean; virtual;
     function SearchNumber(const Value: UInt64; Column: TColumnIndex): Boolean; virtual;
+    function SameEntity(Node: INodeProvider): Boolean; virtual;
 
     function GetTree: TUiLibTree; virtual;
     function GetNode: PVirtualNode; virtual;
@@ -387,7 +389,7 @@ implementation
 
 uses
   Winapi.Windows, Winapi.ShLwApi, System.SysUtils, Vcl.Clipbrd, Vcl.Themes,
-  NtUtils.SysUtils;
+  NtUtils.SysUtils, DelphiUtils.AutoObjects;
 
 {$BOOLEVAL OFF}
 {$IFOPT R+}{$DEFINE R+}{$ENDIF}
@@ -879,28 +881,22 @@ end;
 function TUiLibTree.BackupSelectionAuto;
 var
   WeakRef: IWeak;
-  SelectionConditions: TArray<TCondition<INodeProvider>>;
-  FocusCondition: TCondition<INodeProvider>;
+  PreviouslySelected: TArray<INodeProvider>;
+  PreviouslyFocused: INodeProvider;
 begin
-  // For each selected node, capture necessary data for later comparison
-  SelectionConditions := TArray.Map<INodeProvider, TCondition<INodeProvider>>(
-    SelectedNodes.Providers, Comparer);
-
-  // Same for the focused node
-  if Assigned(FocusedNode) then
-    FocusCondition := Comparer(FocusedNode.Provider)
-  else
-    FocusCondition := nil;
+  // Capture selection and focus information
+  PreviouslySelected := SelectedNodes.Providers;
+  PreviouslyFocused := FocusedNode.ProviderOrNil;
 
   // Use a weak reference to verify that the defer didn't outlive the tree
   WeakRef := Auto.RefWeak(Self);
 
-  // Restore selection afterward
+  // Make a defer to restore selection later
   Result := Auto.Defer(
     procedure
     var
-      SelectionCondition: TCondition<INodeProvider>;
       Node: INodeProvider;
+      i: Integer;
     begin
       // Check if the tree is still alive
       if not WeakRef.HasRef then
@@ -908,20 +904,23 @@ begin
 
       BeginUpdateAuto;
 
-      // Check new nodes for matching any conditions for selection
+      // Check new nodes for matching any previously selected nodes
       for Node in Nodes.Providers do
       begin
-        for SelectionCondition in SelectionConditions do
-          if Assigned(SelectionCondition) and
-            SelectionCondition(Node) then
+        for i := 0 to High(PreviouslySelected) do
+          if Node.SameEntity(PreviouslySelected[i]) then
           begin
             Selected[Node.Node] := True;
             Break;
           end;
 
         // Same for the focus
-        if Assigned(FocusCondition) and FocusCondition(Node) then
+        if Assigned(PreviouslyFocused) and
+          Node.SameEntity(PreviouslyFocused) then
+        begin
           FocusedNode := Node.Node;
+          ScrollIntoView(Node.Node, False);
+        end;
       end;
 
       // Re-apply sorting
@@ -1655,6 +1654,19 @@ begin
     FHasFontStyleForColumn[Column] := False;
     Invalidate;
   end;
+end;
+
+function TNodeProvider.SameEntity;
+var
+  AnotherNodeObject: TObject;
+begin
+  // This method indicates that this and the other node represent the same
+  // underlying resource and that the tree should preserve node selection and
+  // similar visual properties when replacing one node with another. To be
+  // overriden by descendants.
+
+  Result := (Node.QueryInterface(ObjCastGUID,
+    AnotherNodeObject) = S_OK) and (AnotherNodeObject = Self);
 end;
 
 function TNodeProvider.SearchExpression;

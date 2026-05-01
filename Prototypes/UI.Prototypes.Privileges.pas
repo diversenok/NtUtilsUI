@@ -37,7 +37,6 @@ type
       const Node: PVirtualNode;
       out Privilege: TPrivilege
     ): Boolean;
-    function NodeComparer(const Node: INodeProvider): TCondition<INodeProvider>;
     function ListSelected: TArray<TPrivilege>;
     function ListChecked: TArray<TPrivilege>;
     procedure SetChecked(const NewChecked: TArray<TPrivilege>);
@@ -84,6 +83,8 @@ type
     function GetPrivilege: TPrivilege;
     procedure SetColoringMode(Mode: TPrivilegeColoring);
     procedure Adjust(NewAttributes: TPrivilegeAttributes);
+  protected
+    function SameEntity(Node: INodeProvider): Boolean; override;
   public
     constructor Create(Privilege: TPrivilege; const hxPolicy: ILsaHandle = nil);
     class function CreateMany(const Privileges: TArray<TPrivilege>): TArray<IPrivilege>;
@@ -151,6 +152,14 @@ begin
   Result := Privilege;
 end;
 
+function TPrivilegeNodeData.SameEntity;
+var
+  AnotherPrivilege: IPrivilege;
+begin
+  Result := (Node.QueryInterface(IPrivilege, AnotherPrivilege) = S_OK)
+   and (AnotherPrivilege.Privilege.Luid = Privilege.Luid);
+end;
+
 procedure TPrivilegeNodeData.SetColoringMode;
 begin
   ColoringMode := Mode;
@@ -211,7 +220,7 @@ var
   NodeData: IPrivilege;
 begin
   VST.BeginUpdateAuto;
-  VST.BackupSelectionAuto(NodeComparer);
+  VST.BackupSelectionAuto;
 
   VST.RootNodeCount := 0;
   for NodeData in TPrivilegeNodeData.CreateMany(New) do
@@ -248,28 +257,6 @@ begin
   SeChangeNotify.Attributes := SE_PRIVILEGE_ENABLED or
     SE_PRIVILEGE_ENABLED_BY_DEFAULT;
   Checked := [SeChangeNotify];
-end;
-
-function TFramePrivileges.NodeComparer;
-var
-  Provider: IPrivilege;
-  Luid: TPrivilegeId;
-begin
-  if Succeeded(Node.QueryInterface(IPrivilege, Provider)) then
-  begin
-    // We compare nodes via their LUIDs
-    Luid := Provider.Privilege.Luid;
-
-    Result := function (const Node: INodeProvider): Boolean
-    var
-      Provider: IPrivilege;
-    begin
-      Result := Succeeded(Node.QueryInterface(IPrivilege, Provider)) and
-        (Provider.Privilege.Luid = Luid);
-    end;
-  end
-  else
-    Result := nil;
 end;
 
 function TFramePrivileges.NodeToPrivilege;

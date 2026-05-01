@@ -49,7 +49,6 @@ type
     function GetChecked: TArray<TGroup>;
     function GetIsChecked(const Group: TGroup): Boolean;
     function GetSelected: TArray<TGroup>;
-    function NodeComparer(const Node: INodeProvider): TCondition<INodeProvider>;
     function NodeToGroup(const Node: PVirtualNode; out Group: TGroup): Boolean;
     procedure SetChecked(const Value: TArray<TGroup>);
     procedure SetIsChecked(const Group: TGroup; const Value: Boolean);
@@ -102,6 +101,9 @@ type
     Group: TGroup;
     Lookup: TTranslatedName;
     FViewingMode: TGroupViewingMode;
+  protected
+    function SameEntity(Node: INodeProvider): Boolean; override;
+  public
     constructor Create(const Src: TGroup; const LookupSrc: TTranslatedName; ViewingMode: TGroupViewingMode);
     class function CreateMany(const Src: TArray<TGroup>; ViewingMode: TGroupViewingMode): TArray<INodeProvider>; static;
     function GetGroup: TGroup;
@@ -210,6 +212,14 @@ end;
 function TGroupNodeData.Matches;
 begin
   Result := RtlxEqualSids(Group.Sid, Sid);
+end;
+
+function TGroupNodeData.SameEntity;
+var
+  AnotherGroup: IGroup;
+begin
+  Result := (Node.QueryInterface(IGroup, AnotherGroup) = S_OK)
+   and RtlxEqualSids(AnotherGroup.Group.Sid, Group.Sid);
 end;
 
 { TFrameGroups }
@@ -340,32 +350,10 @@ end;
 procedure TFrameGroups.Load;
 begin
   VST.BeginUpdateAuto;
-  VST.BackupSelectionAuto(NodeComparer);
+  VST.BackupSelectionAuto;
   VST.RootNodeCount := 0;
   FViewingMode := Mode;
   Add(Groups);
-end;
-
-function TFrameGroups.NodeComparer;
-var
-  Provider: IGroup;
-  Sid: ISid;
-begin
-  if Succeeded(Node.QueryInterface(IGroup, Provider)) then
-  begin
-    // We compare nodes via their SIDs
-    Sid := Provider.Group.Sid;
-
-    Result := function (const Node: INodeProvider): Boolean
-    var
-      Provider: IGroup;
-    begin
-      Result := Succeeded(Node.QueryInterface(IGroup, Provider)) and
-        Provider.Matches(Sid);
-    end;
-  end
-  else
-    Result := nil;
 end;
 
 function TFrameGroups.NodeToGroup;
