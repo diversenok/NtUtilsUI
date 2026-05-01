@@ -10,10 +10,6 @@ object FramePrivileges: TFramePrivileges
     Width = 446
     Height = 294
     Align = alClient
-    ClipboardFormats.Strings = (
-      'CSV'
-      'Plain text'
-      'Unicode text')
     EmptyListMessage = 'No items to display'
     Header.AutoSizeIndex = 0
     TabOrder = 0

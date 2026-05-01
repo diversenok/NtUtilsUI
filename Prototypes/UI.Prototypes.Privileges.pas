@@ -75,39 +75,6 @@ begin
     Result[i] := Privileges[i].Luid;
 end;
 
-function GetAllPrivileges: TArray<TPrivilege>;
-const
-  SE_MIN_WELL_KNOWN_PRIVILEGE = Integer(SE_CREATE_TOKEN_PRIVILEGE);
-  SE_MAX_WELL_KNOWN_PRIVILEGE = Integer(High(TSeWellKnownPrivilege));
-var
-  New: TArray<TPrivilegeDefinition>;
-  i: Integer;
-begin
-  if LsaxEnumeratePrivileges(New).IsSuccess then
-  begin
-    SetLength(Result, Length(New));
-
-    // Copy LUIDs
-    for i := 0 to High(New) do
-      Result[i].Luid := New[i].LocalValue;
-  end
-  else
-  begin
-    // If privilege enumeration does not work, use the whole well-known range
-    SetLength(Result, SE_MAX_WELL_KNOWN_PRIVILEGE -
-      SE_MIN_WELL_KNOWN_PRIVILEGE + 1);
-
-    for i := 0 to High(Result) do
-      Result[i].Luid := SE_MIN_WELL_KNOWN_PRIVILEGE + i;
-  end;
-
-  // Only enable SeChangeNotifyPrivilege by default
-  for i := 0 to High(Result) do
-    with Result[i] do
-      if Luid = TPrivilegeId(SE_CHANGE_NOTIFY_PRIVILEGE) then
-        Attributes := SE_PRIVILEGE_ENABLED_BY_DEFAULT or SE_PRIVILEGE_ENABLED;
-end;
-
 { TPrivilegeNodeData }
 
 type
@@ -188,19 +155,26 @@ procedure TPrivilegeNodeData.SetColoringMode;
 begin
   ColoringMode := Mode;
 
-  case Mode of
-    pcRemoved: SetColor(ColorSettings.clBackgroundInactive);
-    pcStateBased:
-      if BitTest(Privilege.Attributes and SE_PRIVILEGE_ENABLED) then
-        if BitTest(Privilege.Attributes and SE_PRIVILEGE_ENABLED_BY_DEFAULT) then
-          SetColor(ColorSettings.clBackgroundAllow)
-        else
-          SetColor(ColorSettings.clBackgroundAllowAccent)
-      else
-        if BitTest(Privilege.Attributes and SE_PRIVILEGE_ENABLED_BY_DEFAULT) then
-          SetColor(ColorSettings.clBackgroundDenyAccent)
-        else
-          SetColor(ColorSettings.clBackgroundDeny);
+  if BitTest(Privilege.Attributes and SE_PRIVILEGE_ENABLED) then
+    if BitTest(Privilege.Attributes and SE_PRIVILEGE_ENABLED_BY_DEFAULT) then
+      SetColor(ColorSettings.clBackgroundAllow)
+    else
+      SetColor(ColorSettings.clBackgroundAllowAccent)
+  else
+    if BitTest(Privilege.Attributes and SE_PRIVILEGE_ENABLED_BY_DEFAULT) then
+      SetColor(ColorSettings.clBackgroundDenyAccent)
+    else
+      SetColor(ColorSettings.clBackgroundDeny);
+
+  if Mode = pcRemoved then
+  begin
+    SetFontColor(ColorSettings.clForegroundInactive);
+    SetFontStyle([fsStrikeOut]);
+  end
+  else
+  begin
+    ResetFontColor;
+    ResetFontStyle;
   end;
 
   Invalidate;
@@ -253,8 +227,27 @@ begin
 end;
 
 procedure TFramePrivileges.LoadEvery;
+var
+  AllPrivileges: TArray<TPrivilege>;
+  SeChangeNotify: TPrivilege;
 begin
-  Load(GetAllPrivileges);
+  AllPrivileges := TArray.Map<TLuid, TPrivilege>(
+    LsaxEnumeratePrivilegesWithFallback,
+    function (const Luid: TLuid): TPrivilege
+    begin
+      Result.Luid := Luid;
+      Result.Attributes := SE_PRIVILEGE_ENABLED or
+        SE_PRIVILEGE_ENABLED_BY_DEFAULT
+    end
+  );
+
+  Load(AllPrivileges);
+
+  // Check only SeChangeNotify by default
+  SeChangeNotify.Luid := TLuid(SE_CHANGE_NOTIFY_PRIVILEGE);
+  SeChangeNotify.Attributes := SE_PRIVILEGE_ENABLED or
+    SE_PRIVILEGE_ENABLED_BY_DEFAULT;
+  Checked := [SeChangeNotify];
 end;
 
 function TFramePrivileges.NodeComparer;
