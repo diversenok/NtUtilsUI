@@ -13,6 +13,9 @@ uses
   VirtualTrees, VirtualTrees.Header, VirtualTrees.Types, NtUtils,
   DelphiUtils.Arrays;
 
+const
+  DEFAULT_EMPTY_MESSAGE = 'No items to display';
+
 type
   TUiLibTree = class;
 
@@ -1040,6 +1043,10 @@ begin
   ClipboardFormats.Add('CSV');
   ClipboardFormats.Add('Plain text');
   ClipboardFormats.Add('Unicode text');
+
+  // Select defaults for new properties
+  FEmptyListMessage := DEFAULT_EMPTY_MESSAGE;
+  FEmptyListMessageLines := [FEmptyListMessage];
 end;
 
 procedure TUiLibTree.DblClick;
