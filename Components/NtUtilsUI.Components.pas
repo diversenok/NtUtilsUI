@@ -7,7 +7,7 @@ unit NtUtilsUI.Components;
 interface
 
 uses
-  System.Classes, Vcl.Controls, NtUtils;
+  System.Classes, Vcl.Controls, Ntapi.ntseapi, NtUtils;
 
 type
   // An anonymous function that can instantiate visual controls
@@ -39,6 +39,16 @@ var
     [opt] const InitialChoice: ISid = nil
   ): ISid;
 
+  { Privileges }
+
+  // A host for displaying a list of privileges
+  UiLibHostShowPrivilegeList: procedure (
+    const Privileges: TArray<TPrivilege>
+  );
+
+  // A host for displaying a list of all known privileges
+  UiLibHostShowPrivilegeListAll: procedure;
+
 // Show a modal dialog to choose an integrity SID
 function UiLibPickIntegritySid(
   Owner: TComponent;
@@ -50,6 +60,14 @@ function UiLibPickTrustSid(
   Owner: TComponent;
   [opt] const InitialChoice: ISid = nil
 ): ISid;
+
+// Display a dialog with a list of privileges
+procedure UiLibShowPrivilegeList(
+  const Privileges: TArray<TPrivilege>
+);
+
+// Display a dialog with a list of all known privileges
+procedure UiLibShowPrivilegeListAll;
 
 implementation
 
@@ -68,6 +86,22 @@ function UiLibPickTrustSid;
 begin
   if Assigned(UiLibHostPickTrustSid) then
     Result := UiLibHostPickTrustSid(Owner, InitialChoice)
+  else
+    raise EClassNotFound.Create(MSG_E_NO_COMPONENT);
+end;
+
+procedure UiLibShowPrivilegeList;
+begin
+  if Assigned(UiLibHostShowPrivilegeList) then
+    UiLibHostShowPrivilegeList(Privileges)
+  else
+    raise EClassNotFound.Create(MSG_E_NO_COMPONENT);
+end;
+
+procedure UiLibShowPrivilegeListAll;
+begin
+  if Assigned(UiLibHostShowPrivilegeListAll) then
+    UiLibHostShowPrivilegeListAll
   else
     raise EClassNotFound.Create(MSG_E_NO_COMPONENT);
 end;
