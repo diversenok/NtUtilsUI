@@ -68,7 +68,7 @@ type
     procedure NotifyExpanding(var HasChildren: Boolean);
     procedure NotifyCollapsing(var HasChildren: Boolean);
     function SearchExpression(const UpcasedExpression: String; Column: TColumnIndex): Boolean;
-    function SearchNumber(const Value: UInt64; Signed: Boolean; Column: TColumnIndex): Boolean;
+    function SearchNumber(const Value: UInt64; Column: TColumnIndex): Boolean;
   end;
 
   TNodeProviderEvent = procedure (Node: INodeProvider) of object;
@@ -274,7 +274,7 @@ type
     procedure NotifyCollapsing(var HasChildren: Boolean); virtual;
     procedure NotifyFirstExpanding; virtual;
     function SearchExpression(const UpcasedExpression: String; Column: TColumnIndex): Boolean; virtual;
-    function SearchNumber(const Value: UInt64; Signed: Boolean; Column: TColumnIndex): Boolean; virtual;
+    function SearchNumber(const Value: UInt64; Column: TColumnIndex): Boolean; virtual;
 
     function GetTree: TUiLibTree; virtual;
     function GetNode: PVirtualNode; virtual;
@@ -845,7 +845,7 @@ var
   Node, Parent: INodeProvider;
   SearchColumns: TColumnsArray;
   Column: TVirtualTreeColumn;
-  Matches, IsNumberSearch, IsSignedNumber: Boolean;
+  Matches, IsNumberSearch: Boolean;
   Expression: String;
   NumberQuery: UInt64;
 begin
@@ -867,8 +867,6 @@ begin
   // Check if the query parses into a number
   IsNumberSearch := RtlxStrToUInt64(Query, NumberQuery, nsDecimal,
     [nsHexadecimal], True, [npSpace, npAccent, npApostrophe, npUnderscore]);
-  IsSignedNumber := IsNumberSearch and (Length(Query) > 1) and
-    (Query[Low(String)] = '-');
 
   // Prepare an upcased expression for text search
   Expression := '*' + RtlxUpperString(Query) + '*';
@@ -879,16 +877,21 @@ begin
   begin
     Matches := False;
 
-    // At least one coulmn should match
-    for Column in SearchColumns do
-    begin
-      Matches := (IsNumberSearch and
-        Node.SearchNumber(NumberQuery, IsSignedNumber, Column.Index)) or
-        Node.SearchExpression(Expression, Column.Index);
+    // The node can match a non-column-specific number search
+    if IsNumberSearch and (UseColumn < 0) then
+      Matches := Node.SearchNumber(NumberQuery, -1);
 
-      if Matches then
-        Break;
-    end;
+    // Or at least one coulmn should match text or number
+    if not Matches then
+      for Column in SearchColumns do
+      begin
+        Matches := (IsNumberSearch and
+          Node.SearchNumber(NumberQuery, Column.Index)) or
+          Node.SearchExpression(Expression, Column.Index);
+
+        if Matches then
+          Break;
+      end;
 
     if Matches then
     begin
@@ -896,7 +899,7 @@ begin
       Parent := Node;
       repeat
         IsVisible[Node.Node] := True;
-        Parent := NodeParent[Node.Node].Provider;
+        Parent := NodeParent[Node.Node].ProviderOrNil;
       until not Assigned(Parent);
     end
     else
