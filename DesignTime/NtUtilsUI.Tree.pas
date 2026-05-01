@@ -13,6 +13,9 @@ uses
   System.Classes, Vcl.Controls, Vcl.Menus, VirtualTrees, VirtualTrees.Header,
   VirtualTrees.Types;
 
+const
+  DEFAULT_EMPTY_MESSAGE = 'No items to display';
+
 type
   INodeProvider = interface
   end;
@@ -172,6 +175,10 @@ begin
   ClipboardFormats.Add('CSV');
   ClipboardFormats.Add('Plain text');
   ClipboardFormats.Add('Unicode text');
+
+  // Select defaults for new properties
+  FEmptyListMessage := DEFAULT_EMPTY_MESSAGE;
+  FEmptyListMessageLines := [FEmptyListMessage];
 end;
 
 procedure TUiLibTree.DoAfterPaint;
