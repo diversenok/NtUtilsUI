@@ -20,7 +20,7 @@ type
   TUiLibTree = class;
 
   INodeProvider = interface
-    ['{B123A5F1-26FD-4AB3-8D0F-FC3AD07ABAD0}']
+    ['{470E3BBC-4DED-4CCC-B05A-4754DF92506F}']
     procedure Attach(Node: PVirtualNode);
     procedure Detach;
     procedure Initialize;
@@ -31,36 +31,18 @@ type
     function GetNode: PVirtualNode;
     function GetColumnText(Column: TColumnIndex): String;
     function GetHint: String;
-    function GetHasColor: Boolean;
-    function GetColor: TColor;
-    function GetHasFontColor: Boolean;
-    function GetFontColor: TColor;
-    function GetHasFontColorForColumn(Column: TColumnIndex): Boolean;
-    function GetFontColorForColumn(Column: TColumnIndex): TColor;
-    function GetHasFontStyle: Boolean;
-    function GetFontStyle: TFontStyles;
-    function GetHasFontStyleForColumn(Column: TColumnIndex): Boolean;
-    function GetFontStyleForColumn(Column: TColumnIndex): TFontStyles;
-    function GetHasCursor: Boolean;
-    function GetCursor: TCursor;
+    function GetColor(out Value: TColor): Boolean;
+    function GetFontColor(out Value: TColor): Boolean;
+    function GetFontColorForColumn(Column: TColumnIndex; out Value: TColor): Boolean;
+    function GetFontStyle(out Value: TFontStyles): Boolean;
+    function GetFontStyleForColumn(Column: TColumnIndex; out Value: TFontStyles): Boolean;
+    function GetCursor(out Value: TCursor): Boolean;
     function GetEnabledMainActionMenu: Boolean;
 
     property Tree: TUiLibTree read GetTree;
     property Node: PVirtualNode read GetNode;
     property ColumnText[Column: TColumnIndex]: String read GetColumnText;
     property Hint: String read GetHint;
-    property HasColor: Boolean read GetHasColor;
-    property Color: TColor read GetColor;
-    property HasFontColor: Boolean read GetHasFontColor;
-    property FontColor: TColor read GetFontColor;
-    property HasFontColorForColumn[Column: TColumnIndex]: Boolean read GetHasFontColorForColumn;
-    property FontColorForColumn[Column: TColumnIndex]: TColor read GetFontColorForColumn;
-    property HasFontStyle: Boolean read GetHasFontStyle;
-    property FontStyle: TFontStyles read GetFontStyle;
-    property HasFontStyleForColumn[Column: TColumnIndex]: Boolean read GetHasFontStyleForColumn;
-    property FontStyleForColumn[Column: TColumnIndex]: TFontStyles read GetFontStyleForColumn;
-    property HasCursor: Boolean read GetHasCursor;
-    property Cursor: TCursor read GetCursor;
     property EnabledMainActionMenu: Boolean read GetEnabledMainActionMenu;
 
     procedure NotifyChecked;
@@ -280,18 +262,12 @@ type
     function GetNode: PVirtualNode; virtual;
     function GetColumnText(Column: TColumnIndex): String; virtual;
     function GetHint: String; virtual;
-    function GetHasColor: Boolean; virtual;
-    function GetColor: TColor; virtual;
-    function GetHasFontColor: Boolean; virtual;
-    function GetFontColor: TColor; virtual;
-    function GetHasFontColorForColumn(Column: TColumnIndex): Boolean; virtual;
-    function GetFontColorForColumn(Column: TColumnIndex): TColor; virtual;
-    function GetHasFontStyle: Boolean; virtual;
-    function GetFontStyle: TFontStyles; virtual;
-    function GetHasFontStyleForColumn(Column: TColumnIndex): Boolean; virtual;
-    function GetFontStyleForColumn(Column: TColumnIndex): TFontStyles; virtual;
-    function GetHasCursor: Boolean; virtual;
-    function GetCursor: TCursor; virtual;
+    function GetColor(out Value: TColor): Boolean; virtual;
+    function GetFontColor(out Value: TColor): Boolean; virtual;
+    function GetFontColorForColumn(Column: TColumnIndex; out Value: TColor): Boolean; virtual;
+    function GetFontStyle(out Value: TFontStyles): Boolean; virtual;
+    function GetFontStyleForColumn(Column: TColumnIndex; out Value: TFontStyles): Boolean; virtual;
+    function GetCursor(out Value: TCursor): Boolean; virtual;
     function GetEnabledMainActionMenu: Boolean; virtual;
 
     procedure SetColumnText(Column: TColumnIndex; const Value: String); virtual;
@@ -357,18 +333,6 @@ type
     property Node: PVirtualNode read GetNode;
     property ColumnText[Column: TColumnIndex]: String read GetColumnText write SetColumnText;
     property Hint: String read GetHint write SetHint;
-    property HasColor: Boolean read GetHasColor;
-    property Color: TColor read GetColor write SetColor;
-    property HasFontColor: Boolean read GetHasFontColor;
-    property FontColor: TColor read GetFontColor write SetFontColor;
-    property HasFontColorForColumn[Column: TColumnIndex]: Boolean read GetHasFontColorForColumn;
-    property FontColorForColumn[Column: TColumnIndex]: TColor read GetFontColorForColumn write SetFontColorForColumn;
-    property HasFontStyle: Boolean read GetHasFontStyle;
-    property FontStyle: TFontStyles read GetFontStyle write SetFontStyle;
-    property HasFontStyleForColumn[Column: TColumnIndex]: Boolean read GetHasFontStyleForColumn;
-    property FontStyleForColumn[Column: TColumnIndex]: TFontStyles read GetFontStyleForColumn write SetFontStyleForColumn;
-    property HasCursor: Boolean read GetHasCursor;
-    property Cursor: TCursor read GetCursor write SetCursor;
     property EnabledMainActionMenu: Boolean read GetEnabledMainActionMenu write SetEnabledMainActionMenu;
     property OnInitialize: TNodeProviderEvent read GetOnInitialize write SetOnInitialize;
     property OnInitializeChildren: TNodeProviderEvent read GetOnInitializeChildren write SetOnInitializeChildren;
@@ -1150,9 +1114,11 @@ begin
 end;
 
 procedure TUiLibTree.DoBeforeItemErase;
+var
+  Value: TColor;
 begin
-  if Node.Provider.HasColor then
-    Color := Node.Provider.Color
+  if Node.Provider.GetColor(Value) then
+    Color := Value
   else
     inherited;
 end;
@@ -1208,11 +1174,12 @@ end;
 procedure TUiLibTree.DoGetCursor;
 var
   Node: PVirtualNode;
+  Value: TCursor;
 begin
   Node := GetNodeAt(ScreenToClient(Mouse.CursorPos));
 
-  if Assigned(Node) and Node.Provider.HasCursor then
-    Cursor := Node.Provider.Cursor
+  if Assigned(Node) and Node.Provider.GetCursor(Value) then
+    Cursor := Value
   else
     inherited;
 end;
@@ -1267,21 +1234,21 @@ end;
 procedure TUiLibTree.DoPaintText;
 var
   Provider: INodeProvider;
+  ColorValue: TColor;
+  FontStyleValue: TFontStyles;
 begin
   // Preload the font color and style
   if TextType = ttNormal then
   begin
     Provider := Node.Provider;
 
-    if Provider.HasFontColorForColumn[Column] then
-      Canvas.Font.Color := Provider.FontColorForColumn[Column]
-    else if Provider.HasFontColor then
-      Canvas.Font.Color := Provider.FontColor;
+    if Provider.GetFontColorForColumn(Column, ColorValue) or
+      Provider.GetFontColor(ColorValue) then
+      Canvas.Font.Color := ColorValue;
 
-    if Provider.HasFontStyleForColumn[Column] then
-      Canvas.Font.Style := Provider.FontStyleForColumn[Column]
-    else if Provider.HasFontStyle then
-      Canvas.Font.Style := Provider.FontStyle;
+    if Provider.GetFontStyleForColumn(Column, FontStyleValue) or
+      Provider.GetFontStyle(FontStyleValue)  then
+      Canvas.Font.Style := FontStyleValue;
   end;
 
   inherited;
@@ -1512,7 +1479,10 @@ end;
 
 function TNodeProvider.GetColor;
 begin
-  Result := FColor;
+  Result := FHasColor;
+
+  if Result then
+    Value := FColor;
 end;
 
 function TNodeProvider.GetColumnText;
@@ -1525,7 +1495,10 @@ end;
 
 function TNodeProvider.GetCursor;
 begin
-  Result := FCursor;
+  Result := FHasCursor;
+
+  if Result then
+    Value := FCursor;
 end;
 
 function TNodeProvider.GetEnabledMainActionMenu;
@@ -1535,62 +1508,38 @@ end;
 
 function TNodeProvider.GetFontColor;
 begin
-  Result := FFontColor;
+  Result := FHasFontColor;
+
+  if Result then
+    Value := FFontColor;
 end;
 
 function TNodeProvider.GetFontColorForColumn;
 begin
-  if (Column >= Low(FFontColorForColumn)) and
-    (Column <= High(FFontColorForColumn)) then
-    Result := FFontColorForColumn[Column]
-  else
-    Result := clBlack;
+  Result := (Column >= Low(FFontColorForColumn)) and
+    (Column <= High(FFontColorForColumn)) and
+    FHasFontColorForColumn[Column];
+
+  if Result then
+    Value := FFontColorForColumn[Column];
 end;
 
 function TNodeProvider.GetFontStyle;
 begin
-  Result := FFontStyle;
+  Result := FHasFontStyle;
+
+  if Result then
+    Value := FFontStyle;
 end;
 
 function TNodeProvider.GetFontStyleForColumn;
 begin
-  if (Column >= Low(FFontStyleForColumn)) and
-    (Column <= High(FFontStyleForColumn)) then
-    Result := FFontStyleForColumn[Column]
-  else
-    Result := [];
-end;
+  Result := (Column >= Low(FFontStyleForColumn)) and
+    (Column <= High(FFontStyleForColumn)) and
+    FHasFontStyleForColumn[Column];
 
-function TNodeProvider.GetHasColor;
-begin
-  Result := FHasColor;
-end;
-
-function TNodeProvider.GetHasCursor;
-begin
-  Result := FHasCursor;
-end;
-
-function TNodeProvider.GetHasFontColor;
-begin
-  Result := FHasFontColor;
-end;
-
-function TNodeProvider.GetHasFontColorForColumn;
-begin
-  Result := (Column >= Low(FHasFontColorForColumn)) and
-    (Column <= High(FHasFontColorForColumn)) and FHasFontColorForColumn[Column];
-end;
-
-function TNodeProvider.GetHasFontStyle;
-begin
-  Result := FHasFontStyle;
-end;
-
-function TNodeProvider.GetHasFontStyleForColumn;
-begin
-  Result := (Column >= Low(FHasFontStyleForColumn)) and
-    (Column <= High(FHasFontStyleForColumn)) and FHasFontStyleForColumn[Column];
+  if Result then
+    Value := FFontStyleForColumn[Column];
 end;
 
 function TNodeProvider.GetHint;
@@ -1652,64 +1601,60 @@ end;
 
 procedure TNodeProvider.ResetColor;
 begin
-  if not FHasColor then
-    Exit;
-
-  FHasColor := False;
-  Invalidate;
+  if FHasColor then
+  begin
+    FHasColor := False;
+    Invalidate;
+  end;
 end;
 
 procedure TNodeProvider.ResetCursor;
 begin
-  if not FHasCursor then
-    Exit;
-
-  FHasCursor := False;
-  Invalidate;
+  if FHasCursor then
+  begin
+    FHasCursor := False;
+    Invalidate;
+  end;
 end;
 
 procedure TNodeProvider.ResetFontColor;
 begin
-  if not FHasFontColor then
-    Exit;
-
-  FHasFontColor := False;
-  Invalidate;
+  if FHasFontColor then
+  begin
+    FHasFontColor := False;
+    Invalidate;
+  end;
 end;
 
 procedure TNodeProvider.ResetFontColorForColumn;
 begin
-  if (Column < Low(FHasFontColorForColumn)) or
-    not GetHasFontColorForColumn(Column) then
-    Exit;
-
-  if Column > High(FHasFontColorForColumn) then
-    SetLength(FHasFontColorForColumn, Column + 1);
-
-  FHasFontColorForColumn[Column] := False;
-  Invalidate;
+  if (Column >= Low(FHasFontColorForColumn)) and
+    (Column <= High(FHasFontColorForColumn)) and
+    FHasFontColorForColumn[Column] then
+  begin
+    FHasFontColorForColumn[Column] := False;
+    Invalidate;
+  end;
 end;
 
 procedure TNodeProvider.ResetFontStyle;
 begin
-  if not FHasFontStyle then
-    Exit;
-
-  FHasFontStyle := False;
-  Invalidate;
+  if FHasFontStyle then
+  begin
+    FHasFontStyle := False;
+    Invalidate;
+  end;
 end;
 
 procedure TNodeProvider.ResetFontStyleForColumn;
 begin
-  if (Column < Low(FHasFontStyleForColumn)) or
-    not GetHasFontColorForColumn(Column) then
-    Exit;
-
-  if Column > High(FHasFontStyleForColumn) then
-    SetLength(FHasFontStyleForColumn, Column + 1);
-
-  FHasFontStyleForColumn[Column] := False;
-  Invalidate;
+  if (Column >= Low(FHasFontStyleForColumn)) and
+    (Column <= High(FHasFontStyleForColumn)) and
+    FHasFontStyleForColumn[Column] then
+  begin
+    FHasFontStyleForColumn[Column] := False;
+    Invalidate;
+  end;
 end;
 
 function TNodeProvider.SearchExpression;
@@ -1791,12 +1736,13 @@ begin
 end;
 
 procedure TNodeProvider.SetFontColorForColumn;
+var
+  OldValue: TColor;
 begin
   if Column < Low(FFontColorForColumn) then
     Exit;
 
-  if GetHasFontColorForColumn(Column) and
-    (GetFontColorForColumn(Column) = Value) then
+  if GetFontColorForColumn(Column, OldValue) and (OldValue = Value) then
     Exit;
 
   if Column > High(FHasFontColorForColumn) then
@@ -1821,12 +1767,13 @@ begin
 end;
 
 procedure TNodeProvider.SetFontStyleForColumn;
+var
+  OldValue: TFontStyles;
 begin
-    if Column < Low(FFontStyleForColumn) then
+  if Column < Low(FFontStyleForColumn) then
     Exit;
 
-  if GetHasFontStyleForColumn(Column) and
-    (GetFontStyleForColumn(Column) = Value) then
+  if GetFontStyleForColumn(Column, OldValue) and (OldValue = Value) then
     Exit;
 
   if Column > High(FHasFontStyleForColumn) then

@@ -233,9 +233,9 @@ begin
     if Status.IsSuccess then
     begin
       Node.ColumnText[1] := RtlxSidToStringNoError(ParentSid);
-      Node.FontStyleForColumn[1] := [TFontStyle.fsUnderline];
-      Node.FontColorForColumn[1] := ColorSettings.clForegroundLink;
-      Node.Cursor := crHandPoint;
+      Node.SetFontStyleForColumn(1, [TFontStyle.fsUnderline]);
+      Node.SetFontColorForColumn(1, ColorSettings.clForegroundLink);
+      Node.SetCursor(crHandPoint);
       Node.EnabledMainActionMenu := True;
     end
     else
