@@ -150,7 +150,8 @@ begin
   else
   begin
     // Otherwise, prepare names based on well-known privileges
-    FColumnText[colFriendly] := Rttix.Format(Privilege.Luid);
+    FColumnText[colFriendly] := Rttix.Format(
+      TSeWellKnownPrivilege(Privilege.Luid));
   end;
 
   SetAttributes(Privilege.Attributes);
