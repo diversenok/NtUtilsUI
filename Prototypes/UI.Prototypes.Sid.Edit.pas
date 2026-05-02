@@ -49,7 +49,7 @@ uses
   Ntapi.ntstatus, Ntapi.WinNt, NtUtils.Lsa.Sid, NtUiLib.AutoCompletion.Sid,
   NtUtils.Security.Sid, Resources.Icon.Catalogue, Resources.Icon.UserPicker,
   Resources.Icon.Choose, NtUiCommon.Prototypes, NtUiFrame.Sids.Abbreviations,
-  NtUtilsUI, NtUtilsUI.Components;
+  NtUtilsUI, NtUtilsUI.Components, NtUtilsUI.Components.Factories;
 
 {$R *.dfm}
 
@@ -141,13 +141,13 @@ begin
   case Value of
     scIntegrity:
     begin
-      btnChoice.Visible := Assigned(UiLibHostPickIntegritySid);
+      btnChoice.Visible := Assigned(UiLibFactoryIntegritySid);
       btnChoice.Hint := 'Choose Integrity Level';
     end;
 
     scTrust:
     begin
-      btnChoice.Visible := Assigned(UiLibHostPickTrustSid);
+      btnChoice.Visible := Assigned(UiLibFactoryTrustSid);
       btnChoice.Hint := 'Choose Trust Level';
     end;
   else

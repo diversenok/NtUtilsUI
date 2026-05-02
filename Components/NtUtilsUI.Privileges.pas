@@ -11,7 +11,7 @@ interface
 
 uses
   System.Classes, Vcl.Menus, NtUtilsUI.Base, NtUtilsUI.Tree,
-  NtUtilsUI.Tree.Search, NtUtilsUI.Components, Ntapi.ntseapi;
+  NtUtilsUI.Tree.Search, NtUtilsUI.Components.Factories, Ntapi.ntseapi;
 
 type
   TUiLibPrivilegeListMode = (pmNormal, pmAdding, pmRemoving);
@@ -36,10 +36,8 @@ type
     property Privileges: TArray<TPrivilege> read GetPrivileges write SetPrivileges;
     property SelectedPrivileges: TArray<TPrivilege> read GetSelectedPrivileges;
     property CheckedPrivileges: TArray<TPrivilege> read GetCheckedPrivileges write SetCheckedPrivileges;
-    class function Factory(Privileges: TArray<TPrivilege>): TWinControlFactory; static;
+    class function Factory(const Privileges: TArray<TPrivilege>): TWinControlFactory; static;
     class function FactoryAll: TWinControlFactory; static;
-    class procedure Show(const Privileges: TArray<TPrivilege>); static;
-    class procedure ShowAll; static;
   published
     property Mode: TUiLibPrivilegeListMode read FMode write SetMode;
     property PopupMenu: TPopupMenu read GetPopupMenu write SetPopupMenu;
@@ -443,17 +441,7 @@ begin
   end;
 end;
 
-class procedure TUiLibPrivilegeList.Show;
-begin
-  UiLibShow(TUiLibPrivilegeList.Factory(Privileges));
-end;
-
-class procedure TUiLibPrivilegeList.ShowAll;
-begin
-  UiLibShow(TUiLibPrivilegeList.FactoryAll());
-end;
-
 initialization
-  UiLibHostShowPrivilegeList := TUiLibPrivilegeList.Show;
-  UiLibHostShowPrivilegeListAll := TUiLibPrivilegeList.ShowAll;
+  UiLibFactoryPrivilegeList := TUiLibPrivilegeList.Factory;
+  UiLibFactoryPrivilegeListAll := TUiLibPrivilegeList.FactoryAll;
 end.

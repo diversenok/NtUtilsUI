@@ -10,7 +10,7 @@ uses
   Ntapi.WinNt, Ntapi.ntseapi, Ntapi.WinUser, NtUtils, NtUtils.Profiles,
   NtUtils.Objects, NtUtils.Security.AppContainer, NtUtils.Security,
   NtUtils.Security.Acl, NtUtilsUI.Tree, NtUiDialog.FrameHost,
-  System.Classes, Vcl.Forms, NtUtilsUI, NtUtilsUI.Components;
+  System.Classes, Vcl.Forms, NtUtilsUI, NtUtilsUI.Components.Factories;
 
 type
   TSecurityAccessMaskLookup = reference to function (

@@ -7,8 +7,8 @@ unit NtUtilsUI;
 interface
 
 uses
-  System.Classes, NtUtilsUI.Forms, NtUtilsUI.Base, NtUtilsUI.Components,
-  NtUtilsUI.Colors, NtUtils;
+  System.Classes, NtUtilsUI.Forms, NtUtilsUI.Base,
+  NtUtilsUI.Components.Factories, NtUtilsUI.Colors, NtUtils;
 
 const
   // Forward child form modes
@@ -29,7 +29,7 @@ type
   IHasDefaultCaption = NtUtilsUI.Base.IHasDefaultCaption;
   IHasModalResult = NtUtilsUI.Base.IHasModalResult;
   IHasModalResultObservation = NtUtilsUI.Base.IHasModalResultObservation;
-  TWinControlFactory = NtUtilsUI.Components.TWinControlFactory;
+  TWinControlFactory = NtUtilsUI.Components.Factories.TWinControlFactory;
 
   TCollectionHelper = class helper for TCollection
     function BeginUpdateAuto: IAutoReleasable;
@@ -53,7 +53,7 @@ function UiLibPick(
 implementation
 
 uses
-  NtUtilsUI.Exceptions;
+  NtUtilsUI.Exceptions, NtUtilsUI.Components;
 
 { Functions }
 

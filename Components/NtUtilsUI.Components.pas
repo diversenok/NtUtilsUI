@@ -7,11 +7,10 @@ unit NtUtilsUI.Components;
 interface
 
 uses
-  System.Classes, Vcl.Controls, Ntapi.ntseapi, NtUtils;
+  System.Classes, Ntapi.ntseapi, NtUtils, NtUtilsUI.Components.Factories;
 
-type
-  // An anonymous function that can instantiate visual controls
-  TWinControlFactory = reference to function (AOwner: TComponent): TWinControl;
+const
+  MSG_E_NO_COMPONENT = 'The required component is not registered';
 
 var
   // A host for showing a control in a dialog
@@ -24,30 +23,6 @@ var
     AOwner: TComponent;
     ControlFactory: TWinControlFactory
   ): IInterface;
-
-  { SIDs }
-
-  // A host for selecting an integrity SID
-  UiLibHostPickIntegritySid: function (
-    Owner: TComponent;
-    [opt] const InitialChoice: ISid = nil
-  ): ISid;
-
-    // A host for selecting a trust SID
-  UiLibHostPickTrustSid: function (
-    Owner: TComponent;
-    [opt] const InitialChoice: ISid = nil
-  ): ISid;
-
-  { Privileges }
-
-  // A host for displaying a list of privileges
-  UiLibHostShowPrivilegeList: procedure (
-    const Privileges: TArray<TPrivilege>
-  );
-
-  // A host for displaying a list of all known privileges
-  UiLibHostShowPrivilegeListAll: procedure;
 
 // Show a modal dialog to choose an integrity SID
 function UiLibPickIntegritySid(
@@ -71,37 +46,34 @@ procedure UiLibShowPrivilegeListAll;
 
 implementation
 
-const
-  MSG_E_NO_COMPONENT = 'The required component is not registered';
-
 function UiLibPickIntegritySid;
 begin
-  if Assigned(UiLibHostPickIntegritySid) then
-    Result := UiLibHostPickIntegritySid(Owner, InitialChoice)
+  if Assigned(UiLibHostPick) and Assigned(UiLibFactoryIntegritySid) then
+    Result := ISid(UiLibHostPick(Owner, UiLibFactoryIntegritySid(InitialChoice)))
   else
     raise EClassNotFound.Create(MSG_E_NO_COMPONENT);
 end;
 
 function UiLibPickTrustSid;
 begin
-  if Assigned(UiLibHostPickTrustSid) then
-    Result := UiLibHostPickTrustSid(Owner, InitialChoice)
+  if Assigned(UiLibHostPick) and Assigned(UiLibFactoryTrustSid) then
+    Result := ISid(UiLibHostPick(Owner, UiLibFactoryTrustSid(InitialChoice)))
   else
     raise EClassNotFound.Create(MSG_E_NO_COMPONENT);
 end;
 
 procedure UiLibShowPrivilegeList;
 begin
-  if Assigned(UiLibHostShowPrivilegeList) then
-    UiLibHostShowPrivilegeList(Privileges)
+  if Assigned(UiLibHostShow) and Assigned(UiLibFactoryPrivilegeList) then
+    UiLibHostShow(UiLibFactoryPrivilegeList(Privileges))
   else
     raise EClassNotFound.Create(MSG_E_NO_COMPONENT);
 end;
 
 procedure UiLibShowPrivilegeListAll;
 begin
-  if Assigned(UiLibHostShowPrivilegeListAll) then
-    UiLibHostShowPrivilegeListAll
+  if Assigned(UiLibHostShow) and Assigned(UiLibFactoryPrivilegeListAll) then
+    UiLibHostShow(UiLibFactoryPrivilegeListAll())
   else
     raise EClassNotFound.Create(MSG_E_NO_COMPONENT);
 end;

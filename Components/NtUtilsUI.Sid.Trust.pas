@@ -11,7 +11,7 @@ interface
 
 uses
   System.Classes, Vcl.StdCtrls, Vcl.ComCtrls, NtUtilsUI, NtUtilsUI.StdCtrls,
-  NtUtilsUI.Number, Ntapi.ntseapi, NtUtils;
+  NtUtilsUI.Number, Ntapi.ntseapi, NtUtils, NtUtilsUI.Components.Factories;
 
 type
   TUiLibTrustSid = class (TUiLibControl, IHasDefaultCaption, IHasModalResult)
@@ -45,18 +45,13 @@ type
   public
     constructor Create(AOwner: TComponent); override;
     class function Factory(const InitialChoice: ISid = nil): TWinControlFactory; static;
-    class function Pick(
-      AOwner: TComponent;
-      [opt] const InitialChoice: ISid = nil
-    ): ISid; static;
     property Sid: ISid read GetSid write SetSid;
   end;
 
 implementation
 
 uses
-  Vcl.Controls, Ntapi.WinNt, NtUtils.SysUtils, NtUtils.Security.Sid,
-  NtUtilsUI.Components;
+  Vcl.Controls, Ntapi.WinNt, NtUtils.SysUtils, NtUtils.Security.Sid;
 
 { TUiLibTrustSid }
 
@@ -259,11 +254,6 @@ begin
   UpdateLevelComboBox;
 end;
 
-class function TUiLibTrustSid.Pick;
-begin
-  Result := ISid(UiLibPick(AOwner, TUiLibTrustSid.Factory(InitialChoice)));
-end;
-
 procedure TUiLibTrustSid.SetSid;
 begin
   if (RtlxIdentifierAuthoritySid(Value) = SECURITY_PROCESS_TRUST_AUTHORITY) and
@@ -344,5 +334,5 @@ begin
 end;
 
 initialization
-  UiLibHostPickTrustSid := TUiLibTrustSid.Pick;
+  UiLibFactoryTrustSid := TUiLibTrustSid.Factory;
 end.

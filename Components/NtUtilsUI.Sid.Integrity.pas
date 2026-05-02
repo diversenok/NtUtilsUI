@@ -11,7 +11,7 @@ interface
 
 uses
   System.Classes, Vcl.StdCtrls, Vcl.ComCtrls, NtUtilsUI, NtUtilsUI.Number,
-  Ntapi.ntseapi, NtUtils;
+  NtUtilsUI.Components.Factories, Ntapi.ntseapi, NtUtils;
 
 type
   // A control for selecting an integrity level or SID
@@ -38,10 +38,6 @@ type
   public
     constructor Create(AOwner: TComponent); override;
     class function Factory(const InitialChoice: ISid = nil): TWinControlFactory; static;
-    class function Pick(
-      AOwner: TComponent;
-      [opt] const InitialChoice: ISid = nil
-    ): ISid; static;
     property Rid: TIntegrityRid read FValue write SetValue;
     property Sid: ISid read GetSid write SetSid;
   end;
@@ -49,8 +45,7 @@ type
 implementation
 
 uses
-  Vcl.Controls, Ntapi.WinNt, NtUtils.SysUtils, NtUtils.Security.Sid,
-  NtUtilsUI.Components;
+  Vcl.Controls, Ntapi.WinNt, NtUtils.SysUtils, NtUtils.Security.Sid;
 
 { TUiLibIntegritySid }
 
@@ -190,11 +185,6 @@ begin
     [FValue]).RaiseOnError;
 end;
 
-class function TUiLibIntegritySid.Pick;
-begin
-  Result := ISid(UiLibPick(AOwner, TUiLibIntegritySid.Factory(InitialChoice)));
-end;
-
 procedure TUiLibIntegritySid.SetSid;
 begin
   SetValue(RtlxRidSid(Value));
@@ -243,5 +233,5 @@ begin
 end;
 
 initialization
-  UiLibHostPickIntegritySid := TUiLibIntegritySid.Pick;
+  UiLibFactoryIntegritySid := TUiLibIntegritySid.Factory;
 end.
