@@ -40,6 +40,10 @@ type
   end;
 
   TUiLibComboBox = class(TComboBox)
+  public
+    constructor Create(AOwner: TComponent); override;
+  published
+    property DropDownCount default 24;
   end;
 
   TUiLibButton = class(TButton)
@@ -80,6 +84,16 @@ constructor TUiLibButtonedEdit.Create;
 begin
   inherited;
   FDelayedChangeTimeout := 500;
+end;
+
+{ TUiLibComboBox }
+
+constructor TUiLibComboBox.Create;
+begin
+  inherited;
+
+  // Adjust defaults
+  DropDownCount := 24;
 end;
 
 { TUiLibImageListHelper }

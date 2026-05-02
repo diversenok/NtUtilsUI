@@ -73,7 +73,10 @@ type
     procedure ComboWndProc(var Message: TMessage; ComboWnd: HWnd; ComboProc: TWindowProcPtr); override;
     procedure KeyPress(var Key: Char); override;
   public
+    constructor Create(AOwner: TComponent); override;
     procedure UpdateItems(const NewItems: TArray<String>; FallbackIndex: Integer = -1);
+  published
+    property DropDownCount default 24;
   end;
 
   TUiLibButton = class(TButton)
@@ -436,6 +439,14 @@ begin
   if (Message.Msg <> WM_KEYDOWN) or (EditHandle = 0) or
     not HandleCtrlBackspace(EditHandle, GetText, TWMKeyDown(Message)) then
     inherited;
+end;
+
+constructor TUiLibComboBox.Create;
+begin
+  inherited;
+
+  // Adjust defaults
+  DropDownCount := 24;
 end;
 
 procedure TUiLibComboBox.CreateWnd;
