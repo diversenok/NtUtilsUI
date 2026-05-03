@@ -8,20 +8,20 @@ interface
 
 uses
   System.SysUtils, System.Classes, Vcl.Graphics, Vcl.Controls, Vcl.Forms,
-  Vcl.Dialogs, VirtualTrees,
-  NtUtilsUI.Tree, NtUiCommon.Interfaces, NtUiBackend.UserProfiles,
+  Vcl.Dialogs, VirtualTrees, NtUtilsUI.Tree, NtUiCommon.Interfaces, NtUiBackend.UserProfiles,
   NtUtilsUI, NtUtilsUI.Base, NtUtilsUI.Tree.Search;
 
 type
   TUserProfilesFrame = class(TFrame, IHasDefaultCaption,
-    IAllowsDefaultNodeAction, IHasModalResult, IHasModalResultObservation)
+    IAllowsDefaultNodeAction, IModalResult<IProfileNode>,
+    IModalResultAvailability)
   published
     Tree: TUiLibTree;
     SearchBox: TUiLibTreeSearchBox;
   private
-    Backend: TTreeNodeInterfaceProvider;
+    Backend: TTreeNodeInterfaceProviderModal<IProfileNode>;
     BackendRef: IUnknown;
-    property BackendImpl: TTreeNodeInterfaceProvider read Backend implements IHasModalResult, IHasModalResultObservation, IAllowsDefaultNodeAction;
+    property BackendImpl: TTreeNodeInterfaceProviderModal<IProfileNode> read Backend implements IModalResult<IProfileNode>, IModalResultAvailability, IAllowsDefaultNodeAction;
     function GetDefaultCaption: String;
   protected
     procedure Loaded; override;
@@ -32,7 +32,8 @@ type
 implementation
 
 uses
-  NtUtils, NtUtils.Profiles, NtUiCommon.Prototypes, NtUiLib.Errors;
+  NtUtils, NtUtils.Profiles, NtUiCommon.Prototypes, NtUiLib.Errors,
+  NtUtilsUI.Components;
 
 {$R *.dfm}
 
@@ -70,8 +71,7 @@ procedure TUserProfilesFrame.Loaded;
 begin
   inherited;
   SearchBox.AttachToTree(Tree);
-  Backend := TTreeNodeInterfaceProvider.Create(Tree, [teSelectionChange]);
-  Backend.ModalResultFilter := IProfileNode;
+  Backend := TTreeNodeInterfaceProviderModal<IProfileNode>.Create(Tree, [teSelectionChange]);
   BackendRef := Backend; // Make an owning reference
 end;
 
@@ -92,14 +92,14 @@ end;
 
 procedure NtUiLibShowUserProfiles;
 begin
-  UiLibShow(Initializer);
+  UiLibHost.Show(Initializer);
 end;
 
 function NtUiLibSelectUserProfile(Owner: TComponent): TNtUiLibProfileInfo;
 var
   ProfileNode: IProfileNode;
 begin
-  Profilenode := UiLibPick(Owner, Initializer) as IProfileNode;
+  Profilenode := UiLibHost.Pick<IProfileNode>(Owner, Initializer);
   Result := ProfileNode.Info;
 end;
 

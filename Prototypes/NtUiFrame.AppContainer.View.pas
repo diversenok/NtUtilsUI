@@ -28,7 +28,7 @@ type
 implementation
 
 uses
-  NtUiCommon.Prototypes;
+  NtUiCommon.Prototypes, NtUtilsUI.Components;
 
 {$R *.dfm}
 
@@ -77,7 +77,7 @@ end;
 
 procedure NtUiLibShowAppContainer(const Info: TRtlxAppContainerInfo);
 begin
-  UiLibShow(Initializer(Info));
+  UiLibHost.Show(Initializer(Info));
 end;
 
 initialization

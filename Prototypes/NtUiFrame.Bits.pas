@@ -51,7 +51,8 @@ type
 implementation
 
 uses
-  VirtualTrees.Types, DelphiUiLib.Strings, NtUiCommon.Prototypes;
+  VirtualTrees.Types, DelphiUiLib.Strings, NtUiCommon.Prototypes,
+  NtUtilsUI.Components;
 
 {$R *.dfm}
 
@@ -224,7 +225,7 @@ procedure NtUiLibShowBitMask(
   ATypeInfo: Pointer
 );
 begin
-  UiLibShow(
+  UiLibHost.Show(
     function (AOwner: TComponent): TWinControl
     var
       Frame: TBitsFrame absolute Result;
@@ -248,7 +249,7 @@ procedure NtUiLibShowAccessMask(
   const GenericMapping: TGenericMapping
 );
 begin
-  UiLibShow(
+  UiLibHost.Show(
     function (AOwner: TComponent): TWinControl
     var
       Frame: TBitsFrame absolute Result;

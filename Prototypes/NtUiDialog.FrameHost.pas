@@ -7,8 +7,8 @@ unit NtUiDialog.FrameHost;
 interface
 
 uses
-  System.SysUtils, System.Classes, Vcl.Graphics, Vcl.Controls, Vcl.Forms,
-  Vcl.Dialogs, Vcl.StdCtrls, NtUtilsUI.Tree, NtUtilsUI;
+  System.Classes, Vcl.Controls, Vcl.StdCtrls, NtUtilsUI.Tree, NtUtilsUI.Base,
+  NtUtilsUI.Forms, NtUtilsUI.Components.Factories;
 
 type
   TFrameHostDialog = class(TUiLibChildForm)
@@ -19,22 +19,25 @@ type
     procedure btnSelectClick(Sender: TObject);
   private
     FFrame: TWinControl;
-    [Weak] FFrameRef: IUnknown;
-    FFrameModalResult: IInterface;
-    procedure FrameModalResultChanged(Sender: TObject);
-  protected
-    procedure AddFrame(Frame: TWinControl; AllowModal: Boolean);
+    [Unsafe] FFrameRef: IUnknown;
+    FModalResultCache: IModalResultCache;
+    procedure FrameHasModalResultChanged(Sender: TObject);
+    procedure AddFrame(Frame: TWinControl; ModalResultCache: IModalResultCache);
   public
-    function PickModal: IInterface;
-    class function Pick(AOwner: TComponent; Factory: TWinControlFactory): IInterface; static;
-    class procedure Display(Factory: TWinControlFactory); static;
+    constructor Create(
+      AOwner: TComponent;
+      ChildMode: TUiLibChildFormMode;
+      Factory: TWinControlFactory;
+      ModalResultCache: IModalResultCache
+    );
+    class procedure HostPick(AOwner: TComponent; Factory: TWinControlFactory; ModalResultCache: IModalResultCache); static;
+    class procedure HostShow(Factory: TWinControlFactory); static;
   end;
 
 implementation
 
 uses
-  Winapi.Windows, NtUiCommon.Prototypes, NtUiCommon.Interfaces, NtUtils.Errors,
-  NtUtilsUI.Components;
+  NtUiCommon.Interfaces;
 
 {$BOOLEVAL OFF}
 {$IFOPT R+}{$DEFINE R+}{$ENDIF}
@@ -47,7 +50,7 @@ const
   SMALL_MARGIN = 3;
   BIG_MARGIN = 31;
 var
-  ModalResultObservation: IHasModalResultObservation;
+  ModalResultAvailability: IModalResultAvailability;
   ButtonCaptions: IHasModalButtonCaptions;
   DefaultCaption: IHasDefaultCaption;
   DefaultAction: IAllowsDefaultNodeAction;
@@ -59,8 +62,9 @@ begin
 
   FFrame := Frame;
   FFrameRef := IUnknown(FFrame);
+  FModalResultCache := ModalResultCache;
 
-  if AllowModal then
+  if Assigned(FModalResultCache) then
     BottomMargin := BIG_MARGIN * CurrentPPI div 96
   else
     BottomMargin := SMALL_MARGIN * CurrentPPI div 96;
@@ -73,27 +77,28 @@ begin
   FFrame.Margins.SetBounds(OtherMargin, OtherMargin, OtherMargin, BottomMargin);
   FFrame.Align := alClient;
   FFrame.TabOrder := 0;
-  btnClose.Visible := AllowModal;
-  btnSelect.Visible := AllowModal;
+  btnClose.Visible := Assigned(FModalResultCache);
+  btnSelect.Visible := Assigned(FModalResultCache);
 
-  if FFrameRef.QueryInterface(IHasDefaultCaption, DefaultCaption).IsSuccess then
+  if FFrameRef.QueryInterface(IHasDefaultCaption, DefaultCaption) = S_OK then
     Caption := DefaultCaption.GetDefaultCaption
   else
     Caption := FFrame.ClassName;
 
-  if AllowModal then
+  if Assigned(FModalResultCache) then
   begin
-    // Subscribe to modal result changes
-    if FFrameRef.QueryInterface(IHasModalResultObservation,
-      ModalResultObservation).IsSuccess then
+    // Subscribe to modal result availability changes
+    if FFrameRef.QueryInterface(IModalResultAvailability,
+      ModalResultAvailability) = S_OK then
     begin
-      ModalResultObservation.OnModalResultChanged := FrameModalResultChanged;
-      FrameModalResultChanged(Self);
+      ModalResultAvailability.OnHasModalResultChanged :=
+        FrameHasModalResultChanged;
+      FrameHasModalResultChanged(Self);
     end;
 
     // Adjust button captions
     if FFrameRef.QueryInterface(IHasModalButtonCaptions,
-      ButtonCaptions).IsSuccess then
+      ButtonCaptions) = S_OK then
     begin
       btnSelect.Caption := ButtonCaptions.ConfirmationCaption;
       btnClose.Caption := ButtonCaptions.CancellationCaption;
@@ -101,7 +106,7 @@ begin
 
     // Set the default action on the frame
     if FFrameRef.QueryInterface(IAllowsDefaultNodeAction,
-      DefaultAction).IsSuccess then
+      DefaultAction) = S_OK then
     begin
       DefaultAction.MainActionCaption := btnSelect.Caption;
       DefaultAction.OnMainAction := DefaultActionChosen;
@@ -109,7 +114,7 @@ begin
   end;
 
   // Delay-initialize the frame
-  if FFrameRef.QueryInterface(IDelayedLoad, DelayedLoad).IsSuccess then
+  if FFrameRef.QueryInterface(IDelayedLoad, DelayedLoad) = S_OK then
     DelayedLoad.DelayedLoad;
 end;
 
@@ -119,80 +124,52 @@ begin
 end;
 
 procedure TFrameHostDialog.btnSelectClick;
-var
-  ModalResultImpl: IHasModalResult;
 begin
-  // Retrieve the modal result from the frame
-  if FFrameRef.QueryInterface(IHasModalResult, ModalResultImpl).IsSuccess then
-    FFrameModalResult := ModalResultImpl.ModalResult
-  else
-    FFrameModalResult := nil;
+  FModalResultCache.Save(FFrameRef);
 
   // Initiate closing if no exceptions occured
   ModalResult := mrOk;
 end;
 
+constructor TFrameHostDialog.Create;
+begin
+  inherited Create(AOwner, ChildMode);
+  AddFrame(Factory(Self), ModalResultCache);
+end;
+
 procedure TFrameHostDialog.DefaultActionChosen;
 begin
-  FFrameModalResult := Node;
+  FModalResultCache.Save(FFrameRef);
   ModalResult := mrOk;
 end;
 
-class procedure TFrameHostDialog.Display;
+procedure TFrameHostDialog.FrameHasModalResultChanged;
+var
+  ModalResultAvailability: IModalResultAvailability;
+begin
+  if FFrameRef.QueryInterface(IModalResultAvailability,
+    ModalResultAvailability) = S_OK then
+    btnSelect.Enabled := ModalResultAvailability.HasModalResult;
+end;
+
+class procedure TFrameHostDialog.HostPick;
 var
   Form: TFrameHostDialog;
 begin
-  Form := TFrameHostDialog.Create(nil, cfmDesktop);
+  Form := TFrameHostDialog.Create(AOwner, cfmApplication, Factory,
+    ModalResultCache);
+  Form.ShowModal;
+end;
 
-  try
-    Form.AddFrame(Factory(Form), False);
-  except
-    Form.Free;
-    raise;
-  end;
-
+class procedure TFrameHostDialog.HostShow;
+var
+  Form: TFrameHostDialog;
+begin
+  Form := TFrameHostDialog.Create(nil, cfmDesktop, Factory, nil);
   Form.Show;
 end;
 
-procedure TFrameHostDialog.FrameModalResultChanged;
-var
-  ModalResultImpl: IHasModalResultObservation;
-begin
-  if Assigned(FFrameRef) and FFrameRef.QueryInterface(
-    IHasModalResultObservation, ModalResultImpl).IsSuccess then
-    btnSelect.Enabled := ModalResultImpl.HasModalResult;
-end;
-
-class function TFrameHostDialog.Pick;
-var
-  Form: TFrameHostDialog;
-begin
-  Form := TFrameHostDialog.Create(AOwner, cfmApplication);
-
-  try
-    Form.AddFrame(Factory(Form), True);
-  except
-    Form.Free;
-    raise;
-  end;
-
-  // Show the dialog and free on close
-  Result := Form.PickModal;
-
-  if not Assigned(Result) then
-    Abort;
-end;
-
-function TFrameHostDialog.PickModal;
-begin
-  ShowModal;
-
-  // Note: the form will be destroyed when it processes the next message.
-  // until then, we can access the field.
-  Result := FFrameModalResult;
-end;
-
 initialization
-  UiLibHostShow := TFrameHostDialog.Display;
-  UiLibHostPick := TFrameHostDialog.Pick;
+  UiLibHostShow := TFrameHostDialog.HostShow;
+  UiLibHostPick := TFrameHostDialog.HostPick;
 end.

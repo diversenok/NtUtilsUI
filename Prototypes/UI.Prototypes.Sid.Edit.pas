@@ -60,7 +60,7 @@ begin
   if tbxSid.CanFocus then
     tbxSid.SetFocus;
 
-  UiLibShow(
+  UiLibHost.Show(
     function (AOwner: TComponent): TWinControl
     begin
       Result := TSidAbbreviationFrame.Create(AOwner);

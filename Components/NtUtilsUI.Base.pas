@@ -48,26 +48,45 @@ type
     function GetDefaultCaption: String;
   end;
 
-  // Indicates a component that allows returning a result from a modal dialog
-  IHasModalResult = interface
-    ['{F5CFA05F-11FE-46BD-8004-01696E95103D}']
-    function GetModalResult: IInterface;
-    property ModalResult: IInterface read GetModalResult;
+  // Indicates a component that allows returning something
+  IModalResult<T> = interface
+    ['{FC2CA11B-5A28-4632-ABCF-3399AAB1828A}']
+    function GetModalResult: T;
+    property ModalResult: T read GetModalResult;
   end;
 
   // Indicates ability to observe changes to modal result availability
-  IHasModalResultObservation = interface (IHasModalResult)
-    ['{D4AB2813-C236-43D7-9ABF-C46CE7923770}']
+  IModalResultAvailability = interface
+    ['{F37BB1AA-08F3-4A70-B985-AAC472E2196D}']
     function GetHasModalResult: Boolean;
-    function GetOnModalResultChanged: TNotifyEvent;
-    procedure SetOnModalResultChanged(const Callback: TNotifyEvent);
+    function GetOnHasModalResultChanged: TNotifyEvent;
+    procedure SetOnHasModalResultChanged(Callback: TNotifyEvent);
     property HasModalResult: Boolean read GetHasModalResult;
-    property OnModalResultChanged: TNotifyEvent
-      read GetOnModalResultChanged
-      write SetOnModalResultChanged;
+    property OnHasModalResultChanged: TNotifyEvent
+      read GetOnHasModalResultChanged
+      write SetOnHasModalResultChanged;
+  end;
+
+  // A reference to a modal result cache
+  IModalResultCache = interface
+    ['{62C0D393-F610-4167-8A79-7FD9C9B8AB35}']
+    procedure Save(const ModalResultImplementor: IInterface);
+  end;
+
+  // A generic storage for a modal result
+  TModalResultCache<T> = class (TInterfacedObject, IModalResult<T>,
+    IModalResultCache)
+  private
+    FModalResult: T;
+    FModalResultSet: Boolean;
+    function GetModalResult: T;
+    procedure Save(const ModalResultImplementor: IInterface);
   end;
 
 implementation
+
+uses
+  System.SysUtils;
 
 { TUiLibShortCut }
 
@@ -107,6 +126,27 @@ begin
         Result := True;
         Break;
       end;
+end;
+
+{ TModalResultCache<T> }
+
+function TModalResultCache<T>.GetModalResult;
+begin
+  if FModalResultSet then
+    Result := FModalResult
+  else
+    raise EArgumentException.Create('Modal result not available');
+end;
+
+procedure TModalResultCache<T>.Save;
+var
+  Source: IModalResult<T>;
+begin
+  if ModalResultImplementor.QueryInterface(IModalResult<T>, Source) = S_OK then
+  begin
+    FModalResult := Source.ModalResult;
+    FModalResultSet := True;
+  end;
 end;
 
 end.

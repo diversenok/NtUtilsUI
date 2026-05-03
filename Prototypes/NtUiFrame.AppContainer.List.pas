@@ -14,7 +14,8 @@ uses
 
 type
   TAppContainerListFrame = class (TFrame, IHasDefaultCaption,
-    IAllowsDefaultNodeAction, IHasModalResult, IHasModalResultObservation)
+    IAllowsDefaultNodeAction, IModalResult<IAppContainerNode>,
+    IModalResultAvailability)
     PopupMenu: TPopupMenu;
     cmInspect: TMenuItem;
     procedure cmInspectClick(Sender: TObject);
@@ -25,9 +26,9 @@ type
     Tree: TUiLibTree;
     procedure FrameMainActionSet(Sender: TObject);
   private
-    Backend: TTreeNodeInterfaceProvider;
+    Backend: TTreeNodeInterfaceProviderModal<IAppContainerNode>;
     BackendRef: IUnknown;
-    property BackendImpl: TTreeNodeInterfaceProvider read Backend implements IHasModalResult, IHasModalResultObservation, IAllowsDefaultNodeAction;
+    property BackendImpl: TTreeNodeInterfaceProviderModal<IAppContainerNode> read Backend implements IModalResult<IAppContainerNode>, IModalResultAvailability, IAllowsDefaultNodeAction;
     function GetDefaultCaption: String;
   protected
     procedure Loaded; override;
@@ -39,7 +40,7 @@ implementation
 
 uses
   NtUtils.Errors, NtUiCommon.Prototypes, System.SysUtils, Winapi.Windows,
-  NtUiLib.Errors;
+  NtUiLib.Errors, NtUtilsUI.Components;
 
 {$BOOLEVAL OFF}
 {$IFOPT R+}{$DEFINE R+}{$ENDIF}
@@ -80,7 +81,7 @@ procedure TAppContainerListFrame.Loaded;
 begin
   inherited;
   SearchBox.AttachToTree(Tree);
-  Backend := TTreeNodeInterfaceProvider.Create(Tree, [teSelectionChange]);
+  Backend := TTreeNodeInterfaceProviderModal<IAppContainerNode>.Create(Tree, [teSelectionChange]);
   BackendRef := Backend; // Make an owning reference
 
   if Assigned(NtUiLibShowAppContainer) then
@@ -149,7 +150,7 @@ procedure NtUiLibShowAppContainers(
   const User: ISid
 );
 begin
-  UiLibShow(Initializer(User));
+  UiLibHost.Show(Initializer(User));
 end;
 
 function NtUiLibSelectAppContainer(
@@ -159,7 +160,7 @@ function NtUiLibSelectAppContainer(
 var
   ProfileNode: IAppContainerNode;
 begin
-  Profilenode := UiLibPick(Owner, Initializer(User)) as IAppContainerNode;
+  Profilenode := UiLibHost.Pick<IAppContainerNode>(Owner, Initializer(User));
   Result := ProfileNode.Info;
 end;
 

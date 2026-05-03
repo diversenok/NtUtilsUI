@@ -18,7 +18,8 @@ implementation
 
 uses
   NtUiFrame.Security.Acl, NtUiFrame.Security.OwnerGroup,
-  System.SysUtils, System.Classes, Vcl.Forms, Vcl.Controls;
+  System.SysUtils, System.Classes, Vcl.Forms, Vcl.Controls,
+  NtUtilsUI.Components;
 
 function NtUiLibMakeSecurityFrame;
 begin
@@ -46,7 +47,7 @@ procedure NtUiLibShowSecurity(
   const Context: TNtUiLibSecurityContext
 );
 begin
-  UiLibShow(NtUiLibMakeSecurityFrame(Context));
+  UiLibHost.Show(NtUiLibMakeSecurityFrame(Context));
 end;
 
 initialization

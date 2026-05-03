@@ -8,7 +8,7 @@ interface
 
 uses
   NtUtilsUI.Tree, VirtualTrees, System.Classes,
-  DelphiUtils.AutoObjects, NtUtils, NtUtilsUI;
+  DelphiUtils.AutoObjects, NtUtils, NtUtilsUI, NtUtilsUI.Base;
 
 type
   { Common interfaces }
@@ -63,26 +63,19 @@ type
     teSelectionChange
   );
 
-  TBaseTreeExtension = class abstract (TInterfacedObject)
+  TTreeNodeInterfaceProvider = class (TInterfacedObject, ICanShowEmptyMessage,
+    IAllowsDefaultNodeAction)
   private
-    [Weak] FTree: TUiLibTree;
-  protected
-    function Attached: Boolean;
-    property Tree: TUiLibTree read FTree;
-    constructor Create(Tree: TUiLibTree);
-  end;
-
-  TTreeNodeInterfaceProvider = class (TBaseTreeExtension, ICanShowEmptyMessage,
-    IAllowsDefaultNodeAction, IHasModalResult, IHasModalResultObservation)
-  private
+    FTree: TUiLibTree;
     FOnModalResultChange: TNotifyEvent;
     FOnMainAction: TNodeProviderEvent;
     FOnMainActionSet: TNotifyEvent;
-    FModalResultFilter: TGuid;
     procedure TreeSelectionChanged(Sender: TBaseVirtualTree; Node: PVirtualNode);
     procedure TreeMainAction(Node: INodeProvider);
     function GetOnMainActionSet: TNotifyEvent;
     procedure SetOnMainActionSet(const Value: TNotifyEvent);
+  protected
+    property Tree: TUiLibTree read FTree;
   public
     procedure SetEmptyMessage(const Value: String);
     function GetOnMainAction: TNodeProviderEvent;
@@ -90,40 +83,37 @@ type
     function GetMainActionCaption: String;
     procedure SetMainActionCaption(const Value: String);
     property OnMainActionSet: TNotifyEvent read GetOnMainActionSet write SetOnMainActionSet;
-    function GetModalResult: IInterface;
+    function GetOnHasModalResultChanged: TNotifyEvent;
+    procedure SetOnHasModalResultChanged(Callback: TNotifyEvent);
+    constructor Create(Tree: TUiLibTree; SubscribeTo: TTreeEventSubscription = []); virtual;
+  end;
+
+  TTreeNodeInterfaceProviderModal<I: INodeProvider> = class (
+    TTreeNodeInterfaceProvider, IModalResult<I>, IModalResultAvailability)
+  private
+    FModalResultFilter: TGuid;
+  public
+    function GetModalResult: I; reintroduce;
     function GetHasModalResult: Boolean;
-    function GetOnModalResultChanged: TNotifyEvent;
-    procedure SetOnModalResultChanged(const Callback: TNotifyEvent);
-    property ModalResultFilter: TGuid read FModalResultFilter write FModalResultFilter;
-    constructor Create(Tree: TUiLibTree; SubscribeTo: TTreeEventSubscription = []);
+    constructor Create(Tree: TUiLibTree; SubscribeTo: TTreeEventSubscription = []); override;
   end;
 
 implementation
 
 uses
-  VirtualTrees.Types, NtUtils.Errors, NtUiLib.Errors;
+  VirtualTrees.Types, System.SysUtils, NtUtils.Errors, NtUiLib.Errors,
+  DelphiUtils.LiteRTTI.Base;
 
 {$BOOLEVAL OFF}
 {$IFOPT R+}{$DEFINE R+}{$ENDIF}
 {$IFOPT Q+}{$DEFINE Q+}{$ENDIF}
 
-{ TBaseTreeExtension }
-
-function TBaseTreeExtension.Attached;
-begin
-  Result := Assigned(FTree);
-end;
-
-constructor TBaseTreeExtension.Create;
-begin
-  FTree := Tree;
-end;
-
 { TTreeNodeInterfaceProvider }
 
 constructor TTreeNodeInterfaceProvider.Create;
 begin
-  inherited Create(Tree);
+  inherited Create;
+  FTree := Tree;
 
   if Assigned(Tree) then
   begin
@@ -133,39 +123,12 @@ begin
       Tree.OnAddToSelection := TreeSelectionChanged;
       Tree.OnRemoveFromSelection := TreeSelectionChanged;
     end;
-
-    FModalResultFilter := INodeProvider;
   end;
-end;
-
-function TTreeNodeInterfaceProvider.GetHasModalResult;
-begin
-  // Our implementation of GetModalResult is simple enough so there is nothing
-  // to optimize here, but other code might benefit from it.
-  Result := Assigned(GetModalResult());
 end;
 
 function TTreeNodeInterfaceProvider.GetMainActionCaption;
 begin
-  if Attached then
-    Result := FTree.MainActionMenuText
-  else
-    Result := '';
-end;
-
-function TTreeNodeInterfaceProvider.GetModalResult;
-var
-  ModalChecker: IOptionalModalResultNode;
-begin
-  // Rertieve the focused node and test it against the modal return filter
-  if not Attached or (FTree.SelectedCount <> 1) or not
-    FTree.FocusedNode.TryGetProvider(FModalResultFilter, Result) then
-    Exit(nil);
-
-  // Ask the node if it's okay with being returned as a modal result
-  if Result.QueryInterface(IOptionalModalResultNode, ModalChecker).IsSuccess and
-    not ModalChecker.AllowsModalReturn then
-    Exit(nil);
+  Result := FTree.MainActionMenuText
 end;
 
 function TTreeNodeInterfaceProvider.GetOnMainAction;
@@ -178,37 +141,32 @@ begin
   Result := FOnMainActionSet;
 end;
 
-function TTreeNodeInterfaceProvider.GetOnModalResultChanged;
+function TTreeNodeInterfaceProvider.GetOnHasModalResultChanged;
 begin
   Result := FOnModalResultChange;
 end;
 
 procedure TTreeNodeInterfaceProvider.SetEmptyMessage;
 begin
-  if Attached then
-    Tree.EmptyListMessage := Value;
+  Tree.EmptyListMessage := Value;
 end;
 
 procedure TTreeNodeInterfaceProvider.SetMainActionCaption;
 begin
-  if Attached then
-    FTree.MainActionMenuText := Value;
+  FTree.MainActionMenuText := Value;
 end;
 
 procedure TTreeNodeInterfaceProvider.SetOnMainAction;
 begin
   FOnMainAction := Value;
 
-  if Attached then
-  begin
-    if Assigned(FOnMainAction) then
-      FTree.OnMainAction := TreeMainAction
-    else
-      FTree.OnMainAction := nil;
+  if Assigned(FOnMainAction) then
+    FTree.OnMainAction := TreeMainAction
+  else
+    FTree.OnMainAction := nil;
 
-    if Assigned(FOnMainActionSet) then
-      FOnMainActionSet(Self);
-  end;
+  if Assigned(FOnMainActionSet) then
+    FOnMainActionSet(Self);
 end;
 
 procedure TTreeNodeInterfaceProvider.SetOnMainActionSet;
@@ -216,7 +174,7 @@ begin
   FOnMainActionSet := Value;
 end;
 
-procedure TTreeNodeInterfaceProvider.SetOnModalResultChanged;
+procedure TTreeNodeInterfaceProvider.SetOnHasModalResultChanged;
 begin
   FOnModalResultChange := Callback;
 end;
@@ -231,6 +189,38 @@ procedure TTreeNodeInterfaceProvider.TreeSelectionChanged;
 begin
   if Assigned(FOnModalResultChange) then
     FOnModalResultChange(Sender);
+end;
+
+{ TTreeNodeInterfaceProviderModal<I> }
+
+constructor TTreeNodeInterfaceProviderModal<I>.Create;
+begin
+  inherited;
+
+  if not TryGetIID(TypeInfo(I), FModalResultFilter) then
+    raise EArgumentException.Create('Node provider interface has no IID');
+end;
+
+function TTreeNodeInterfaceProviderModal<I>.GetHasModalResult;
+begin
+  // Our implementation of GetModalResult is simple enough so there is nothing
+  // to optimize here, but other code might benefit from it.
+  Result := Assigned(GetModalResult());
+end;
+
+function TTreeNodeInterfaceProviderModal<I>.GetModalResult;
+var
+  ModalChecker: IOptionalModalResultNode;
+begin
+  // Retrieve the highlighted node and test it against the modal return filter
+  if not Assigned(FTree.HighlightedNode) or not
+    FTree.HighlightedNode.TryGetProvider(FModalResultFilter, Result) then
+    Exit(nil);
+
+  // Ask the node if it's okay with being returned as a modal result
+  if Result.QueryInterface(IOptionalModalResultNode, ModalChecker).IsSuccess and
+    not ModalChecker.AllowsModalReturn then
+    Exit(nil);
 end;
 
 end.

@@ -5,18 +5,18 @@ interface
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes,
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, VirtualTrees,
-  NtUtilsUI.Tree, NtUiCommon.Interfaces,
+  NtUtilsUI.Tree, NtUiCommon.Interfaces, NtUiCommon.Prototypes,
   NtUtilsUI, NtUtilsUI.Base, NtUtilsUI.Tree.Search;
 
 type
-  TCapabilityListFrame = class(TFrame, IHasDefaultCaption, IHasModalResult,
-    IDelayedLoad)
+  TCapabilityListFrame = class(TFrame, IHasDefaultCaption,
+    IModalResult<TArray<TNtUiLibCapability>>, IDelayedLoad)
     SearchBox: TUiLibTreeSearchBox;
     Tree: TUiLibTree;
   private
     UseCheckboxes: Boolean;
     function GetDefaultCaption: String;
-    function GetModalResult: IInterface;
+    function GetModalResult: TArray<TNtUiLibCapability>;
   protected
     procedure Loaded; override;
   public
@@ -26,8 +26,8 @@ type
 implementation
 
 uses
-  NtUiBackend.Sids.Capabilities, NtUiCommon.Prototypes, NtUtils,
-  VirtualTrees.Types;
+  NtUiBackend.Sids.Capabilities, NtUtils, VirtualTrees.Types,
+  NtUtilsUI.Components;
 
 {$R *.dfm}
 
@@ -67,26 +67,23 @@ function TCapabilityListFrame.GetModalResult;
 var
   Nodes: TArray<PVirtualNode>;
   Provider: ICapabilityNode;
-  Output: TArray<TNtUiLibCapability>;
   i, j: Integer;
 begin
   Nodes := Tree.CheckedNodes.Nodes;
-  SetLength(Output, Length(Nodes));
+  SetLength(Result, Length(Nodes));
 
   j := 0;
   for i := 0 to High(Nodes) do
     if Nodes[i].TryGetProvider(ICapabilityNode, Provider) then
     begin
-      Output[j].Name := Provider.Name;
-      Output[j].AppSid := Provider.AppSid;
-      Output[j].GroupSid := Provider.GroupSid;
+      Result[j].Name := Provider.Name;
+      Result[j].AppSid := Provider.AppSid;
+      Result[j].GroupSid := Provider.GroupSid;
       Inc(j);
     end;
 
-  if j <> Length(Output) then
-    SetLength(Output, j);
-
-  Result := Auto.Copy(Output);
+  if j <> Length(Result) then
+    SetLength(Result, j);
 end;
 
 procedure TCapabilityListFrame.Loaded;
@@ -110,8 +107,7 @@ function NtUiLibSelectCapabilities(
   Owner: TComponent
 ): TArray<TNtUiLibCapability>;
 begin
-  Result := TArray<TNtUiLibCapability>((UiLibPick(Owner,
-    Initializer(True)) as IMemory).Data^);
+  Result := UiLibHost.Pick<TArray<TNtUiLibCapability>>(Owner, Initializer(True));
 end;
 
 initialization

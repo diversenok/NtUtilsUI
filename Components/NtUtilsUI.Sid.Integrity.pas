@@ -10,12 +10,13 @@ unit NtUtilsUI.Sid.Integrity;
 interface
 
 uses
-  System.Classes, Vcl.StdCtrls, Vcl.ComCtrls, NtUtilsUI, NtUtilsUI.Number,
-  NtUtilsUI.Components.Factories, Ntapi.ntseapi, NtUtils;
+  System.Classes, Vcl.StdCtrls, Vcl.ComCtrls, NtUtilsUI.Base, NtUtilsUI.Number,
+  NtUtilsUI, Ntapi.ntseapi, NtUtils;
 
 type
   // A control for selecting an integrity level or SID
-  TUiLibIntegritySid = class (TUiLibControl, IHasDefaultCaption, IHasModalResult)
+  TUiLibIntegritySid = class (TUiLibControl, IHasDefaultCaption,
+    IModalResult<ISid>)
   private
     FValue: TIntegrityRid;
     FTrackBar: TTrackBar;
@@ -34,7 +35,7 @@ type
     procedure SetSid(const Value: ISid);
   private
     function GetDefaultCaption: String;
-    function GetModalResult: IInterface;
+    function GetModalResult: ISid;
   public
     constructor Create(AOwner: TComponent); override;
     class function Factory(const InitialChoice: ISid = nil): TWinControlFactory; static;
@@ -45,7 +46,8 @@ type
 implementation
 
 uses
-  Vcl.Controls, Ntapi.WinNt, NtUtils.SysUtils, NtUtils.Security.Sid;
+  Vcl.Controls, Ntapi.WinNt, NtUtils.SysUtils, NtUtils.Security.Sid,
+  NtUtilsUI.Components.Factories;
 
 { TUiLibIntegritySid }
 

@@ -7,13 +7,25 @@ unit NtUtilsUI.Components.Factories;
 interface
 
 uses
-  System.Classes, Vcl.Controls, Ntapi.ntseapi, NtUtils;
+  System.Classes, Vcl.Controls, Ntapi.ntseapi, NtUtils, NtUtilsUI.Base;
 
 type
   // An anonymous function that can instantiate visual controls
   TWinControlFactory = reference to function (AOwner: TComponent): TWinControl;
 
 var
+  // A host for showing a control in a dialog
+  UiLibHostShow: procedure (
+    ControlFactory: TWinControlFactory
+  );
+
+  // A host for showing a control in a modal dialog
+  UiLibHostPick: procedure (
+    AOwner: TComponent;
+    ControlFactory: TWinControlFactory;
+    ModalResultCache: IModalResultCache
+  );
+
   { SIDs }
 
   // A control factory for selecting an integrity SID

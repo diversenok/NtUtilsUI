@@ -10,11 +10,11 @@ unit NtUtilsUI.Sid.Trust;
 interface
 
 uses
-  System.Classes, Vcl.StdCtrls, Vcl.ComCtrls, NtUtilsUI, NtUtilsUI.StdCtrls,
-  NtUtilsUI.Number, Ntapi.ntseapi, NtUtils, NtUtilsUI.Components.Factories;
+  System.Classes, Vcl.StdCtrls, Vcl.ComCtrls, NtUtilsUI, NtUtilsUI.Base,
+  NtUtilsUI.StdCtrls, NtUtilsUI.Number, Ntapi.ntseapi, NtUtils;
 
 type
-  TUiLibTrustSid = class (TUiLibControl, IHasDefaultCaption, IHasModalResult)
+  TUiLibTrustSid = class (TUiLibControl, IHasDefaultCaption, IModalResult<ISid>)
   private
     FTypeValue: Cardinal;
     FLevelValue: Cardinal;
@@ -41,7 +41,7 @@ type
     procedure SetSid(const Value: ISid);
   private
     function GetDefaultCaption: String;
-    function GetModalResult: IInterface;
+    function GetModalResult: ISid;
   public
     constructor Create(AOwner: TComponent); override;
     class function Factory(const InitialChoice: ISid = nil): TWinControlFactory; static;
@@ -51,7 +51,8 @@ type
 implementation
 
 uses
-  Vcl.Controls, Ntapi.WinNt, NtUtils.SysUtils, NtUtils.Security.Sid;
+  Vcl.Controls, Ntapi.WinNt, NtUtils.SysUtils, NtUtils.Security.Sid,
+  NtUtilsUI.Components.Factories;
 
 { TUiLibTrustSid }
 

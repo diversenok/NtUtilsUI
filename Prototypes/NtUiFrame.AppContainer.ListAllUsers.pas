@@ -9,11 +9,13 @@ interface
 uses
   System.SysUtils, System.Classes, Vcl.Graphics, Vcl.Controls, Vcl.Forms,
   Vcl.Dialogs, Vcl.StdCtrls, NtUtils, NtUiFrame.AppContainer.List,
-  NtUiCommon.Interfaces, NtUtilsUI, NtUtilsUI.StdCtrls;
+  NtUiCommon.Interfaces, NtUtilsUI, NtUtilsUI.StdCtrls, NtUtilsUI.Base,
+  NtUiBackend.AppContainers;
 
 type
   TAppContainerListAllUsersFrame = class (TFrame, IHasDefaultCaption,
-    IAllowsDefaultNodeAction, IHasModalResult, IHasModalResultObservation)
+    IAllowsDefaultNodeAction, IModalResult<IAppContainerNode>,
+    IModalResultAvailability)
   published
     lblUsers: TLabel;
     tbxUser: TUiLibEdit;
@@ -22,10 +24,11 @@ type
     procedure btnSelectUserClick(Sender: TObject);
   private
     FUser: ISid;
+    function GetModalResult: IAppContainerNode;
     function GetNodeDefaultActionImpl: IAllowsDefaultNodeAction;
-    function GetModalResultObservation: IHasModalResultObservation;
+    function GetModalResultAvailability: IModalResultAvailability;
     property NodeDefaultActionImpl: IAllowsDefaultNodeAction read GetNodeDefaultActionImpl implements IAllowsDefaultNodeAction;
-    property ModalResultObservationImpl: IHasModalResultObservation read GetModalResultObservation implements IHasModalResult, IHasModalResultObservation;
+    property ModalResultAvailabilityImpl: IModalResultAvailability read GetModalResultAvailability implements IModalResultAvailability;
     property Impl: TAppContainerListFrame read AppContainersFrame implements IHasDefaultCaption;
   public
     procedure LoadForUser([opt] const SelectedUser: ISid);
@@ -34,7 +37,7 @@ type
 implementation
 
 uses
-  DelphiUiLib.LiteReflection, NtUiBackend.AppContainers, NtUiCommon.Prototypes;
+  DelphiUiLib.LiteReflection, NtUiCommon.Prototypes, NtUtilsUI.Components;
 
 {$BOOLEVAL OFF}
 {$IFOPT R+}{$DEFINE R+}{$ENDIF}
@@ -48,7 +51,12 @@ begin
     LoadForUser(NtUiLibSelectUserProfile(Self).User);
 end;
 
-function TAppContainerListAllUsersFrame.GetModalResultObservation;
+function TAppContainerListAllUsersFrame.GetModalResult;
+begin
+  Result := (AppContainersFrame as IModalResult<IAppContainerNode>).ModalResult;
+end;
+
+function TAppContainerListAllUsersFrame.GetModalResultAvailability;
 begin
   Result := AppContainersFrame;
 end;
@@ -95,7 +103,7 @@ procedure NtUiLibShowAppContainersAllUsers(
   const User: ISid
 );
 begin
-  UiLibShow(Initializer(User));
+  UiLibHost.Show(Initializer(User));
 end;
 
 function NtUiLibSelectAppContainerAllUsers(
@@ -105,9 +113,8 @@ function NtUiLibSelectAppContainerAllUsers(
 var
   ProfileNode: IAppContainerNode;
 begin
-  ProfileNode := UiLibPick(Owner,
-    Initializer(DefaultUser)) as IAppContainerNode;
-
+  ProfileNode := UiLibHost.Pick<IAppContainerNode>(Owner,
+    Initializer(DefaultUser));
   Result := ProfileNode.Info;
 end;
 

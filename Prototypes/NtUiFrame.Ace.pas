@@ -15,7 +15,7 @@ uses
 
 type
   TAceFrame = class(TFrame, IHasDefaultCaption, IHasModalButtonCaptions,
-    IHasModalResult)
+    IModalResult<TAceData>)
     cbxType: TUiLibComboBox;
     lblType: TLabel;
     lblFlags: TLabel;
@@ -53,7 +53,7 @@ type
     function GetDefaultCaption: String;
     function GetConfirmationCaption: String;
     function GetCancellationCaption: String;
-    function GetModalResult: IInterface;
+    function GetModalResult: TAceData;
   public
     procedure LoadType(
       AccessMaskType: Pointer;
@@ -66,7 +66,8 @@ type
 implementation
 
 uses
-  NtUtils, NtUtils.Security, NtUiLib.TaskDialog, NtUiCommon.Prototypes;
+  NtUtils, NtUtils.Security, NtUiLib.TaskDialog, NtUiCommon.Prototypes,
+  NtUtilsUI.Components;
 
 {$R *.dfm}
 
@@ -168,7 +169,7 @@ end;
 
 function TAceFrame.GetModalResult;
 begin
-  Result := Auto.Copy(Ace);
+  Result := Ace;
 end;
 
 procedure TAceFrame.Loaded;
@@ -338,13 +339,9 @@ function NtUiLibCreateAce(
   const GenericMapping: TGenericMapping;
   DefaultAceType: TAceType
 ): TAceData;
-var
-  ModalResult: IInterface;
 begin
-  ModalResult := UiLibPick(Owner, Initializer(AccessMaskType,
+  Result := UiLibHost.Pick<TAceData>(Owner, Initializer(AccessMaskType,
     GenericMapping, DefaultAceType));
-
-  Result := TAceData((ModalResult as IMemory).Data^);
 end;
 
 function NtUiLibEditAce(
@@ -353,13 +350,9 @@ function NtUiLibEditAce(
   const GenericMapping: TGenericMapping;
   const Ace: TAceData
 ): TAceData;
-var
-  ModalResult: IInterface;
 begin
-  ModalResult := UiLibPick(Owner, InitializerEx(AccessMaskType,
+  Result := UiLibHost.Pick<TAceData>(Owner, InitializerEx(AccessMaskType,
     GenericMapping, Ace));
-
-  Result := TAceData((ModalResult as IMemory).Data^);
 end;
 
 initialization

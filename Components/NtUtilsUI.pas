@@ -27,8 +27,6 @@ type
   TUiLibShortCut = NtUtilsUI.Base.TUiLibShortCut;
   TUiLibControl = NtUtilsUI.Base.TUiLibControl;
   IHasDefaultCaption = NtUtilsUI.Base.IHasDefaultCaption;
-  IHasModalResult = NtUtilsUI.Base.IHasModalResult;
-  IHasModalResultObservation = NtUtilsUI.Base.IHasModalResultObservation;
   TWinControlFactory = NtUtilsUI.Components.Factories.TWinControlFactory;
 
   TCollectionHelper = class helper for TCollection
@@ -39,42 +37,10 @@ type
     function BeginUpdateAuto: IAutoReleasable;
   end;
 
-// Show a control in a dialog
-procedure UiLibShow(
-  ControlFactory: TWinControlFactory
-);
-
-// Show a control in a modal dialog and return its modal result
-function UiLibPick(
-  AOwner: TComponent;
-  ControlFactory: TWinControlFactory
-): IInterface;
-
 implementation
 
 uses
-  NtUtilsUI.Exceptions, NtUtilsUI.Components;
-
-{ Functions }
-
-const
-  MSG_E_NO_HOST = 'The component hosting dialog is not registered';
-
-procedure UiLibShow(ControlFactory: TWinControlFactory);
-begin
-  if Assigned(UiLibHostShow) then
-    UiLibHostShow(ControlFactory)
-  else
-    raise EClassNotFound.Create(MSG_E_NO_HOST);
-end;
-
-function UiLibPick;
-begin
-  if Assigned(UiLibHostPick) then
-    Result := UiLibHostPick(AOwner, ControlFactory)
-  else
-    raise EClassNotFound.Create(MSG_E_NO_HOST);
-end;
+  NtUtilsUI.Exceptions;
 
 { TCollectionHelper }
 
