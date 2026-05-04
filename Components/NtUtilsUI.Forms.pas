@@ -95,7 +95,8 @@ begin
       if TUiLibShortCut(Component).ShortCut = ShortCut then
         Result := TUiLibShortCut(Component).Invoke;
     end
-    else if not (Component is TCustomForm) then
+    else if not (Component is TCustomForm) and
+      (not (Component is TControl) or (TControl(Component).Enabled)) then
       Result := DispatchShortCut(Component, ShortCut);
 
     if Result then
