@@ -40,6 +40,8 @@ type
     property TabOrder;
     property TabStop;
     property Visible;
+    property OnEnter;
+    property OnExit;
   end;
 
   // Indicates a component that suggests a modal dialog or page caption

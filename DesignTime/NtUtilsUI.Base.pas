@@ -23,6 +23,8 @@ type
     property TabOrder;
     property TabStop;
     property Visible;
+    property OnEnter;
+    property OnExit;
   end;
 
 implementation
