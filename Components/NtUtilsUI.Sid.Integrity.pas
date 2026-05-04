@@ -11,12 +11,12 @@ interface
 
 uses
   System.Classes, Vcl.StdCtrls, Vcl.ComCtrls, NtUtilsUI.Base, NtUtilsUI.Number,
-  NtUtilsUI, Ntapi.ntseapi, NtUtils;
+  NtUtilsUI.Components.Factories, Ntapi.ntseapi, NtUtils;
 
 type
   // A control for selecting an integrity level or SID
-  TUiLibIntegritySid = class (TUiLibControl, IHasDefaultCaption,
-    IModalResult<ISid>)
+  [DefaultCaption('Integrity Level')]
+  TUiLibIntegritySid = class (TUiLibControl, IModalResult<ISid>)
   private
     FValue: TIntegrityRid;
     FTrackBar: TTrackBar;
@@ -34,7 +34,6 @@ type
     function GetSid: ISid;
     procedure SetSid(const Value: ISid);
   private
-    function GetDefaultCaption: String;
     function GetModalResult: ISid;
   public
     constructor Create(AOwner: TComponent); override;
@@ -46,8 +45,7 @@ type
 implementation
 
 uses
-  Vcl.Controls, Ntapi.WinNt, NtUtils.SysUtils, NtUtils.Security.Sid,
-  NtUtilsUI.Components.Factories;
+  Vcl.Controls, Ntapi.WinNt, NtUtils.SysUtils, NtUtils.Security.Sid;
 
 { TUiLibIntegritySid }
 
@@ -169,11 +167,6 @@ begin
         raise;
       end;
     end;
-end;
-
-function TUiLibIntegritySid.GetDefaultCaption;
-begin
-  Result := 'Integrity Level';
 end;
 
 function TUiLibIntegritySid.GetModalResult;

@@ -12,7 +12,7 @@ uses
   NtUiCommon.Prototypes, NtUiCommon.Interfaces, NtUtilsUI;
 
 type
-  TFramePages = class(TFrame, IHasDefaultCaption)
+  TFramePages = class(TFrame, IDefaultCaption)
     PageControl: TPageControl;
     procedure PageControlChange(Sender: TObject);
   private
@@ -57,7 +57,6 @@ end;
 procedure TFramePages.LoadPages;
 var
   i: Integer;
-  CaptionImpl: IHasDefaultCaption;
   RequiredWidth, RequiredHeight: Integer;
 begin
   // Instantiate frames
@@ -97,11 +96,7 @@ begin
     end;
 
     // Adjust page caption
-    if IUnknown(FFrames[i]).QueryInterface(IHasDefaultCaption,
-      CaptionImpl).IsSuccess then
-      FTabs[i].Caption := CaptionImpl.GetDefaultCaption
-    else
-      FTabs[i].Caption := FFrames[i].ClassName;
+    FTabs[i].Caption := QueryDefaultCaption(FFrames[i]);
 
     // Attach the frame
     FFrames[i].Parent := FTabs[i];

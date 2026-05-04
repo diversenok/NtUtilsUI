@@ -12,9 +12,9 @@ uses
   NtUtilsUI, NtUtilsUI.Base, NtUtilsUI.Tree.Search;
 
 type
-  TUserProfilesFrame = class(TFrame, IHasDefaultCaption,
-    IAllowsDefaultNodeAction, IModalResult<IProfileNode>,
-    IModalResultAvailability)
+  [DefaultCaption('User Profiles')]
+  TUserProfilesFrame = class(TFrame, IAllowsDefaultNodeAction,
+    IModalResult<IProfileNode>, IModalResultAvailability)
   published
     Tree: TUiLibTree;
     SearchBox: TUiLibTreeSearchBox;
@@ -22,7 +22,6 @@ type
     Backend: TTreeNodeInterfaceProviderModal<IProfileNode>;
     BackendRef: IUnknown;
     property BackendImpl: TTreeNodeInterfaceProviderModal<IProfileNode> read Backend implements IModalResult<IProfileNode>, IModalResultAvailability, IAllowsDefaultNodeAction;
-    function GetDefaultCaption: String;
   protected
     procedure Loaded; override;
   public
@@ -38,11 +37,6 @@ uses
 {$R *.dfm}
 
 { TUserProfilesFrame }
-
-function TUserProfilesFrame.GetDefaultCaption;
-begin
-  Result := 'User Profiles';
-end;
 
 procedure TUserProfilesFrame.LoadAllUsers;
 var

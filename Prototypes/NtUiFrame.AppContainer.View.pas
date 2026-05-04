@@ -13,7 +13,8 @@ uses
   NtUiCommon.Interfaces, NtUtilsUI;
 
 type
-  TAppContainerViewFrame = class(TFrame, IHasDefaultCaption)
+  [DefaultCaption('AppContainer Information')]
+  TAppContainerViewFrame = class(TFrame)
     Tree: TUiLibTree;
   private
     FInfo: TRtlxAppContainerInfo;
@@ -21,7 +22,6 @@ type
   protected
     procedure Loaded; override;
   public
-    function GetDefaultCaption: String;
     procedure LoadFor(const Info: TRtlxAppContainerInfo);
   end;
 
@@ -33,11 +33,6 @@ uses
 {$R *.dfm}
 
 { TAppContainerViewFrame }
-
-function TAppContainerViewFrame.GetDefaultCaption;
-begin
-  Result := 'AppContainer Information';
-end;
 
 procedure TAppContainerViewFrame.InspectMenu;
 begin

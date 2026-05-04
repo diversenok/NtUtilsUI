@@ -10,11 +10,12 @@ unit NtUtilsUI.Sid.Trust;
 interface
 
 uses
-  System.Classes, Vcl.StdCtrls, Vcl.ComCtrls, NtUtilsUI, NtUtilsUI.Base,
-  NtUtilsUI.StdCtrls, NtUtilsUI.Number, Ntapi.ntseapi, NtUtils;
+  System.Classes, Vcl.StdCtrls, Vcl.ComCtrls, NtUtilsUI.Components.Factories,
+  NtUtilsUI.Base, NtUtilsUI.StdCtrls, NtUtilsUI.Number, Ntapi.ntseapi, NtUtils;
 
 type
-  TUiLibTrustSid = class (TUiLibControl, IHasDefaultCaption, IModalResult<ISid>)
+  [DefaultCaption('Trust SID')]
+  TUiLibTrustSid = class (TUiLibControl, IModalResult<ISid>)
   private
     FTypeValue: Cardinal;
     FLevelValue: Cardinal;
@@ -40,7 +41,6 @@ type
     function GetSid: ISid;
     procedure SetSid(const Value: ISid);
   private
-    function GetDefaultCaption: String;
     function GetModalResult: ISid;
   public
     constructor Create(AOwner: TComponent); override;
@@ -51,8 +51,7 @@ type
 implementation
 
 uses
-  Vcl.Controls, Ntapi.WinNt, NtUtils.SysUtils, NtUtils.Security.Sid,
-  NtUtilsUI.Components.Factories;
+  Vcl.Controls, Ntapi.WinNt, NtUtils.SysUtils, NtUtils.Security.Sid;
 
 { TUiLibTrustSid }
 
@@ -218,11 +217,6 @@ begin
         raise;
       end;
     end;
-end;
-
-function TUiLibTrustSid.GetDefaultCaption;
-begin
-  Result := 'Trust SID';
 end;
 
 function TUiLibTrustSid.GetModalResult;

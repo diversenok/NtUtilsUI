@@ -14,11 +14,10 @@ uses
   NtUtilsUI.Tree.Search;
 
 type
-  TSidHierarchyFrame = class(TFrame, IHasDefaultCaption, IDelayedLoad)
+  [DefaultCaption('SID Hierarchy')]
+  TSidHierarchyFrame = class(TFrame, IDelayedLoad)
     Tree: TUiLibTree;
     SearchBox: TUiLibTreeSearchBox;
-  private
-    function GetDefaultCaption: String;
   protected
     procedure CreateWnd; override;
     procedure DelayedLoad;
@@ -35,11 +34,6 @@ implementation
 procedure TSidHierarchyFrame.DelayedLoad;
 begin
   NtUiLibAddSidHierarchyNodes(Tree);
-end;
-
-function TSidHierarchyFrame.GetDefaultCaption;
-begin
-  Result := 'SID Hierarchy';
 end;
 
 procedure TSidHierarchyFrame.CreateWnd;

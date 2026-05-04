@@ -9,13 +9,13 @@ uses
   NtUtilsUI, NtUtilsUI.Base, NtUtilsUI.Tree.Search;
 
 type
-  TCapabilityListFrame = class(TFrame, IHasDefaultCaption,
-    IModalResult<TArray<TNtUiLibCapability>>, IDelayedLoad)
+  [DefaultCaption('Capabilities')]
+  TCapabilityListFrame = class(TFrame, IModalResult<TArray<TNtUiLibCapability>>,
+    IDelayedLoad)
     SearchBox: TUiLibTreeSearchBox;
     Tree: TUiLibTree;
   private
     UseCheckboxes: Boolean;
-    function GetDefaultCaption: String;
     function GetModalResult: TArray<TNtUiLibCapability>;
   protected
     procedure Loaded; override;
@@ -56,11 +56,6 @@ begin
         Tree.CheckType[NodeInfo[Category].Items[i].Node] := ctCheckBox;
     end;
   end;
-end;
-
-function TCapabilityListFrame.GetDefaultCaption;
-begin
-  Result := 'Capabilities';
 end;
 
 function TCapabilityListFrame.GetModalResult;

@@ -11,12 +11,12 @@ uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes,
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs,
   UI.Prototypes.Sid.Edit, Vcl.StdCtrls, NtUiCommon.Interfaces,
-  NtUiCommon.Prototypes, NtUtils, NtUtilsUI;
+  NtUiCommon.Prototypes, NtUtils, NtUtilsUI, NtUtilsUI.Base;
 
 type
   TDescriptorSidType = (dsOwner, dsPrimaryGroup);
 
-  TOwnerGroupSecurityFrame = class(TFrame, IHasDefaultCaption, IDelayedLoad)
+  TOwnerGroupSecurityFrame = class(TFrame, IDefaultCaption, IDelayedLoad)
     SidEditor: TSidEditor;
     GroupBox: TGroupBox;
     cbxDefaulted: TCheckBox;

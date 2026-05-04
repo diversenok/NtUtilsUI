@@ -13,9 +13,9 @@ uses
   NtUiBackend.AppContainers;
 
 type
-  TAppContainerListAllUsersFrame = class (TFrame, IHasDefaultCaption,
-    IAllowsDefaultNodeAction, IModalResult<IAppContainerNode>,
-    IModalResultAvailability)
+  [DefaultCaption('AppContainer Profiles')]
+  TAppContainerListAllUsersFrame = class (TFrame, IAllowsDefaultNodeAction,
+    IModalResult<IAppContainerNode>, IModalResultAvailability)
   published
     lblUsers: TLabel;
     tbxUser: TUiLibEdit;
@@ -29,7 +29,6 @@ type
     function GetModalResultAvailability: IModalResultAvailability;
     property NodeDefaultActionImpl: IAllowsDefaultNodeAction read GetNodeDefaultActionImpl implements IAllowsDefaultNodeAction;
     property ModalResultAvailabilityImpl: IModalResultAvailability read GetModalResultAvailability implements IModalResultAvailability;
-    property Impl: TAppContainerListFrame read AppContainersFrame implements IHasDefaultCaption;
   public
     procedure LoadForUser([opt] const SelectedUser: ISid);
   end;

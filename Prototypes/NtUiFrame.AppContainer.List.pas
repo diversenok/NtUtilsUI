@@ -13,9 +13,9 @@ uses
   NtUtilsUI, NtUtilsUI.Base, NtUtilsUI.Tree.Search;
 
 type
-  TAppContainerListFrame = class (TFrame, IHasDefaultCaption,
-    IAllowsDefaultNodeAction, IModalResult<IAppContainerNode>,
-    IModalResultAvailability)
+  [DefaultCaption('AppContainer Profiles')]
+  TAppContainerListFrame = class (TFrame, IAllowsDefaultNodeAction,
+    IModalResult<IAppContainerNode>, IModalResultAvailability)
     PopupMenu: TPopupMenu;
     cmInspect: TMenuItem;
     procedure cmInspectClick(Sender: TObject);
@@ -29,7 +29,6 @@ type
     Backend: TTreeNodeInterfaceProviderModal<IAppContainerNode>;
     BackendRef: IUnknown;
     property BackendImpl: TTreeNodeInterfaceProviderModal<IAppContainerNode> read Backend implements IModalResult<IAppContainerNode>, IModalResultAvailability, IAllowsDefaultNodeAction;
-    function GetDefaultCaption: String;
   protected
     procedure Loaded; override;
   public
@@ -70,11 +69,6 @@ begin
   cmInspect.ShortCut := scCtrl or VK_RETURN;
   cmInspect.Default := False;
   Tree.RefreshPopupMenuShortcuts;
-end;
-
-function TAppContainerListFrame.GetDefaultCaption;
-begin
-  Result := 'AppContainer Profiles'
 end;
 
 procedure TAppContainerListFrame.Loaded;

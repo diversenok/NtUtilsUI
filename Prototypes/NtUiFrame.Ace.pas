@@ -14,7 +14,8 @@ uses
   NtUtilsUI.Base, NtUtilsUI.StdCtrls;
 
 type
-  TAceFrame = class(TFrame, IHasDefaultCaption, IHasModalButtonCaptions,
+  [DefaultCaption('ACE Editor')]
+  TAceFrame = class(TFrame, IHasModalButtonCaptions,
     IModalResult<TAceData>)
     cbxType: TUiLibComboBox;
     lblType: TLabel;
@@ -50,7 +51,6 @@ type
     procedure UpdateMaskType;
   protected
     procedure Loaded; override;
-    function GetDefaultCaption: String;
     function GetConfirmationCaption: String;
     function GetCancellationCaption: String;
     function GetModalResult: TAceData;
@@ -160,11 +160,6 @@ end;
 function TAceFrame.GetConfirmationCaption;
 begin
   Result := 'OK';
-end;
-
-function TAceFrame.GetDefaultCaption;
-begin
-  Result := 'ACE Editor';
 end;
 
 function TAceFrame.GetModalResult;

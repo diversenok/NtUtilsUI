@@ -9,12 +9,12 @@ interface
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes,
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, VirtualTrees,
-  NtUtilsUI.Tree, Vcl.StdCtrls,
+  NtUtilsUI.Tree, Vcl.StdCtrls, NtUtilsUI.Base,
   Vcl.ExtCtrls, Ntapi.WinNt, DelphiUtils.AutoObjects, NtUiCommon.Interfaces,
   NtUiBackend.Bits, NtUtils.SysUtils, NtUtilsUI, NtUtilsUI.StdCtrls;
 
 type
-  TBitsFrame = class(TFrame, IHasDefaultCaption)
+  TBitsFrame = class(TFrame, IDefaultCaption)
     Tree: TUiLibTree;
     BottomPanel: TPanel;
     tbxValue: TUiLibEdit;

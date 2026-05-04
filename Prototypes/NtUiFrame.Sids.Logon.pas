@@ -10,11 +10,10 @@ uses
   NtUtilsUI.Tree.Search;
 
 type
-  TLogonSidsFrame = class(TFrame, IHasDefaultCaption, IDelayedLoad)
+  [DefaultCaption('Logon Sessions')]
+  TLogonSidsFrame = class(TFrame, IDelayedLoad)
     SearchBox: TUiLibTreeSearchBox;
     Tree: TUiLibTree;
-  private
-    function GetDefaultCaption: String;
   protected
     procedure DelayedLoad;
     procedure CreateWnd; override;
@@ -50,11 +49,6 @@ begin
 
   for i := 0 to High(Nodes) do
     Tree.AddChild(Nodes[i]);
-end;
-
-function TLogonSidsFrame.GetDefaultCaption;
-begin
-  Result := 'Logon Sessions';
 end;
 
 procedure TLogonSidsFrame.CreateWnd;

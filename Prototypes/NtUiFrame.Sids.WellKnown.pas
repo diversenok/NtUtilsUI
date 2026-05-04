@@ -14,11 +14,10 @@ uses
   NtUtilsUI.Tree.Search;
 
 type
-  TWellKnownSidsFrame = class(TFrame, IHasDefaultCaption, IDelayedLoad)
+  [DefaultCaption('Well-known SIDs')]
+  TWellKnownSidsFrame = class(TFrame, IDelayedLoad)
     Tree: TUiLibTree;
     SearchBox: TUiLibTreeSearchBox;
-  private
-    function GetDefaultCaption: String;
   protected
     procedure CreateWnd; override;
     procedure DelayedLoad;
@@ -39,11 +38,6 @@ begin
 
   for Provider in NtUiLibMakeWellKnownSidNodes do
     Tree.AddChild(Provider);
-end;
-
-function TWellKnownSidsFrame.GetDefaultCaption;
-begin
-  Result := 'Well-known SIDs';
 end;
 
 procedure TWellKnownSidsFrame.CreateWnd;

@@ -14,11 +14,10 @@ uses
   NtUtilsUI.Tree.Search;
 
 type
-  TSidAbbreviationFrame = class(TFrame, IHasDefaultCaption, IDelayedLoad)
+  [DefaultCaption('SDDL Abbreviations')]
+  TSidAbbreviationFrame = class(TFrame, IDelayedLoad)
     Tree: TUiLibTree;
     SearchBox: TUiLibTreeSearchBox;
-  private
-    function GetDefaultCaption: String;
   protected
     procedure Loaded; override;
     procedure DelayedLoad;
@@ -44,11 +43,6 @@ begin
 
   for Provider in NtUiLibCollectSidAbbreviations do
     Tree.AddChild(Provider);
-end;
-
-function TSidAbbreviationFrame.GetDefaultCaption;
-begin
-  Result := 'SDDL Abbreviations';
 end;
 
 procedure TSidAbbreviationFrame.Loaded;

@@ -44,8 +44,14 @@ type
     property OnExit;
   end;
 
-  // Indicates a component that suggests a modal dialog or page caption
-  IHasDefaultCaption = interface
+  // Component's suggestion for a static modal dialog or a page caption
+  DefaultCaptionAttribute = class (TCustomAttribute)
+    FDefaultCaption: String;
+    constructor Create(const Value: String);
+  end;
+
+  // Component's suggestion for a dynamic modal dialog or a page caption
+  IDefaultCaption = interface
     ['{C6238589-5504-461B-8539-F391A4DCC52B}']
     function GetDefaultCaption: String;
   end;
@@ -128,6 +134,13 @@ begin
         Result := True;
         Break;
       end;
+end;
+
+{ DefaultCaptionAttribute }
+
+constructor DefaultCaptionAttribute.Create;
+begin
+  FDefaultCaption := Value;
 end;
 
 { TModalResultCache<T> }

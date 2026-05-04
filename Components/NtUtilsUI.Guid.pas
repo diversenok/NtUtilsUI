@@ -13,6 +13,7 @@ uses
   System.Classes, NtUtils, NtUtilsUI.Base, NtUtilsUI.StdCtrls;
 
 type
+  [DefaultCaption('GUID')]
   TUiLibGuidBox = class (TUiLibControl)
   private
     FEdit: TUiLibEdit;

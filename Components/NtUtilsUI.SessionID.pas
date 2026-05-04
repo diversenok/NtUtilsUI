@@ -14,8 +14,8 @@ uses
   NtUtilsUI.Components.Factories;
 
 type
-  TUiLibSessionIdBox = class (TUiLibControl, IModalResult<TSessionId>,
-    IHasDefaultCaption)
+  [DefaultCaption('Session ID')]
+  TUiLibSessionIdBox = class (TUiLibControl, IModalResult<TSessionId>)
   private
     FComboBox: TUiLibNumberComboBox;
     FRefreshShortcut: TUiLibShortCut;
@@ -23,7 +23,6 @@ type
     function GetSessionID: TSessionId;
     procedure SetSessionID(Value: TSessionId);
     function GetModalResult: TSessionId;
-    function GetDefaultCaption: String;
   protected
     procedure CreateWnd; override;
   public
@@ -90,11 +89,6 @@ begin
         raise;
       end;
     end;
-end;
-
-function TUiLibSessionIdBox.GetDefaultCaption;
-begin
-  Result := 'Session ID';
 end;
 
 function TUiLibSessionIdBox.GetModalResult;

@@ -37,13 +37,15 @@ type
 implementation
 
 uses
-  NtUiCommon.Interfaces;
+  NtUtilsUI, NtUiCommon.Interfaces;
 
 {$BOOLEVAL OFF}
 {$IFOPT R+}{$DEFINE R+}{$ENDIF}
 {$IFOPT Q+}{$DEFINE Q+}{$ENDIF}
 
 {$R *.dfm}
+
+{ TFrameHostDialog }
 
 procedure TFrameHostDialog.AddFrame;
 const
@@ -52,7 +54,6 @@ const
 var
   ModalResultAvailability: IModalResultAvailability;
   ButtonCaptions: IHasModalButtonCaptions;
-  DefaultCaption: IHasDefaultCaption;
   DefaultAction: IAllowsDefaultNodeAction;
   DelayedLoad: IDelayedLoad;
   BottomMargin, OtherMargin: Integer;
@@ -79,11 +80,7 @@ begin
   FFrame.TabOrder := 0;
   btnClose.Visible := Assigned(FModalResultCache);
   btnSelect.Visible := Assigned(FModalResultCache);
-
-  if FFrameRef.QueryInterface(IHasDefaultCaption, DefaultCaption) = S_OK then
-    Caption := DefaultCaption.GetDefaultCaption
-  else
-    Caption := FFrame.ClassName;
+  Caption := QueryDefaultCaption(FFrame);
 
   if Assigned(FModalResultCache) then
   begin

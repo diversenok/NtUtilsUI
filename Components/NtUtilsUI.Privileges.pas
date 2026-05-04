@@ -16,6 +16,7 @@ uses
 type
   TUiLibPrivilegeListMode = (pmNormal, pmAdding, pmRemoving);
 
+  [DefaultCaption('Privileges')]
   TUiLibPrivilegeList = class (TUiLibControl)
   private
     FSearch: TUiLibTreeSearchBox;

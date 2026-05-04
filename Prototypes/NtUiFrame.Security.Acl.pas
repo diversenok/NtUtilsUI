@@ -10,12 +10,12 @@ uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes,
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls,
   NtUiFrame.Acl, Ntapi.WinNt, NtUtils, NtUiCommon.Prototypes,
-  NtUiCommon.Interfaces, NtUtils.Security.Acl, NtUtilsUI;
+  NtUiCommon.Interfaces, NtUtils.Security.Acl, NtUtilsUI, NtUtilsUI.Base;
 
 type
   TAclType = (aiDacl, aiLabel, aiTrust, aiSacl, aiAttribute, aiScope, aiFilter);
 
-  TAclSecurityFrame = class(TFrame, IHasDefaultCaption, IDelayedLoad)
+  TAclSecurityFrame = class(TFrame, IDefaultCaption, IDelayedLoad)
     AclFrame: TAclFrame;
     btnRefresh: TButton;
     btnApply: TButton;

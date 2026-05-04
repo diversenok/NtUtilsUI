@@ -10,11 +10,10 @@ uses
   NtUtilsUI.Tree.Search;
 
 type
-  TSamSidsFrame = class(TFrame, IHasDefaultCaption, IDelayedLoad)
+  [DefaultCaption('SAM Accounts')]
+  TSamSidsFrame = class(TFrame, IDelayedLoad)
     Tree: TUiLibTree;
     SearchBox: TUiLibTreeSearchBox;
-  private
-    function GetDefaultCaption: String;
   protected
     procedure CreateWnd; override;
     procedure DelayedLoad;
@@ -65,11 +64,6 @@ begin
     for j := 0 to High(Nodes[i].Users) do
       Tree.AddChild(Nodes[i].Users[j], Nodes[i].Domain);
   end;
-end;
-
-function TSamSidsFrame.GetDefaultCaption;
-begin
-  Result := 'SAM Accounts';
 end;
 
 procedure TSamSidsFrame.CreateWnd;
