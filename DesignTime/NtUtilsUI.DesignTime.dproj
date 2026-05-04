@@ -130,6 +130,7 @@
         <DCCReference Include="NtUtilsUI.Number.pas"/>
         <DCCReference Include="NtUtilsUI.Sid.Trust.pas"/>
         <DCCReference Include="NtUtilsUI.Privileges.pas"/>
+        <DCCReference Include="NtUtilsUI.SessionID.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

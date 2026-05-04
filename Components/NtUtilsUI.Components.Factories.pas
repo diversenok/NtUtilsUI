@@ -7,7 +7,8 @@ unit NtUtilsUI.Components.Factories;
 interface
 
 uses
-  System.Classes, Vcl.Controls, Ntapi.ntseapi, NtUtils, NtUtilsUI.Base;
+  System.Classes, Vcl.Controls, Ntapi.WinNt, Ntapi.ntseapi, NtUtils,
+  NtUtilsUI.Base;
 
 type
   // An anonymous function that can instantiate visual controls
@@ -30,7 +31,7 @@ var
 
   // A control factory for selecting an integrity SID
   UiLibFactoryIntegritySid: function (
-    const InitialChoice: ISid = nil
+    [opt] const InitialChoice: ISid = nil
   ): TWinControlFactory;
 
     // A control factory for selecting a trust SID
@@ -47,6 +48,12 @@ var
 
   // A control factory for displaying a list of all known privileges
   UiLibFactoryPrivilegeListAll: function (
+  ): TWinControlFactory;
+
+  { Session ID }
+
+  UiLibFactorySessionId: function (
+    InitialChoice: TSessionId = TSessionId(-1)
   ): TWinControlFactory;
 
 implementation

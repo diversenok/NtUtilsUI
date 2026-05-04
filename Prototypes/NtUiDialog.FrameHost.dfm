@@ -4,6 +4,8 @@ object FrameHostDialog: TFrameHostDialog
   ClientHeight = 473
   ClientWidth = 614
   Color = clBtnFace
+  Constraints.MinHeight = 50
+  Constraints.MinWidth = 160
   DoubleBuffered = True
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText

@@ -7,7 +7,8 @@ unit NtUtilsUI.Components;
 interface
 
 uses
-  System.Classes, Vcl.Controls, Ntapi.ntseapi, NtUtils, NtUtilsUI.Components.Factories;
+  System.Classes, Vcl.Controls, Ntapi.WinNt, Ntapi.ntseapi, NtUtils,
+  NtUtilsUI.Components.Factories;
 
 const
   MSG_E_NO_COMPONENT = 'The required component is not registered';
@@ -40,6 +41,12 @@ procedure UiLibShowPrivilegeList(
 
 // Display a dialog with a list of all known privileges
 procedure UiLibShowPrivilegeListAll;
+
+// Show a modal dialog to choose a session ID
+function UiLibPickSessionId(
+  Owner: TComponent;
+  InitialChoice: TSessionId = TSessionId(-1)
+): TSessionId;
 
 implementation
 
@@ -100,6 +107,15 @@ procedure UiLibShowPrivilegeListAll;
 begin
   if Assigned(UiLibFactoryPrivilegeListAll) then
     UiLibHost.Show(UiLibFactoryPrivilegeListAll())
+  else
+    raise EClassNotFound.Create(MSG_E_NO_COMPONENT);
+end;
+
+function UiLibPickSessionId;
+begin
+  if Assigned(UiLibFactorySessionId) then
+    Result := UiLibHost.Pick<TSessionId>(Owner,
+      UiLibFactorySessionId(InitialChoice))
   else
     raise EClassNotFound.Create(MSG_E_NO_COMPONENT);
 end;
