@@ -53,7 +53,7 @@ begin
 
   Width := 240;
   Height := 23;
-  Constraints.MinHeight := 21;
+  Constraints.MinHeight := 23;
   Constraints.MinWidth := 150;
 
   FComboBox := TUiLibNumberComboBox.Create(Self);
@@ -109,19 +109,13 @@ end;
 
 procedure TUiLibSessionIdBox.Refresh;
 var
-  PreviousValue: UInt64;
-  Restore: Boolean;
   ID: TSessionId;
 begin
-  Restore := FComboBox.TryGetNumber(PreviousValue);
   FComboBox.KnownValues.BeginUpdateAuto;
   FComboBox.KnownValues.Clear;
 
   for ID in WsxEnumerateSessionIDsWithFallback do
     FComboBox.KnownValues.Add(ID, Rttix.Format(ID));
-
-  if Restore then
-    FComboBox.Number := PreviousValue;
 end;
 
 procedure TUiLibSessionIdBox.RefreshShortcut;
