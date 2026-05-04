@@ -52,7 +52,7 @@ begin
   inherited;
 
   Width := 240;
-  Height := 21;
+  Height := 23;
   Constraints.MinHeight := 21;
   Constraints.MinWidth := 150;
 

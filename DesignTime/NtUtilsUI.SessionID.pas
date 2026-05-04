@@ -46,7 +46,7 @@ begin
   inherited;
 
   Width := 240;
-  Height := 21;
+  Height := 23;
 
   FComboBox := TUiLibComboBox.Create(Self);
   FComboBox.Width := Width;
