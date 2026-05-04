@@ -116,8 +116,9 @@
             <MainSource>MainSource</MainSource>
         </DelphiCompile>
         <DCCReference Include="rtl.dcp"/>
-        <DCCReference Include="VirtualTreesDD.dcp"/>
         <DCCReference Include="vcl.dcp"/>
+        <DCCReference Include="designide.dcp"/>
+        <DCCReference Include="VirtualTreesDD.dcp"/>
         <DCCReference Include="NtUtilsUI.Tree.pas"/>
         <DCCReference Include="NtUtilsUI.StdCtrls.pas"/>
         <DCCReference Include="NtUtilsUI.ListView.pas"/>

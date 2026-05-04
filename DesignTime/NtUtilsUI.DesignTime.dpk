@@ -31,8 +31,9 @@ package NtUtilsUI.DesignTime;
 
 requires
   rtl,
-  VirtualTreesDD,
-  vcl;
+  vcl,
+  designide,
+  VirtualTreesDD;
 
 contains
   NtUtilsUI.Tree in 'NtUtilsUI.Tree.pas',
