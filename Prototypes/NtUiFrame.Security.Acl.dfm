@@ -47,7 +47,7 @@ object AclSecurityFrame: TAclSecurityFrame
     Caption = 'Control flags: '
     TabOrder = 1
     object cbxInherited: TCheckBox
-      Left = 224
+      Left = 192
       Top = 20
       Width = 140
       Height = 17
@@ -56,16 +56,16 @@ object AclSecurityFrame: TAclSecurityFrame
       TabOrder = 2
     end
     object cbxProtected: TCheckBox
-      Left = 447
+      Left = 424
       Top = 20
-      Width = 80
+      Width = 112
       Height = 17
       Anchors = [akTop, akRight]
       Caption = 'Protected'
       TabOrder = 4
     end
     object cbxInheritReq: TCheckBox
-      Left = 224
+      Left = 192
       Top = 41
       Width = 140
       Height = 17
@@ -89,6 +89,15 @@ object AclSecurityFrame: TAclSecurityFrame
       Caption = 'Present'
       TabOrder = 1
       OnClick = cbxPresentClick
+    end
+    object cbxServerSecurity: TCheckBox
+      Left = 424
+      Top = 41
+      Width = 112
+      Height = 17
+      Anchors = [akTop, akRight]
+      Caption = 'Server security'
+      TabOrder = 5
     end
   end
 end

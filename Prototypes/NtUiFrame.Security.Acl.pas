@@ -25,6 +25,7 @@ type
     cbxInheritReq: TCheckBox;
     cbxDefaulted: TCheckBox;
     cbxPresent: TCheckBox;
+    cbxServerSecurity: TCheckBox;
     procedure btnRefreshClick(Sender: TObject);
     procedure btnApplyClick(Sender: TObject);
     procedure cbxPresentClick(Sender: TObject);
@@ -214,6 +215,9 @@ begin
 
   if cbxProtected.Checked then
     Result := Result or FLAG_PROTECTED[FAclType = aiDacl];
+
+  if cbxServerSecurity.Checked then
+    Result := Result or SE_SERVER_SECURITY;
 end;
 
 function TAclSecurityFrame.GetDefaultCaption;
@@ -335,6 +339,7 @@ begin
   cbxInheritReq.Checked := BitTest(Value and FLAG_INHERIT_REQ[FAclType = aiDacl]);
   cbxInherited.Checked := BitTest(Value and FLAG_INHERITED[FAclType = aiDacl]);
   cbxProtected.Checked := BitTest(Value and FLAG_PROTECTED[FAclType = aiDacl]);
+  cbxServerSecurity.Checked := BitTest(Value and SE_SERVER_SECURITY);
   cbxPresentClick(Self);
 end;
 
