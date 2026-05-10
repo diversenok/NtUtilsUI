@@ -866,8 +866,8 @@ begin
       // Make the node and all of its parents visible
       Parent := Node;
       repeat
-        IsVisible[Node.Node] := True;
-        Parent := NodeParent[Node.Node].ProviderOrNil;
+        IsVisible[Parent.Node] := True;
+        Parent := NodeParent[Parent.Node].ProviderOrNil;
       until not Assigned(Parent);
     end
     else
