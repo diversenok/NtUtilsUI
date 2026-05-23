@@ -118,11 +118,13 @@ type
   TUiLibTreeOptions = class (TStringTreeOptions)
   strict private
     FAutoShowRoot: Boolean;
+    FAutoExpandParent: Boolean;
   public
     constructor Create(AOwner: TCustomControl); override;
     procedure AssignTo(Dest: TPersistent); override;
   published
     property AutoShowRoot: Boolean read FAutoShowRoot write FAutoShowRoot default True;
+    property AutoExpandParent: Boolean read FAutoExpandParent write FAutoExpandParent default True;
     property AutoOptions default [toAutoDropExpand, toAutoScrollOnExpand, toAutoTristateTracking, toAutoDeleteMovedNodes, toAutoChangeScale];
     property ExportMode default emSelected;
     property MiscOptions default [toAcceptOLEDrop, toFullRepaintOnResize, toInitOnSave, toToggleOnDblClick, toWheelPanning];
@@ -191,10 +193,11 @@ type
     function GetOptionsClass: TTreeOptionsClass; override;
     procedure KeyDown(var Key: Word; Shift: TShiftState); override;
     procedure ValidateNodeDataSize(var Size: Integer); override;
+    procedure ApplyAutoOptions(Existing: INodeProvider; Mode: TVTNodeAttachMode);
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
-    function AddChild(NewProvider: INodeProvider; [opt] Parent: INodeProvider = nil; AutoExpandParent: Boolean = True): INodeProvider; reintroduce;
+    function AddChild(NewProvider: INodeProvider; [opt] Parent: INodeProvider = nil): INodeProvider; reintroduce;
     procedure ApplyFilter(const Query: String; UseColumn: TColumnIndex = -1);
     function BackupSelectionAuto: IDeferredOperation;
     function BeginUpdateAuto: IAutoReleasable;
@@ -206,6 +209,7 @@ type
     function InsertNode(NewProvider: INodeProvider; Mode: TVTNodeAttachMode; Existing: INodeProvider): INodeProvider; reintroduce;
     function MoveSelectedNodesUp: Boolean;
     function MoveSelectedNodesDown: Boolean;
+    procedure MoveTo(Source, Target: INodeProvider; Mode: TVTNodeAttachMode; ChildrenOnly: Boolean = False); reintroduce;
     procedure RefreshPopupMenuShortcuts;
     property HighlightedNode: PVirtualNode read GetHighlightedNode write SetHighlightedNode;
   published
@@ -719,7 +723,10 @@ end;
 procedure TUiLibTreeOptions.AssignTo;
 begin
   if Dest is TUiLibTreeOptions then
+  begin
     TUiLibTreeOptions(Dest).FAutoShowRoot := FAutoShowRoot;
+    TUiLibTreeOptions(Dest).FAutoExpandParent := FAutoExpandParent;
+  end;
 
   inherited;
 end;
@@ -741,6 +748,7 @@ begin
 
   // Choose new option defaults
   FAutoShowRoot := True;
+  FAutoExpandParent := True;
 end;
 
 { TUiLibTreeColumns }
@@ -800,12 +808,22 @@ begin
   NewNode := inherited AddChild(NodeOrNil(Parent), IInterface(NewProvider));
   NewProvider.Attach(NewNode);
   Result := NewProvider;
+  ApplyAutoOptions(Parent, amAddChildLast);
+end;
 
-  if AutoExpandParent and Assigned(Parent) then
-    Expanded[Parent.Node] := True;
+procedure TUiLibTree.ApplyAutoOptions;
+begin
+  if Assigned(Existing) and (Mode in [amAddChildFirst, amAddChildLast]) then
+  begin
+    // Auto-expand only on the first child so we don't interfer with the user
+    // manually collapsing sub-trees
+    if TreeOptions.AutoExpandParent and (ChildCount[Existing.Node] = 1) then
+      Expanded[Existing.Node] := True;
 
-  if TreeOptions.AutoShowRoot and Assigned(Parent) then
-    TreeOptions.PaintOptions := TreeOptions.PaintOptions + [toShowRoot];
+    if TreeOptions.AutoShowRoot then
+      TreeOptions.PaintOptions := TreeOptions.PaintOptions + [toShowRoot];
+  end;
+
 end;
 
 procedure TUiLibTree.ApplyFilter;
@@ -1325,6 +1343,8 @@ begin
   // Notify the provider of completion
   NewProvider.Attach(NewNode);
   Result := NewProvider;
+
+  ApplyAutoOptions(Existing, Mode);
 end;
 
 procedure TUiLibTree.KeyDown;
@@ -1337,22 +1357,22 @@ end;
 
 function TUiLibTree.MoveSelectedNodesDown;
 var
-  Nodes: TArray<PVirtualNode>;
-  Next: PVirtualNode;
+  Providers: TArray<INodeProvider>;
+  Next: INodeProvider;
   i: Integer;
 begin
   BeginUpdateAuto;
   Result := False;
-  Nodes := SelectedNodes.Nodes;
+  Providers := SelectedNodes.Providers;
 
-  for i := High(Nodes) downto 0 do
+  for i := High(Providers) downto 0 do
   begin
-    Next := GetNext(Nodes[i]);
+    Next := GetNext(Providers[i].Node).ProviderOrNil;
 
     // Move each node after its next without passing previously moved
-    if Assigned(Next) and ((i = High(Nodes)) or (Next <> Nodes[i + 1])) then
+    if Assigned(Next) and ((i = High(Providers)) or (Next <> Providers[i + 1])) then
     begin
-      MoveTo(Nodes[i], Next, amInsertAfter, False);
+      MoveTo(Providers[i], Next, amInsertAfter, False);
       Result := True;
     end;
   end;
@@ -1360,25 +1380,31 @@ end;
 
 function TUiLibTree.MoveSelectedNodesUp;
 var
-  Nodes: TArray<PVirtualNode>;
-  Previous: PVirtualNode;
+  Providers: TArray<INodeProvider>;
+  Previous: INodeProvider;
   i: Integer;
 begin
   BeginUpdateAuto;
   Result := False;
-  Nodes := SelectedNodes.Nodes;
+  Providers := SelectedNodes.Providers;
 
-  for i := 0 to High(Nodes) do
+  for i := 0 to High(Providers) do
   begin
-    Previous := GetPrevious(Nodes[i]);
+    Previous := GetPrevious(Providers[i].Node).ProviderOrNil;
 
     // Move each node before its previous without passing previously moved
-    if Assigned(Previous) and ((i = 0) or (Previous <> Nodes[i - 1])) then
+    if Assigned(Previous) and ((i = 0) or (Previous <> Providers[i - 1])) then
     begin
-      MoveTo(Nodes[i], Previous, amInsertBefore, False);
+      MoveTo(Providers[i], Previous, amInsertBefore, False);
       Result := True;
     end;
   end;
+end;
+
+procedure TUiLibTree.MoveTo;
+begin
+  inherited MoveTo(Source.Node, NodeOrNil(Target), Mode, ChildrenOnly);
+  ApplyAutoOptions(Target, Mode);
 end;
 
 procedure TUiLibTree.RefreshPopupMenuShortcuts;

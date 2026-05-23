@@ -27,11 +27,13 @@ type
   TUiLibTreeOptions = class (TStringTreeOptions)
   strict private
     FAutoShowRoot: Boolean;
+    FAutoExpandParent: Boolean;
   public
     constructor Create(AOwner: TCustomControl); override;
     procedure AssignTo(Dest: TPersistent); override;
   published
     property AutoShowRoot: Boolean read FAutoShowRoot write FAutoShowRoot default True;
+    property AutoExpandParent: Boolean read FAutoExpandParent write FAutoExpandParent default True;
     property AutoOptions default [toAutoDropExpand, toAutoScrollOnExpand, toAutoTristateTracking, toAutoDeleteMovedNodes, toAutoChangeScale];
     property ExportMode default emSelected;
     property MiscOptions default [toAcceptOLEDrop, toFullRepaintOnResize, toInitOnSave, toToggleOnDblClick, toWheelPanning];
@@ -108,7 +110,10 @@ end;
 procedure TUiLibTreeOptions.AssignTo;
 begin
   if Dest is TUiLibTreeOptions then
+  begin
     TUiLibTreeOptions(Dest).FAutoShowRoot := FAutoShowRoot;
+    TUiLibTreeOptions(Dest).FAutoExpandParent := FAutoExpandParent;
+  end;
 
   inherited;
 end;
@@ -130,6 +135,7 @@ begin
 
   // Choose new option defaults
   FAutoShowRoot := True;
+  FAutoExpandParent := True;
 end;
 
 { TUiLibTreeHeader }
