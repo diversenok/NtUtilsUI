@@ -13,6 +13,8 @@ type
   TColorSettings = record
     // Text background
     clBackground: TColor;
+    clBackgroundRecentlyAdded: TColor;
+    clBackgroundRecentlyRemoved: TColor;
     clBackgroundAllow: TColor;
     clBackgroundAllowAccent: TColor;
     clBackgroundDeny: TColor;
@@ -37,6 +39,8 @@ type
 var
   DefaultColorSettings: TColorSettings = (
     clBackground: clWindow;                    // White
+    clBackgroundRecentlyAdded: $40F080;        // Green
+    clBackgroundRecentlyRemoved: $4040F0;      // Red
     clBackgroundAllow: $E0F0E0;                // Light green
     clBackgroundAllowAccent: $C0F0C0;          // Medium-light green
     clBackgroundDeny: $E0E0F0;                 // Light red
