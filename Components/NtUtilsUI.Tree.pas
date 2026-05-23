@@ -1403,6 +1403,29 @@ end;
 
 procedure TUiLibTree.MoveTo;
 begin
+  // Suppress moves that don't do anything
+  if not ChildrenOnly then
+    case Mode of
+      amNoWhere:
+        Exit;
+
+      amInsertBefore:
+        if Assigned(Target) and (GetPreviousNoInit(Target.Node) = Source.Node) then
+          Exit;
+
+      amInsertAfter:
+        if Assigned(Target) and (GetNextNoInit(Target.Node) = Source.Node) then
+          Exit;
+
+      amAddChildFirst:
+        if GetFirstChildNoInit(NodeOrNil(Target)) = Source.Node then
+          Exit;
+
+      amAddChildLast:
+        if GetLastChildNoInit(NodeOrNil(Target)) = Source.Node then
+          Exit;
+    end;
+
   inherited MoveTo(Source.Node, NodeOrNil(Target), Mode, ChildrenOnly);
   ApplyAutoOptions(Target, Mode);
 end;
