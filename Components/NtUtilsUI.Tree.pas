@@ -10,7 +10,7 @@ interface
 
 uses
   System.Types, System.Classes, Vcl.Controls, Vcl.Graphics, Vcl.Menus,
-  VirtualTrees, VirtualTrees.Header, VirtualTrees.Types, NtUtils,
+  Vcl.ImgList, VirtualTrees, VirtualTrees.Header, VirtualTrees.Types, NtUtils,
   DelphiUtils.Arrays;
 
 const
@@ -20,7 +20,7 @@ type
   TUiLibTree = class;
 
   INodeProvider = interface
-    ['{470E3BBC-4DED-4CCC-B05A-4754DF92506F}']
+    ['{18A9A8E1-8C3B-40C9-B506-96FD1EBFD8CB}']
     procedure Attach(Node: PVirtualNode);
     procedure Detach;
     procedure Initialize;
@@ -37,6 +37,7 @@ type
     function GetFontStyle(out Value: TFontStyles): Boolean;
     function GetFontStyleForColumn(Column: TColumnIndex; out Value: TFontStyles): Boolean;
     function GetCursor(out Value: TCursor): Boolean;
+    function GetIcon(Column: TColumnIndex; out ImageIndex: TImageIndex): TCustomImageList;
     function GetEnabledMainActionMenu: Boolean;
 
     property Tree: TUiLibTree read GetTree;
@@ -182,6 +183,8 @@ type
     function DoExpanding(Node: PVirtualNode): Boolean; override;
     procedure DoFreeNode(Node: PVirtualNode); override;
     procedure DoGetCursor(var Cursor: TCursor); override;
+    function DoGetImageIndex(Node: PVirtualNode; Kind: TVTImageKind; Column: TColumnIndex;
+      var Ghosted: Boolean; var Index: TImageIndex): TCustomImageList; override;
     function DoGetNodeHint(Node: PVirtualNode; Column: TColumnIndex; var LineBreakStyle: TVTTooltipLineBreakStyle): string; override;
     function DoGetPopupMenu(Node: PVirtualNode; Column: TColumnIndex; Position: TPoint): TPopupMenu; override;
     procedure DoGetText(var EventArgs: TVSTGetCellTextEventArgs); override;
@@ -274,6 +277,7 @@ type
     function GetFontStyle(out Value: TFontStyles): Boolean; virtual;
     function GetFontStyleForColumn(Column: TColumnIndex; out Value: TFontStyles): Boolean; virtual;
     function GetCursor(out Value: TCursor): Boolean; virtual;
+    function GetIcon(Column: TColumnIndex; out ImageIndex: TImageIndex): TCustomImageList; virtual;
     function GetEnabledMainActionMenu: Boolean; virtual;
 
     procedure SetColumnText(Column: TColumnIndex; const Value: String); virtual;
@@ -1203,6 +1207,17 @@ begin
     inherited;
 end;
 
+function TUiLibTree.DoGetImageIndex;
+begin
+  if Kind in [ikNormal, ikSelected] then
+    Result := Node.Provider.GetIcon(Column, Index)
+  else
+    Result := nil;
+
+  if not Assigned(Result) then
+    Result := inherited DoGetImageIndex(Node, Kind, Column, Ghosted, Index);
+end;
+
 function TUiLibTree.DoGetNodeHint;
 begin
   LineBreakStyle := hlbDefault;
@@ -1595,6 +1610,11 @@ end;
 function TNodeProvider.GetHint;
 begin
   Result := FHint;
+end;
+
+function TNodeProvider.GetIcon;
+begin
+  Result := nil;
 end;
 
 function TNodeProvider.GetNode;
