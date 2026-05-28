@@ -1425,11 +1425,13 @@ begin
         Exit;
 
       amInsertBefore:
-        if Assigned(Target) and (GetPreviousNoInit(Target.Node) = Source.Node) then
+        if Assigned(Target) and
+          (GetPreviousSiblingNoInit(Target.Node) = Source.Node) then
           Exit;
 
       amInsertAfter:
-        if Assigned(Target) and (GetNextNoInit(Target.Node) = Source.Node) then
+        if Assigned(Target) and
+          (GetNextSiblingNoInit(Target.Node) = Source.Node) then
           Exit;
 
       amAddChildFirst:
