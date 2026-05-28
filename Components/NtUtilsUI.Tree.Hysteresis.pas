@@ -271,10 +271,31 @@ begin
 end;
 
 procedure TUiLibHysteresisTree.Update;
+var
+  ScrollToBottom: Boolean;
+  LastVisible: PVirtualNode;
 begin
+  // If the control is already scrolled all the way to the bottom, we want to
+  // automatically scroll to the new nodes that appear lower
+  LastVisible := FTreeControl.GetLastVisible;
+  ScrollToBottom := Assigned(LastVisible) and
+    (LastVisible = FTreeControl.BottomNode);
+
+  // Merge new data
   FHysteresisTree.Update(Data);
+
+  // Sync the UI tree with the hysteresis tree state
   FTreeControl.BeginUpdateAuto;
   IssueNodeEvents;
+
+  // Scroll
+  if ScrollToBottom then
+  begin
+    LastVisible := FTreeControl.GetLastVisible;
+
+    if Assigned(LastVisible) then
+      FTreeControl.ScrollIntoView(LastVisible, False);
+  end;
 end;
 
 { TUiLibHysteresisTree<T> }
