@@ -1445,6 +1445,10 @@ begin
 
   inherited MoveTo(Source.Node, NodeOrNil(Target), Mode, ChildrenOnly);
   ApplyAutoOptions(Target, Mode);
+
+  // HACK: There is some kind of miscalculation happening to the cached
+  // VisibleCount value when moving nodes. Fix it here.
+  SetVisibleCount(VisibleNoInitNodes.Count);
 end;
 
 procedure TUiLibTree.RefreshPopupMenuShortcuts;
