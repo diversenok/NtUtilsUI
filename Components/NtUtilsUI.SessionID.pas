@@ -17,9 +17,11 @@ type
   [DefaultCaption('Session ID')]
   TUiLibSessionIdBox = class (TUiLibControl, IModalResult<TSessionId>)
   private
+    FOnChange: TNotifyEvent;
     FComboBox: TUiLibNumberComboBox;
     FRefreshShortcut: TUiLibShortCut;
     procedure RefreshShortcut(Sender: TUiLibShortCut; var Handled: Boolean);
+    procedure ComboBoxChange(Sender: TObject);
     function GetSessionID: TSessionId;
     procedure SetSessionID(Value: TSessionId);
     function GetModalResult: TSessionId;
@@ -31,6 +33,7 @@ type
     class function Factory(InitialChoice: TSessionId): TWinControlFactory; static;
   published
     property SessionID: TSessionId read GetSessionID write SetSessionID;
+    property OnChange: TNotifyEvent read FOnChange write FOnChange;
   end;
 
 implementation
@@ -45,6 +48,12 @@ uses
 {$IFOPT Q+}{$DEFINE Q+}{$ENDIF}
 
 { TUiLibSessionIdBox }
+
+procedure TUiLibSessionIdBox.ComboBoxChange;
+begin
+  if Assigned(FOnChange) then
+    FOnChange(Self);
+end;
 
 constructor TUiLibSessionIdBox.Create;
 begin
@@ -61,6 +70,7 @@ begin
   FComboBox.Anchors := [akLeft, akTop, akRight];
   FComboBox.NumberBase := nsDecimal;
   FComboBox.NumberSize := isCardinal;
+  FComboBox.OnChange := ComboBoxChange;
   FComboBox.Parent := Self;
 
   FRefreshShortcut := TUiLibShortCut.Create(Self);

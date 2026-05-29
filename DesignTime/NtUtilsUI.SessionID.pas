@@ -17,12 +17,14 @@ type
 
   TUiLibSessionIdBox = class (TUiLibControl)
   private
+    FOnChange: TNotifyEvent;
     FComboBox: TUiLibComboBox;
     FSessionId: TSessionId;
   public
     constructor Create(AOwner: TComponent); override;
   published
     property SessionID: TSessionId read FSessionId write FSessionId default TSessionId(-1);
+    property OnChange: TNotifyEvent read FOnChange write FOnChange;
   end;
 
 procedure Register;
