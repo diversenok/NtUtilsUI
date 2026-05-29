@@ -36,6 +36,7 @@ type
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
     procedure AttachToTree(Tree: TUiLibTree);
+    procedure ReapplySearch;
   end;
 
 implementation
@@ -158,13 +159,7 @@ begin
     FTree.SetFocus;
 end;
 
-procedure TUiLibTreeSearchBox.SearchBoxArrow;
-begin
-  if HasTree and FTree.CanFocus then
-    FTree.SetFocus;
-end;
-
-procedure TUiLibTreeSearchBox.SearchBoxSearch;
+procedure TUiLibTreeSearchBox.ReapplySearch;
 var
   SearchColumn: TColumnIndex;
 begin
@@ -177,6 +172,17 @@ begin
 
     FTree.ApplyFilter(FSearchBox.Query, SearchColumn);
   end;
+end;
+
+procedure TUiLibTreeSearchBox.SearchBoxArrow;
+begin
+  if HasTree and FTree.CanFocus then
+    FTree.SetFocus;
+end;
+
+procedure TUiLibTreeSearchBox.SearchBoxSearch;
+begin
+  ReapplySearch;
 end;
 
 procedure TUiLibTreeSearchBox.UpdateColumns;
@@ -203,7 +209,7 @@ begin
   end;
 
   FColumnsBox.UpdateItems(NewItems, 0);
-  SearchBoxSearch(Self);
+  ReapplySearch;
 end;
 
 end.
