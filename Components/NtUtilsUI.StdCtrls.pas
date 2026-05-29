@@ -64,10 +64,15 @@ type
 
   TUiLibComboBox = class(TComboBox)
   private
+    FStableItemIndex: Integer;
+    FStableText: String;
     FEscShortCut: TUiLibShortCut;
     function GetText: String;
+    procedure SetText(const Value: String);
+    procedure RefreshStableState;
     procedure OnEscShortcut(Sender: TUiLibShortcut; var Handled: Boolean);
   protected
+    procedure Change; override;
     procedure CreateWnd; override;
     procedure WMWindowPosChanged(var Message: TWMWindowPosChanging); message WM_WINDOWPOSCHANGED;
     procedure ComboWndProc(var Message: TMessage; ComboWnd: HWnd; ComboProc: TWindowProcPtr); override;
@@ -77,6 +82,8 @@ type
     procedure UpdateItems(const NewItems: TArray<String>; FallbackIndex: Integer = -1);
   published
     property DropDownCount default 24;
+    property ItemIndex: Integer read FStableItemIndex write SetItemIndex;
+    property Text: String read GetText write SetText;
   end;
 
   TUiLibButton = class(TButton)
@@ -434,6 +441,12 @@ end;
 
 { TUiLibComboBox }
 
+procedure TUiLibComboBox.Change;
+begin
+  RefreshStableState;
+  inherited;
+end;
+
 procedure TUiLibComboBox.ComboWndProc;
 begin
   if (Message.Msg <> WM_KEYDOWN) or (EditHandle = 0) or
@@ -447,6 +460,7 @@ begin
 
   // Adjust defaults
   DropDownCount := 24;
+  FStableItemIndex := -1;
 end;
 
 procedure TUiLibComboBox.CreateWnd;
@@ -459,11 +473,13 @@ begin
   FEscShortCut := TUiLibShortCut.Create(Self);
   FEscShortCut.ShortCut := VK_ESCAPE;
   FEscShortCut.OnExecute := OnEscShortcut;
+
+  RefreshStableState;
 end;
 
 function TUiLibComboBox.GetText;
 begin
-  Result := Text;
+  Result := FStableText;
 end;
 
 procedure TUiLibComboBox.KeyPress;
@@ -479,6 +495,23 @@ procedure TUiLibComboBox.OnEscShortcut;
 begin
   if Focused and DroppedDown then
     Handled := True;
+end;
+
+procedure TUiLibComboBox.RefreshStableState;
+begin
+  // Workaround:
+  // In a dropped down state, the combo box highlights the item when the user
+  // hovers over it. This action changes the returned ItemIndex and Text values
+  // without raising the OnChange event. Closing the dropped down list reverts
+  // the change. We want to cache the existing values and return them througout
+  // the interaction to make them consistent with what is actually selected.
+  FStableItemIndex := inherited ItemIndex;
+  FStableText := inherited Text;
+end;
+
+procedure TUiLibComboBox.SetText;
+begin
+  inherited Text := Value;
 end;
 
 procedure TUiLibComboBox.UpdateItems;
