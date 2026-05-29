@@ -26,7 +26,6 @@ type
     procedure EditChange(Sender: TObject);
     procedure EditExit(Sender: TObject);
     procedure EditKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
-    function GetNumber: UInt64;
     procedure SetNumber(const Value: UInt64);
     procedure UpdateFeedback;
     procedure SetNumberBase(const Value: TNumericSystem);
@@ -38,7 +37,7 @@ type
     constructor Create(AOwner: TComponent); override;
     function TryGetNumber(out Value: UInt64): Boolean;
   published
-    property Number: UInt64 read GetNumber write SetNumber default 0;
+    property Number: UInt64 read FNumber write SetNumber default 0;
     property NumberBase: TNumericSystem read FNumberBase write SetNumberBase default nsHexadecimal;
     property NumberSize: TIntegerSize read FNumberSize write SetNumberSize default isUInt64;
     property NumberWidth: Byte read FNumberWidth write SetNumberWidth default NUMERIC_WIDTH_ROUND_TO_GROUP;
@@ -89,7 +88,6 @@ type
     FOnChange: TNotifyEvent;
     procedure ComboBoxChange(Sender: TObject);
     procedure ComboBoxExit(Sender: TObject);
-    function GetNumber: UInt64;
     procedure SetNumber(const Value: UInt64);
     procedure UpdateFeedback;
     procedure SetNumberBase(const Value: TNumericSystem);
@@ -107,7 +105,7 @@ type
     destructor Destroy; override;
     function TryGetNumber(out Value: UInt64): Boolean;
   published
-    property Number: UInt64 read GetNumber write SetNumber default 0;
+    property Number: UInt64 read FNumber write SetNumber default 0;
     property NumberBase: TNumericSystem read FNumberBase write SetNumberBase default nsHexadecimal;
     property NumberSize: TIntegerSize read FNumberSize write SetNumberSize default isUInt64;
     property NumberWidth: Byte read FNumberWidth write SetNumberWidth default NUMERIC_WIDTH_ROUND_TO_GROUP;
@@ -250,14 +248,6 @@ begin
   end;
 
   inherited;
-end;
-
-function TUiLibNumberBox.GetNumber;
-begin
-  if not FValid then
-    raise Exception.Create('Invalid numeric value specified');
-
-  Result := FNumber;
 end;
 
 procedure TUiLibNumberBox.Reformat;
@@ -480,14 +470,6 @@ destructor TUiLibNumberComboBox.Destroy;
 begin
   FreeAndNil(FKnownValues);
   inherited;
-end;
-
-function TUiLibNumberComboBox.GetNumber;
-begin
-  if not FValid then
-    raise Exception.Create('Invalid numeric value specified');
-
-  Result := FNumber;
 end;
 
 procedure TUiLibNumberComboBox.ItemsChanged;
