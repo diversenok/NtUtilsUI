@@ -54,10 +54,11 @@ type
     property HysteresisNode: THysteresisNode<T> read GetHysteresisNode;
   end;
 
+  // A non-generic base interface for the hysteresis tree container
   IUiLibHysteresisContainer = interface
     ['{5EF6A6C9-937E-4D1D-A2A7-013B5EE2F068}']
-    function GetTransitionTime: Integer;
-    procedure SetTransitionTime(Value: Integer);
+    function GetControl: TUiLibTree;
+    function GetCore: IHysteresisTree;
 
     // Notify nodes that an update is about to begin
     procedure PreUpdate;
@@ -65,46 +66,53 @@ type
     // Refresh the tree with the new data snapshot
     procedure Update(const Data: TArray<Pointer>);
 
-    // The number of updates nodes remain "recent" when added or removed
-    property TransitionTime: Integer read GetTransitionTime write SetTransitionTime;
+    // Retrieve the UI tree control reference
+    property Control: TUiLibTree read GetControl;
+
+    // Retrieve the hysteresis tree data structure reference
+    property Core: IHysteresisTree read GetCore;
   end;
 
   TUiLibHysteresisContainer = class abstract (TInterfacedObject,
     IUiLibHysteresisContainer)
   protected
-    FTreeControl: TUiLibTree;
-    FHysteresisTree: IHysteresisTree;
+    FControl: TUiLibTree;
+    FCore: IHysteresisTree;
     FProviderClass: THysteresisNodeProviderClass;
-    function GetTransitionTime: Integer;
-    procedure SetTransitionTime(Value: Integer);
+    function GetControl: TUiLibTree;
+    function GetCore: IHysteresisTree;
     procedure IssueNodeEvents;
     procedure PreUpdate;
     procedure Update(const Data: TArray<Pointer>);
   end;
 
+  // A generic interface for the hysteresis tree container
   IUiLibHysteresisContainer<T> = interface (IUiLibHysteresisContainer)
     ['{C4AC2D6C-3B5A-42E6-B31A-EFA0452375D4}']
+    function GetCore: IHysteresisTree<T>;
+
+    // Refresh the tree with the new data snapshot
     procedure Update(const Entries: TArray<T>);
+
+    // Retrieve the hysteresis tree data structure reference
+    property Core: IHysteresisTree<T> read GetCore;
   end;
 
   TUiLibHysteresisContainer<T> = class sealed (TUiLibHysteresisContainer,
     IUiLibHysteresisContainer<T>)
   private
+    function GetCore: IHysteresisTree<T>;
     procedure Update(const Entries: TArray<T>);
     constructor Create(
       TreeControl: TUiLibTree;
       ProviderClass: THysteresisNodeProviderClass;
-      EquivalencyCheck: TEqualityCheck<T>;
-      [opt] ParentCheck: TParentChecker<T>;
-      [opt] TTL: Integer
+      EquivalencyCheck: TEqualityCheck<T>
     );
   public
     class function Initialize(
       TreeControl: TUiLibTree;
       ProviderClass: THysteresisNodeProviderClass;
-      EquivalencyCheck: TEqualityCheck<T>;
-      [opt] ParentCheck: TParentChecker<T> = nil;
-      [opt] TTL: Integer = 0
+      EquivalencyCheck: TEqualityCheck<T>
     ): IUiLibHysteresisContainer<T>;
   end;
 
@@ -188,9 +196,14 @@ end;
 
 { TUiLibHysteresisContainer }
 
-function TUiLibHysteresisContainer.GetTransitionTime;
+function TUiLibHysteresisContainer.GetControl;
 begin
-  Result := FHysteresisTree.TransitionTime;
+  Result := FControl;
+end;
+
+function TUiLibHysteresisContainer.GetCore;
+begin
+  Result := FCore;
 end;
 
 procedure TUiLibHysteresisContainer.IssueNodeEvents;
@@ -199,18 +212,18 @@ var
   Provider: THysteresisNodeProvider;
 begin
   // Create and insert new nodes (with no parent for now)
-  for Node in FHysteresisTree.Nodes do
+  for Node in FCore.Nodes do
     if Node.NewlyAdded then
     begin
       Provider := FProviderClass.Create(Node);
       Node.Context := Provider;
-      FTreeControl.InsertNode(Provider, amAddChildLast, nil);
+      FControl.InsertNode(Provider, amAddChildLast, nil);
     end;
 
-  if Assigned(FHysteresisTree.FirstNode) then
+  if Assigned(FCore.FirstNode) then
   begin
     // Find the first root node
-    Node := FHysteresisTree.FirstNode;
+    Node := FCore.FirstNode;
 
     while Assigned(Node.Parent) do
       Node := Node.Parent;
@@ -219,28 +232,28 @@ begin
       Node := Node.PreviousSibling;
 
     // Move the first root node to its position
-    FTreeControl.MoveTo(NodeToProvider(Node), amAddChildFirst, nil);
+    FControl.MoveTo(NodeToProvider(Node), amAddChildFirst, nil);
 
     // Move other root nodes
     while Assigned(Node.NextSibling) do
     begin
-      FTreeControl.MoveTo(NodeToProvider(Node.NextSibling), amInsertAfter,
+      FControl.MoveTo(NodeToProvider(Node.NextSibling), amInsertAfter,
         NodeToProvider(Node));
       Node := Node.NextSibling;
     end;
   end;
 
   // Move all parented new nodes to their correct positions
-  for Node in FHysteresisTree.Nodes do
+  for Node in FCore.Nodes do
     if Assigned(Node.FirstChild) then
     begin
-      FTreeControl.MoveTo(NodeToProvider(Node.FirstChild), amAddChildFirst,
+      FControl.MoveTo(NodeToProvider(Node.FirstChild), amAddChildFirst,
         NodeToProvider(Node));
 
       Sibling := Node.FirstChild.NextSibling;
       while Assigned(Sibling) do
       begin
-        FTreeControl.MoveTo(NodeToProvider(Sibling), amInsertAfter,
+        FControl.MoveTo(NodeToProvider(Sibling), amInsertAfter,
           NodeToProvider(Sibling.PreviousSibling));
         Sibling := Sibling.NextSibling;
       end;
@@ -248,19 +261,19 @@ begin
 
   // Move all deleted nodes to the root to flatten them (as we don't want to
   // issue deletes on nodes that might have children)
-  for Node in FHysteresisTree.DeletedNodes do
-    FTreeControl.MoveTo(NodeToProvider(Node), amAddChildLast, nil);
+  for Node in FCore.DeletedNodes do
+    FControl.MoveTo(NodeToProvider(Node), amAddChildLast, nil);
 
   // And then delete them
-  for Node in FHysteresisTree.DeletedNodes do
+  for Node in FCore.DeletedNodes do
   begin
-    Assert(FTreeControl.ChildCount[NodeToProvider(Node).FNode] = 0,
+    Assert(FControl.ChildCount[NodeToProvider(Node).FNode] = 0,
       'Deleting while there are children');
-    FTreeControl.DeleteNode(NodeToProvider(Node).FNode);
+    FControl.DeleteNode(NodeToProvider(Node).FNode);
   end;
 
   // Finally, issue post-update events
-  for Node in FHysteresisTree.Nodes do
+  for Node in FCore.Nodes do
     NodeToProvider(Node).PostUpdate;
 end;
 
@@ -268,13 +281,8 @@ procedure TUiLibHysteresisContainer.PreUpdate;
 var
   Node: THysteresisNode;
 begin
-  for Node in FHysteresisTree.Nodes do
+  for Node in FCore.Nodes do
     NodeToProvider(Node).PreUpdate;
-end;
-
-procedure TUiLibHysteresisContainer.SetTransitionTime;
-begin
-  FHysteresisTree.TransitionTime := Value;
 end;
 
 procedure TUiLibHysteresisContainer.Update;
@@ -284,24 +292,24 @@ var
 begin
   // If the control is already scrolled all the way to the bottom, we want to
   // automatically scroll to the new nodes that appear lower
-  LastVisible := FTreeControl.GetLastVisible;
+  LastVisible := FControl.GetLastVisible;
   ScrollToBottom := Assigned(LastVisible) and
-    (LastVisible = FTreeControl.BottomNode);
+    (LastVisible = FControl.BottomNode);
 
   // Merge new data
-  FHysteresisTree.Update(Data);
+  FCore.Update(Data);
 
   // Sync the UI tree with the hysteresis tree state
-  FTreeControl.BeginUpdateAuto;
+  FControl.BeginUpdateAuto;
   IssueNodeEvents;
 
   // Scroll
   if ScrollToBottom then
   begin
-    LastVisible := FTreeControl.GetLastVisible;
+    LastVisible := FControl.GetLastVisible;
 
     if Assigned(LastVisible) then
-      FTreeControl.ScrollIntoView(LastVisible, False);
+      FControl.ScrollIntoView(LastVisible, False);
   end;
 end;
 
@@ -310,16 +318,20 @@ end;
 constructor TUiLibHysteresisContainer<T>.Create;
 begin
   inherited Create;
-  FTreeControl := TreeControl;
+  FControl := TreeControl;
   FProviderClass := ProviderClass;
-  FHysteresisTree := THysteresisTree<T>.Initialize(EquivalencyCheck,
-    ParentCheck, TTL);
+  FCore := THysteresisTree<T>.Initialize(EquivalencyCheck);
+end;
+
+function TUiLibHysteresisContainer<T>.GetCore;
+begin
+  Result := IHysteresisTree<T>(FCore);
 end;
 
 class function TUiLibHysteresisContainer<T>.Initialize;
 begin
   Result := TUiLibHysteresisContainer<T>.Create(TreeControl, ProviderClass,
-    EquivalencyCheck, ParentCheck, TTL);
+    EquivalencyCheck);
 end;
 
 procedure TUiLibHysteresisContainer<T>.Update;
