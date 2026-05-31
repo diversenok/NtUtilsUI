@@ -17,6 +17,7 @@ const
   DEFAULT_EMPTY_MESSAGE = 'No items to display';
 
 type
+  TColumnIndex = VirtualTrees.Types.TColumnIndex;
   TUiLibTree = class;
 
   INodeProvider = interface
@@ -212,7 +213,7 @@ type
     function InsertNode(NewProvider: INodeProvider; Mode: TVTNodeAttachMode; Existing: INodeProvider): INodeProvider; reintroduce;
     function MoveSelectedNodesUp: Boolean;
     function MoveSelectedNodesDown: Boolean;
-    procedure MoveTo(Source, Target: INodeProvider; Mode: TVTNodeAttachMode; ChildrenOnly: Boolean = False); reintroduce;
+    procedure MoveTo(Source: INodeProvider; Mode: TVTNodeAttachMode; Target: INodeProvider; ChildrenOnly: Boolean = False); reintroduce;
     procedure RefreshPopupMenuShortcuts;
     property HighlightedNode: PVirtualNode read GetHighlightedNode write SetHighlightedNode;
   published
@@ -1387,7 +1388,7 @@ begin
     // Move each node after its next without passing previously moved
     if Assigned(Next) and ((i = High(Providers)) or (Next <> Providers[i + 1])) then
     begin
-      MoveTo(Providers[i], Next, amInsertAfter, False);
+      MoveTo(Providers[i], amInsertAfter, Next);
       Result := True;
     end;
   end;
@@ -1410,7 +1411,7 @@ begin
     // Move each node before its previous without passing previously moved
     if Assigned(Previous) and ((i = 0) or (Previous <> Providers[i - 1])) then
     begin
-      MoveTo(Providers[i], Previous, amInsertBefore, False);
+      MoveTo(Providers[i], amInsertBefore, Previous);
       Result := True;
     end;
   end;

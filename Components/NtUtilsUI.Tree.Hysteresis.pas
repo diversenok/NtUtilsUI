@@ -253,7 +253,7 @@ begin
 
     hnaMove:
       // A node has changed its location
-      FTreeControl.MoveTo(Provider, RelativeToProvider, AttachMode);
+      FTreeControl.MoveTo(Provider, AttachMode, RelativeToProvider);
 
     hnaDelete:
     begin

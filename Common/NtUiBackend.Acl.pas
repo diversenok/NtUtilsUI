@@ -362,7 +362,7 @@ begin
   // Reorder ACEs category-by-category preserving their order within each
   for Category := Low(TAceCategory) to High(TAceCategory) do
     for AceNode in Aces[Category] do
-      Tree.MoveTo(AceNode, nil, amAddChildLast);
+      Tree.MoveTo(AceNode, amAddChildLast, nil);
 end;
 
 function UiLibCollectAces;
