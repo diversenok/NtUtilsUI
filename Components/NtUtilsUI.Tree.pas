@@ -165,6 +165,7 @@ type
     FPopupMode: TUiLibTreePopupMode;
     FEmptyListMessage: String;
     FEmptyListMessageLines: TArray<String>;
+    FOnSortChange: TNotifyEvent;
     procedure SetEmptyListMessage(Value: String);
     function GetHeader: TUiLibTreeHeader;
     procedure SetHeader(Value: TUiLibTreeHeader);
@@ -196,6 +197,7 @@ type
     procedure DoHeaderClick(const HitInfo: TVTHeaderHitInfo); override;
     function DoInitChildren(Node: PVirtualNode; var ChildCount: Cardinal): Boolean; override;
     procedure DoInitNode(Parent, Node: PVirtualNode; var InitStates: TVirtualNodeInitStates); override;
+    procedure DoSortChange; virtual;
     procedure DoPaintText(Node: PVirtualNode; const Canvas: TCanvas; Column: TColumnIndex; TextType: TVSTTextType); override;
     procedure DoRemoveFromSelection(Node: PVirtualNode); override;
     function GetHeaderClass: TVTHeaderClass; override;
@@ -220,6 +222,7 @@ type
     function MoveSelectedNodesDown: Boolean;
     procedure MoveTo(Source: INodeProvider; Mode: TVTNodeAttachMode; Target: INodeProvider; ChildrenOnly: Boolean = False); reintroduce;
     procedure RefreshPopupMenuShortcuts;
+    procedure SortIfNecessary;
     property HighlightedNode: PVirtualNode read GetHighlightedNode write SetHighlightedNode;
   published
     property ClipboardFormats stored False;
@@ -234,6 +237,7 @@ type
     property SelectionBlendFactor default 64;
     property TreeOptions: TUiLibTreeOptions read GetTreeOptions write SetTreeOptions;
     property OnMainAction: TNodeProviderEvent read GetOnMainAction write SetOnMainAction;
+    property OnSortChange: TNotifyEvent read FOnSortChange write FOnSortChange;
   end;
 
   TNodeProvider = class (TInterfacedObject, INodeProvider)
@@ -964,7 +968,7 @@ begin
       end;
 
       // Re-apply sorting
-      SortTree(Header.SortColumn, Header.SortDirection);
+      SortIfNecessary;
     end
   );
 end;
@@ -1267,6 +1271,12 @@ end;
 
 procedure TUiLibTree.DoHeaderClick;
 begin
+  // TriStateAutoSort allows the user to reset column sorting. Note that this
+  // option needs to be explicitly turned on because VirtualTree does not
+  // remember the original order and so the nodes need to be programmed to
+  // provide it instead. At the same time, hoHeaderClickAutoSort must be turned
+  // off because it's incompatible with our logic (which emulates it anyway).
+
   if Header.TriStateAutoSort and
     not (hoHeaderClickAutoSort in Header.Options) and
     (HitInfo.Button = mbLeft) and
@@ -1292,8 +1302,9 @@ begin
     else
       Header.SortColumn := NoColumn;
 
-    // Reapply
-    SortTree(Header.SortColumn, Header.SortDirection);
+    // Re-apply
+    DoSortChange;
+    SortIfNecessary;
   end;
 
   inherited;
@@ -1339,6 +1350,12 @@ begin
   // half-destroyed form
   if not (csDestroying in ComponentState) then
     inherited;
+end;
+
+procedure TUiLibTree.DoSortChange;
+begin
+  if Assigned(FOnSortChange) then
+    FOnSortChange(Self);
 end;
 
 procedure TUiLibTree.EnsureNodeSelected;
@@ -1549,6 +1566,12 @@ end;
 procedure TUiLibTree.SetTreeOptions;
 begin
   inherited TreeOptions := Value;
+end;
+
+procedure TUiLibTree.SortIfNecessary;
+begin
+  if Header.SortColumn <> NoColumn then
+    SortTree(Header.SortColumn, Header.SortDirection);
 end;
 
 procedure TUiLibTree.ValidateNodeDataSize;

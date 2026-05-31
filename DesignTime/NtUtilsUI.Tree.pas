@@ -49,6 +49,7 @@ type
     FTriStateAutoSort: Boolean;
     function GetColumns: TUiLibTreeColumns;
     procedure SetColumns(const Value: TUiLibTreeColumns);
+    procedure SetTriStateAutoSort(Value: Boolean);
   protected
     function GetColumnsClass: TVirtualTreeColumnsClass; override;
   public
@@ -58,7 +59,7 @@ type
     property DefaultHeight default 24;
     property Height default 24;
     property Options default [hoColumnResize, hoDblClickResize, hoDrag, hoHotTrack, hoRestrictDrag, hoShowSortGlyphs, hoVisible, hoDisableAnimatedResize, hoAutoColumnPopupMenu, hoAutoResizeInclCaption];
-    property TriStateAutoSort: Boolean read FTriStateAutoSort write FTriStateAutoSort default False;
+    property TriStateAutoSort: Boolean read FTriStateAutoSort write SetTriStateAutoSort default False;
   end;
 
   TUiLibTree = class (TVirtualStringTree)
@@ -69,6 +70,7 @@ type
     FEmptyListMessageLines: TArray<String>;
     FMainActionMenuText: String;
     FOnMainAction: TNodeProviderEvent;
+    FOnSortChange: TNotifyEvent;
     procedure SetEmptyListMessage(Value: String);
     function GetTreeOptions: TUiLibTreeOptions;
     procedure SetTreeOptions(Value: TUiLibTreeOptions);
@@ -93,6 +95,7 @@ type
     property SelectionBlendFactor default 64;
     property TreeOptions: TUiLibTreeOptions read GetTreeOptions write SetTreeOptions;
     property OnMainAction: TNodeProviderEvent read FOnMainAction write FOnMainAction;
+    property OnSortChange: TNotifyEvent read FOnSortChange write FOnSortChange;
   end;
 
 procedure Register;
@@ -167,6 +170,15 @@ end;
 procedure TUiLibTreeHeader.SetColumns;
 begin
   inherited Columns := Value;
+end;
+
+procedure TUiLibTreeHeader.SetTriStateAutoSort;
+begin
+  FTriStateAutoSort := Value;
+
+  // The built-in auto-sort is not compatible with ours; clear it
+  if Value then
+    Options := Options - [hoHeaderClickAutoSort];
 end;
 
 { TUiLibTree }
