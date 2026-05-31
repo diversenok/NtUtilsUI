@@ -77,6 +77,7 @@ type
     procedure WMWindowPosChanged(var Message: TWMWindowPosChanging); message WM_WINDOWPOSCHANGED;
     procedure ComboWndProc(var Message: TMessage; ComboWnd: HWnd; ComboProc: TWindowProcPtr); override;
     procedure KeyPress(var Key: Char); override;
+    procedure SetItemIndex(const Value: Integer); override;
   public
     constructor Create(AOwner: TComponent); override;
     procedure UpdateItems(const NewItems: TArray<String>; FallbackIndex: Integer = -1);
@@ -505,13 +506,23 @@ begin
   // without raising the OnChange event. Closing the dropped down list reverts
   // the change. We want to cache the existing values and return them througout
   // the interaction to make them consistent with what is actually selected.
-  FStableItemIndex := inherited ItemIndex;
+
+  if HandleALlocated then
+    FStableItemIndex := inherited ItemIndex;
+
   FStableText := inherited Text;
+end;
+
+procedure TUiLibComboBox.SetItemIndex(const Value: Integer);
+begin
+  inherited;
+  RefreshStableState;
 end;
 
 procedure TUiLibComboBox.SetText;
 begin
   inherited Text := Value;
+  RefreshStableState;
 end;
 
 procedure TUiLibComboBox.UpdateItems;
