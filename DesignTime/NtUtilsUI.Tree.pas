@@ -46,6 +46,7 @@ type
 
   TUiLibTreeHeader = class (TVTHeader)
   private
+    FTriStateAutoSort: Boolean;
     function GetColumns: TUiLibTreeColumns;
     procedure SetColumns(const Value: TUiLibTreeColumns);
   protected
@@ -56,7 +57,8 @@ type
     property Columns: TUiLibTreeColumns read GetColumns write SetColumns stored False;
     property DefaultHeight default 24;
     property Height default 24;
-    property Options default [hoColumnResize, hoDblClickResize, hoDrag, hoHotTrack, hoRestrictDrag, hoShowSortGlyphs, hoVisible, hoDisableAnimatedResize, hoHeaderClickAutoSort, hoAutoColumnPopupMenu, hoAutoResizeInclCaption];
+    property Options default [hoColumnResize, hoDblClickResize, hoDrag, hoHotTrack, hoRestrictDrag, hoShowSortGlyphs, hoVisible, hoDisableAnimatedResize, hoAutoColumnPopupMenu, hoAutoResizeInclCaption];
+    property TriStateAutoSort: Boolean read FTriStateAutoSort write FTriStateAutoSort default False;
   end;
 
   TUiLibTree = class (TVirtualStringTree)
@@ -149,7 +151,7 @@ begin
   Height := 24;
   Options := [hoColumnResize, hoDblClickResize, hoDrag, hoHotTrack,
     hoRestrictDrag, hoShowSortGlyphs, hoVisible, hoDisableAnimatedResize,
-    hoHeaderClickAutoSort, hoAutoColumnPopupMenu, hoAutoResizeInclCaption];
+    hoAutoColumnPopupMenu, hoAutoResizeInclCaption];
 end;
 
 function TUiLibTreeHeader.GetColumns;

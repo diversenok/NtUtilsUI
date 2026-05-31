@@ -38,6 +38,7 @@ type
     procedure PreUpdate; virtual;
     procedure PostUpdate; virtual;
     function GetColor(out Value: TColor): Boolean; override;
+    function SortCompare(Node: INodeProvider; Column: TColumnIndex): Integer; override;
   public
     constructor Create(AHysteresisNode: THysteresisNode); virtual;
   end;
@@ -163,7 +164,19 @@ end;
 
 procedure THysteresisNodeProvider.PreUpdate;
 begin
-  ;
+  ; // for overrides
+end;
+
+function THysteresisNodeProvider.SortCompare;
+begin
+  if Column < 0 then
+    {$R-}{$Q-}
+    // Use the original order when resetting sorting
+    Result := (Node as IHysteresisNodeProvider).HysteresisNode.Index -
+      FHysteresisNode.Index
+    {$IFDEF Q+}{$Q+}{$ENDIF}{$IFDEF R+}{$R+}{$ENDIF}
+  else
+    Result := inherited;
 end;
 
 { THysteresisNodeProvider<T> }

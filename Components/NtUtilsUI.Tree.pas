@@ -21,7 +21,7 @@ type
   TUiLibTree = class;
 
   INodeProvider = interface
-    ['{18A9A8E1-8C3B-40C9-B506-96FD1EBFD8CB}']
+    ['{22308CAF-1B2D-4CD3-B248-7AB97D5FE4F3}']
     procedure Attach(Node: PVirtualNode);
     procedure Detach;
     procedure Initialize;
@@ -54,6 +54,7 @@ type
     function SearchExpression(const UpcasedExpression: String; Column: TColumnIndex): Boolean;
     function SearchNumber(const Value: UInt64; Column: TColumnIndex): Boolean;
     function SameEntity(Node: INodeProvider): Boolean;
+    function SortCompare(Node: INodeProvider; Column: TColumnIndex): Integer;
   end;
 
   TNodeProviderEvent = procedure (Node: INodeProvider) of object;
@@ -141,8 +142,10 @@ type
 
   TUiLibTreeHeader = class (TVTHeader)
   private
+    FTriStateAutoSort: Boolean;
     function GetColumns: TUiLibTreeColumns;
     procedure SetColumns(const Value: TUiLibTreeColumns);
+    procedure SetTriStateAutoSort(Value: Boolean);
   protected
     function GetColumnsClass: TVirtualTreeColumnsClass; override;
   public
@@ -151,7 +154,8 @@ type
     property Columns: TUiLibTreeColumns read GetColumns write SetColumns stored False;
     property DefaultHeight default 24;
     property Height default 24;
-    property Options default [hoColumnResize, hoDblClickResize, hoDrag, hoHotTrack, hoRestrictDrag, hoShowSortGlyphs, hoVisible, hoDisableAnimatedResize, hoHeaderClickAutoSort, hoAutoColumnPopupMenu, hoAutoResizeInclCaption];
+    property Options default [hoColumnResize, hoDblClickResize, hoDrag, hoHotTrack, hoRestrictDrag, hoShowSortGlyphs, hoVisible, hoDisableAnimatedResize, hoAutoColumnPopupMenu, hoAutoResizeInclCaption];
+    property TriStateAutoSort: Boolean read FTriStateAutoSort write SetTriStateAutoSort default False;
   end;
 
   TUiLibTree = class (TVirtualStringTree)
@@ -189,6 +193,7 @@ type
     function DoGetNodeHint(Node: PVirtualNode; Column: TColumnIndex; var LineBreakStyle: TVTTooltipLineBreakStyle): string; override;
     function DoGetPopupMenu(Node: PVirtualNode; Column: TColumnIndex; Position: TPoint): TPopupMenu; override;
     procedure DoGetText(var EventArgs: TVSTGetCellTextEventArgs); override;
+    procedure DoHeaderClick(const HitInfo: TVTHeaderHitInfo); override;
     function DoInitChildren(Node: PVirtualNode; var ChildCount: Cardinal): Boolean; override;
     procedure DoInitNode(Parent, Node: PVirtualNode; var InitStates: TVirtualNodeInitStates); override;
     procedure DoPaintText(Node: PVirtualNode; const Canvas: TCanvas; Column: TColumnIndex; TextType: TVSTTextType); override;
@@ -267,6 +272,7 @@ type
     function SearchExpression(const UpcasedExpression: String; Column: TColumnIndex): Boolean; virtual;
     function SearchNumber(const Value: UInt64; Column: TColumnIndex): Boolean; virtual;
     function SameEntity(Node: INodeProvider): Boolean; virtual;
+    function SortCompare(Node: INodeProvider; Column: TColumnIndex): Integer; virtual;
 
     function GetTree: TUiLibTree; virtual;
     function GetNode: PVirtualNode; virtual;
@@ -786,7 +792,7 @@ begin
   Height := 24;
   Options := [hoColumnResize, hoDblClickResize, hoDrag, hoHotTrack,
     hoRestrictDrag, hoShowSortGlyphs, hoVisible, hoDisableAnimatedResize,
-    hoHeaderClickAutoSort, hoAutoColumnPopupMenu, hoAutoResizeInclCaption];
+    hoAutoColumnPopupMenu, hoAutoResizeInclCaption];
 end;
 
 function TUiLibTreeHeader.GetColumns;
@@ -802,6 +808,15 @@ end;
 procedure TUiLibTreeHeader.SetColumns;
 begin
   inherited Columns := Value;
+end;
+
+procedure TUiLibTreeHeader.SetTriStateAutoSort;
+begin
+  FTriStateAutoSort := Value;
+
+  // The built-in auto-sort is not compatible with ours; clear it
+  if Value then
+    Options := Options - [hoHeaderClickAutoSort];
 end;
 
 { TUiLibTree }
@@ -949,7 +964,7 @@ begin
       end;
 
       // Re-apply sorting
-      Sort(nil, Header.SortColumn, Header.SortDirection);
+      SortTree(Header.SortColumn, Header.SortDirection);
     end
   );
 end;
@@ -1175,12 +1190,7 @@ end;
 
 function TUiLibTree.DoCompare;
 begin
-  if Assigned(OnCompareNodes) then
-    OnCompareNodes(Self, Node1, Node2, Column, Result)
-  else
-    // Fall back to logical text comparison
-    Result := StrCmpLogicalW(PWideChar(Text[Node1, Column]),
-      PWideChar(Text[Node2, Column]));
+  Result := Node1.Provider.SortCompare(Node2.Provider, Column);
 end;
 
 function TUiLibTree.DoExpanding;
@@ -1253,6 +1263,40 @@ begin
     InitNode(EventArgs.Node);
 
   EventArgs.CellText := EventArgs.Node.Provider.ColumnText[EventArgs.Column];
+end;
+
+procedure TUiLibTree.DoHeaderClick;
+begin
+  if Header.TriStateAutoSort and
+    not (hoHeaderClickAutoSort in Header.Options) and
+    (HitInfo.Button = mbLeft) and
+    not (hhiOnCheckbox in HitInfo.HitPosition) and
+    (HitInfo.Column >= 0) then
+  begin
+    // The first click sorts the column in the default direction
+    if HitInfo.Column <> Header.SortColumn then
+      Header.DoSetSortColumn(HitInfo.Column,
+        Header.Columns[HitInfo.Column].DefaultSortDirection)
+
+    // The second click switches the sorting to the opposite direction
+    else if Header.SortDirection =
+      Header.Columns[HitInfo.Column].DefaultSortDirection then
+    begin
+      if Header.Columns[HitInfo.Column].DefaultSortDirection = sdAscending then
+        Header.SortDirection := sdDescending
+      else
+        Header.SortDirection := sdAscending;
+    end
+
+    // The third click resets sorting
+    else
+      Header.SortColumn := NoColumn;
+
+    // Reapply
+    SortTree(Header.SortColumn, Header.SortDirection);
+  end;
+
+  inherited;
 end;
 
 function TUiLibTree.DoInitChildren;
@@ -1884,6 +1928,15 @@ begin
 
   FHint := Value;
   Invalidate;
+end;
+
+function TNodeProvider.SortCompare;
+begin
+  if Attached and (Column >= 0) then
+    Result := StrCmpLogicalW(PWideChar(FTree.Text[FNode, Column]),
+      PWideChar(FTree.Text[Node.Node, Column]))
+  else
+    Result := 0;
 end;
 
 { TEditableNodeProvider }
