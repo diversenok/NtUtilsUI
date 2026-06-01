@@ -54,6 +54,7 @@ type
     function GetConfirmationCaption: String;
     function GetCancellationCaption: String;
     function GetModalResult: TAceData;
+    function GetModalResultType: Pointer;
   public
     procedure LoadType(
       AccessMaskType: Pointer;
@@ -165,6 +166,11 @@ end;
 function TAceFrame.GetModalResult;
 begin
   Result := Ace;
+end;
+
+function TAceFrame.GetModalResultType;
+begin
+  Result := TypeInfo(TAceData);
 end;
 
 procedure TAceFrame.Loaded;

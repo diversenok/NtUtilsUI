@@ -35,6 +35,7 @@ type
     procedure SetSid(const Value: ISid);
   private
     function GetModalResult: ISid;
+    function GetModalResultType: Pointer;
   public
     constructor Create(AOwner: TComponent); override;
     class function Factory(const InitialChoice: ISid = nil): TWinControlFactory; static;
@@ -172,6 +173,11 @@ end;
 function TUiLibIntegritySid.GetModalResult;
 begin
   Result := GetSid;
+end;
+
+function TUiLibIntegritySid.GetModalResultType;
+begin
+  Result := TypeInfo(ISid);
 end;
 
 function TUiLibIntegritySid.GetSid;

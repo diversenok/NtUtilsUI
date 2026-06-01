@@ -58,21 +58,24 @@ type
 
   // Indicates a component that allows returning something
   IModalResult<T> = interface
-    ['{FC2CA11B-5A28-4632-ABCF-3399AAB1828A}']
+    ['{F7252A37-B3BD-4004-8054-05E502CBFADC}']
     function GetModalResult: T;
+    function GetModalResultType: Pointer;
+
+    // Data that the user selected in a modal dialog
     property ModalResult: T read GetModalResult;
+
+    // A TypeInfo(T) for type runtime type compatibility checks
+    property ModalResultType: Pointer read GetModalResultType;
   end;
+
+  TOnHasModalResultChange = procedure (HasModalResult: Boolean) of object;
 
   // Indicates ability to observe changes to modal result availability
   IModalResultAvailability = interface
-    ['{F37BB1AA-08F3-4A70-B985-AAC472E2196D}']
-    function GetHasModalResult: Boolean;
-    function GetOnHasModalResultChanged: TNotifyEvent;
-    procedure SetOnHasModalResultChanged(Callback: TNotifyEvent);
-    property HasModalResult: Boolean read GetHasModalResult;
-    property OnHasModalResultChanged: TNotifyEvent
-      read GetOnHasModalResultChanged
-      write SetOnHasModalResultChanged;
+    ['{1819242C-25BA-4DF5-9CD6-121C039D2D8A}']
+    procedure SetOnHasModalResultChange(Value: TOnHasModalResultChange);
+    property OnHasModalResultChange: TOnHasModalResultChange write SetOnHasModalResultChange;
   end;
 
   // A reference to a modal result cache
@@ -84,17 +87,46 @@ type
   // A generic storage for a modal result
   TModalResultCache<T> = class (TInterfacedObject, IModalResult<T>,
     IModalResultCache)
-  private
+  protected
     FModalResult: T;
     FModalResultSet: Boolean;
-    function GetModalResult: T;
-    procedure Save(const ModalResultImplementor: IInterface);
+    function GetModalResult: T; virtual;
+    function GetModalResultType: Pointer; virtual;
+    procedure Save(const ModalResultImplementor: IInterface); virtual;
   end;
+
+// Verify that TypeInfo's match and raise an exception if they don't
+procedure VerifyGenericTypesMatch(
+  ExpectedType: Pointer;
+  FoundType: Pointer
+);
 
 implementation
 
 uses
-  System.SysUtils;
+  System.SysUtils, DelphiUtils.LiteRTTI.Base;
+
+procedure VerifyGenericTypesMatch;
+var
+  ExpectedName, FoundName, Message: String;
+begin
+  if ExpectedType <> FoundType then
+  begin
+    if Assigned(ExpectedType) then
+      ExpectedName := PLiteRttiTypeInfo(ExpectedType).Name
+    else
+      ExpectedName := '<void>';
+
+    if Assigned(FoundType) then
+      FoundName := PLiteRttiTypeInfo(FoundType).Name
+    else
+      FoundName := '<void>';
+
+    Message := 'Generic type mismatch detected: expected ' + ExpectedName +
+      ' found ' + FoundName;
+    raise EAssertionFailed.Create(Message);
+  end;
+end;
 
 { TUiLibShortCut }
 
@@ -153,12 +185,18 @@ begin
     raise EArgumentException.Create('Modal result not available');
 end;
 
+function TModalResultCache<T>.GetModalResultType;
+begin
+  Result := TypeInfo(T);
+end;
+
 procedure TModalResultCache<T>.Save;
 var
   Source: IModalResult<T>;
 begin
   if ModalResultImplementor.QueryInterface(IModalResult<T>, Source) = S_OK then
   begin
+    VerifyGenericTypesMatch(TypeInfo(T), Source.ModalResultType);
     FModalResult := Source.ModalResult;
     FModalResultSet := True;
   end;

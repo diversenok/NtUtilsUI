@@ -25,6 +25,7 @@ type
     function GetSessionID: TSessionId;
     procedure SetSessionID(Value: TSessionId);
     function GetModalResult: TSessionId;
+    function GetModalResultType: Pointer;
   protected
     procedure CreateWnd; override;
   public
@@ -104,6 +105,11 @@ end;
 function TUiLibSessionIdBox.GetModalResult;
 begin
   Result := GetSessionID;
+end;
+
+function TUiLibSessionIdBox.GetModalResultType;
+begin
+  Result := TypeInfo(TSessionId);
 end;
 
 function TUiLibSessionIdBox.GetSessionID;

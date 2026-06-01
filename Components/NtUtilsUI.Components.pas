@@ -8,7 +8,7 @@ interface
 
 uses
   System.Classes, Vcl.Controls, Ntapi.WinNt, Ntapi.ntseapi, NtUtils,
-  NtUtilsUI.Components.Factories;
+  NtUtilsUI.Components.Factories, NtUtilsUI.Base;
 
 const
   MSG_E_NO_COMPONENT = 'The required component is not registered';
@@ -19,7 +19,11 @@ type
     class procedure Show(ControlFactory: TWinControlFactory); static;
 
     // Display a control in a modal dialog and return its modal result
-    class function Pick<T>(AOwner: TComponent; ControlFactory: TWinControlFactory): T; static;
+    class function Pick<T>(
+      AOwner: TComponent;
+      ControlFactory: TWinControlFactory;
+      ModalCache: IModalResultCache = nil
+    ): T; static;
   end;
 
 // Show a modal dialog to choose an integrity SID
@@ -50,21 +54,23 @@ function UiLibPickSessionId(
 
 implementation
 
-uses
-  NtUtilsUI.Base;
-
 { UiLibHost }
 
 class function UiLibHost.Pick<T>;
 var
-  Cache: IModalResult<T>;
+  ModalResult: IModalResult<T>;
 begin
   if not Assigned(UiLibHostPick) then
     raise EClassNotFound.Create(MSG_E_NO_COMPONENT);
 
-  Cache := TModalResultCache<T>.Create;
-  UiLibHostPick(AOwner, ControlFactory, Cache as IModalResultCache);
-  Result := Cache.ModalResult;
+  if not Assigned(ModalCache) then
+    ModalCache := TModalResultCache<T>.Create;
+
+  ModalResult := ModalCache as IModalResult<T>;
+  VerifyGenericTypesMatch(ModalResult.ModalResultType, TypeInfo(T));
+
+  UiLibHostPick(AOwner, ControlFactory, ModalCache);
+  Result := ModalResult.ModalResult;
 end;
 
 class procedure UiLibHost.Show;

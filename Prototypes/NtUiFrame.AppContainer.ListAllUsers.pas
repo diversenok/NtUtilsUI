@@ -25,6 +25,7 @@ type
   private
     FUser: ISid;
     function GetModalResult: IAppContainerNode;
+    function GetModalResultType: Pointer;
     function GetNodeDefaultActionImpl: IAllowsDefaultNodeAction;
     function GetModalResultAvailability: IModalResultAvailability;
     property NodeDefaultActionImpl: IAllowsDefaultNodeAction read GetNodeDefaultActionImpl implements IAllowsDefaultNodeAction;
@@ -58,6 +59,11 @@ end;
 function TAppContainerListAllUsersFrame.GetModalResultAvailability;
 begin
   Result := AppContainersFrame;
+end;
+
+function TAppContainerListAllUsersFrame.GetModalResultType;
+begin
+  Result := TypeInfo(IAppContainerNode);
 end;
 
 function TAppContainerListAllUsersFrame.GetNodeDefaultActionImpl;

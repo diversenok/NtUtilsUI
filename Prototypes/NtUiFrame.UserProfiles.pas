@@ -65,7 +65,7 @@ procedure TUserProfilesFrame.Loaded;
 begin
   inherited;
   SearchBox.AttachToTree(Tree);
-  Backend := TTreeNodeInterfaceProviderModal<IProfileNode>.Create(Tree, [teSelectionChange]);
+  Backend := TTreeNodeInterfaceProviderModal<IProfileNode>.Create(Tree, [teChange]);
   BackendRef := Backend; // Make an owning reference
 end;
 

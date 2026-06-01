@@ -17,6 +17,7 @@ type
   private
     UseCheckboxes: Boolean;
     function GetModalResult: TArray<TNtUiLibCapability>;
+    function GetModalResultType: Pointer;
   protected
     procedure Loaded; override;
   public
@@ -79,6 +80,11 @@ begin
 
   if j <> Length(Result) then
     SetLength(Result, j);
+end;
+
+function TCapabilityListFrame.GetModalResultType;
+begin
+  Result := TypeInfo(TArray<TNtUiLibCapability>);
 end;
 
 procedure TCapabilityListFrame.Loaded;

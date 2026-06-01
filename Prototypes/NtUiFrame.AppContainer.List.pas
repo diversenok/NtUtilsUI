@@ -75,7 +75,7 @@ procedure TAppContainerListFrame.Loaded;
 begin
   inherited;
   SearchBox.AttachToTree(Tree);
-  Backend := TTreeNodeInterfaceProviderModal<IAppContainerNode>.Create(Tree, [teSelectionChange]);
+  Backend := TTreeNodeInterfaceProviderModal<IAppContainerNode>.Create(Tree, [teChange]);
   BackendRef := Backend; // Make an owning reference
 
   if Assigned(NtUiLibShowAppContainer) then

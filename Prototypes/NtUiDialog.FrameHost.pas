@@ -21,7 +21,7 @@ type
     FFrame: TWinControl;
     [Unsafe] FFrameRef: IUnknown;
     FModalResultCache: IModalResultCache;
-    procedure FrameHasModalResultChanged(Sender: TObject);
+    procedure FrameHasModalResultChanged(HasModalResult: Boolean);
     procedure AddFrame(Frame: TWinControl; ModalResultCache: IModalResultCache);
   public
     constructor Create(
@@ -87,11 +87,8 @@ begin
     // Subscribe to modal result availability changes
     if FFrameRef.QueryInterface(IModalResultAvailability,
       ModalResultAvailability) = S_OK then
-    begin
-      ModalResultAvailability.OnHasModalResultChanged :=
+      ModalResultAvailability.OnHasModalResultChange :=
         FrameHasModalResultChanged;
-      FrameHasModalResultChanged(Self);
-    end;
 
     // Adjust button captions
     if FFrameRef.QueryInterface(IHasModalButtonCaptions,
@@ -141,12 +138,8 @@ begin
 end;
 
 procedure TFrameHostDialog.FrameHasModalResultChanged;
-var
-  ModalResultAvailability: IModalResultAvailability;
 begin
-  if FFrameRef.QueryInterface(IModalResultAvailability,
-    ModalResultAvailability) = S_OK then
-    btnSelect.Enabled := ModalResultAvailability.HasModalResult;
+  btnSelect.Enabled := HasModalResult;
 end;
 
 class procedure TFrameHostDialog.HostPick;
