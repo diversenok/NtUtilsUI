@@ -166,6 +166,7 @@ type
     FEmptyListMessage: String;
     FEmptyListMessageLines: TArray<String>;
     FOnSortChange: TNotifyEvent;
+    procedure ApplyAutoOptions(Existing: INodeProvider; Mode: TVTNodeAttachMode);
     procedure SetEmptyListMessage(Value: String);
     function GetHeader: TUiLibTreeHeader;
     procedure SetHeader(Value: TUiLibTreeHeader);
@@ -199,12 +200,10 @@ type
     procedure DoInitNode(Parent, Node: PVirtualNode; var InitStates: TVirtualNodeInitStates); override;
     procedure DoSortChange; virtual;
     procedure DoPaintText(Node: PVirtualNode; const Canvas: TCanvas; Column: TColumnIndex; TextType: TVSTTextType); override;
-    procedure DoRemoveFromSelection(Node: PVirtualNode); override;
     function GetHeaderClass: TVTHeaderClass; override;
     function GetOptionsClass: TTreeOptionsClass; override;
     procedure KeyDown(var Key: Word; Shift: TShiftState); override;
     procedure ValidateNodeDataSize(var Size: Integer); override;
-    procedure ApplyAutoOptions(Existing: INodeProvider; Mode: TVTNodeAttachMode);
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
@@ -1342,14 +1341,6 @@ begin
   end;
 
   inherited;
-end;
-
-procedure TUiLibTree.DoRemoveFromSelection;
-begin
-  // Fix errors caused by invoking the OnRemoveFromSelection event on a
-  // half-destroyed form
-  if not (csDestroying in ComponentState) then
-    inherited;
 end;
 
 procedure TUiLibTree.DoSortChange;
