@@ -14,21 +14,23 @@ uses
 
 type
   [DefaultCaption('AppContainer Profiles')]
-  TAppContainerListFrame = class (TFrame, IAllowsDefaultNodeAction,
-    IModalResult<IAppContainerNode>, IModalResultAvailability)
+  TAppContainerListFrame = class (TFrame, IModalResult<IAppContainerNode>,
+    IModalResultControl)
+    SearchBox: TUiLibTreeSearchBox;
+    Tree: TUiLibTree;
     PopupMenu: TPopupMenu;
     cmInspect: TMenuItem;
     procedure cmInspectClick(Sender: TObject);
-    procedure TreeNodeDblClick(Sender: TBaseVirtualTree;
-      const HitInfo: THitInfo);
-  published
-    SearchBox: TUiLibTreeSearchBox;
-    Tree: TUiLibTree;
-    procedure FrameMainActionSet(Sender: TObject);
+    procedure TreeMainAction(Node: INodeProvider);
+    procedure TreeChange(Sender: TBaseVirtualTree; Node: PVirtualNode);
+    procedure PopupMenuPopup(Sender: TObject);
   private
-    Backend: TTreeNodeInterfaceProviderModal<IAppContainerNode>;
-    BackendRef: IUnknown;
-    property BackendImpl: TTreeNodeInterfaceProviderModal<IAppContainerNode> read Backend implements IModalResult<IAppContainerNode>, IModalResultAvailability, IAllowsDefaultNodeAction;
+    FOnModalComplete: TNotifyEvent;
+    FOnModalResultAvailabilityChange: TOnModalResultAvailabilityChange;
+    function GetModalResult: IAppContainerNode;
+    function GetModalResultType: Pointer;
+    procedure SetOnModalResultAvailabilityChange(Event: TOnModalResultAvailabilityChange);
+    procedure SetOnModalComplete(Event: TNotifyEvent);
   protected
     procedure Loaded; override;
   public
@@ -63,26 +65,23 @@ begin
     NtUiLibShowAppContainer(AppContainerNode.Info);
 end;
 
-procedure TAppContainerListFrame.FrameMainActionSet;
+function TAppContainerListFrame.GetModalResult;
 begin
-  // Demote the inspect menu from the default Enter to Ctrl+Enter
-  cmInspect.ShortCut := scCtrl or VK_RETURN;
-  cmInspect.Default := False;
-  Tree.RefreshPopupMenuShortcuts;
+  Result := Tree.HighlightedNode.Provider as IAppContainerNode;
+end;
+
+function TAppContainerListFrame.GetModalResultType;
+begin
+  Result := TypeInfo(IAppContainerNode);
 end;
 
 procedure TAppContainerListFrame.Loaded;
 begin
   inherited;
   SearchBox.AttachToTree(Tree);
-  Backend := TTreeNodeInterfaceProviderModal<IAppContainerNode>.Create(Tree, [teChange]);
-  BackendRef := Backend; // Make an owning reference
 
   if Assigned(NtUiLibShowAppContainer) then
-  begin
-    Tree.PopupMenu := PopupMenu;
-    Backend.OnMainActionSet := FrameMainActionSet;
-  end;
+    Tree.OnMainAction := TreeMainAction;
 end;
 
 procedure TAppContainerListFrame.LoadForUser;
@@ -116,10 +115,40 @@ begin
   end;
 end;
 
-procedure TAppContainerListFrame.TreeNodeDblClick;
+procedure TAppContainerListFrame.PopupMenuPopup;
 begin
-  if cmInspect.Default then
-    cmInspectClick(Sender);
+  cmInspect.Visible := Assigned(Tree.HighlightedNode);
+end;
+
+procedure TAppContainerListFrame.SetOnModalComplete;
+begin
+  FOnModalComplete := Event;
+  Tree.OnMainAction := TreeMainAction;
+  Tree.MainActionMenuText := 'Select';
+
+  // Demote the inspect menu to a supplimentary Ctrl+Enter
+  if Assigned(NtUiLibShowAppContainer) and Assigned(Event) then
+    Tree.PopupMenu := PopupMenu;
+end;
+
+procedure TAppContainerListFrame.SetOnModalResultAvailabilityChange;
+begin
+  FOnModalResultAvailabilityChange := Event;
+  TreeChange(nil, nil);
+end;
+
+procedure TAppContainerListFrame.TreeChange;
+begin
+  if Assigned(FOnModalResultAvailabilityChange) then
+    FOnModalResultAvailabilityChange(Assigned(Tree.HighlightedNode));
+end;
+
+procedure TAppContainerListFrame.TreeMainAction;
+begin
+  if Assigned(FOnModalComplete) then
+    FOnModalComplete(Self)
+  else if Assigned(NtUiLibShowAppContainer) then
+    cmInspectClick(Self);
 end;
 
 { Integration }

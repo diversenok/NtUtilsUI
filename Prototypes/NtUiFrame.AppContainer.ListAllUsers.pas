@@ -14,8 +14,8 @@ uses
 
 type
   [DefaultCaption('AppContainer Profiles')]
-  TAppContainerListAllUsersFrame = class (TFrame, IAllowsDefaultNodeAction,
-    IModalResult<IAppContainerNode>, IModalResultAvailability)
+  TAppContainerListAllUsersFrame = class (TFrame,
+    IModalResult<IAppContainerNode>, IModalResultControl)
   published
     lblUsers: TLabel;
     tbxUser: TUiLibEdit;
@@ -24,12 +24,7 @@ type
     procedure btnSelectUserClick(Sender: TObject);
   private
     FUser: ISid;
-    function GetModalResult: IAppContainerNode;
-    function GetModalResultType: Pointer;
-    function GetNodeDefaultActionImpl: IAllowsDefaultNodeAction;
-    function GetModalResultAvailability: IModalResultAvailability;
-    property NodeDefaultActionImpl: IAllowsDefaultNodeAction read GetNodeDefaultActionImpl implements IAllowsDefaultNodeAction;
-    property ModalResultAvailabilityImpl: IModalResultAvailability read GetModalResultAvailability implements IModalResultAvailability;
+    property ModalResultImpl: TAppContainerListFrame read AppContainersFrame implements IModalResult<IAppContainerNode>, IModalResultControl;
   public
     procedure LoadForUser([opt] const SelectedUser: ISid);
   end;
@@ -49,26 +44,6 @@ procedure TAppContainerListAllUsersFrame.btnSelectUserClick;
 begin
   if Assigned(NtUiLibSelectUserProfile) then
     LoadForUser(NtUiLibSelectUserProfile(Self).User);
-end;
-
-function TAppContainerListAllUsersFrame.GetModalResult;
-begin
-  Result := (AppContainersFrame as IModalResult<IAppContainerNode>).ModalResult;
-end;
-
-function TAppContainerListAllUsersFrame.GetModalResultAvailability;
-begin
-  Result := AppContainersFrame;
-end;
-
-function TAppContainerListAllUsersFrame.GetModalResultType;
-begin
-  Result := TypeInfo(IAppContainerNode);
-end;
-
-function TAppContainerListAllUsersFrame.GetNodeDefaultActionImpl;
-begin
-  Result := AppContainersFrame;
 end;
 
 procedure TAppContainerListAllUsersFrame.LoadForUser;

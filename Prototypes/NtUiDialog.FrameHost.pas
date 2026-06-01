@@ -21,7 +21,7 @@ type
     FFrame: TWinControl;
     [Unsafe] FFrameRef: IUnknown;
     FModalResultCache: IModalResultCache;
-    procedure FrameHasModalResultChanged(HasModalResult: Boolean);
+    procedure ModalResultAvailabilityChanged(HasModalResult: Boolean);
     procedure AddFrame(Frame: TWinControl; ModalResultCache: IModalResultCache);
   public
     constructor Create(
@@ -52,9 +52,8 @@ const
   SMALL_MARGIN = 3;
   BIG_MARGIN = 31;
 var
-  ModalResultAvailability: IModalResultAvailability;
+  ModalControl: IModalResultControl;
   ButtonCaptions: IHasModalButtonCaptions;
-  DefaultAction: IAllowsDefaultNodeAction;
   DelayedLoad: IDelayedLoad;
   BottomMargin, OtherMargin: Integer;
 begin
@@ -84,11 +83,12 @@ begin
 
   if Assigned(FModalResultCache) then
   begin
-    // Subscribe to modal result availability changes
-    if FFrameRef.QueryInterface(IModalResultAvailability,
-      ModalResultAvailability) = S_OK then
-      ModalResultAvailability.OnHasModalResultChange :=
-        FrameHasModalResultChanged;
+    // Subscribe to modal result availability changes and completion
+    if FFrameRef.QueryInterface(IModalResultControl, ModalControl) = S_OK then
+    begin
+      ModalControl.OnAvailabilityChange := ModalResultAvailabilityChanged;
+      ModalControl.OnModalComplete := btnSelectClick;
+    end;
 
     // Adjust button captions
     if FFrameRef.QueryInterface(IHasModalButtonCaptions,
@@ -96,14 +96,6 @@ begin
     begin
       btnSelect.Caption := ButtonCaptions.ConfirmationCaption;
       btnClose.Caption := ButtonCaptions.CancellationCaption;
-    end;
-
-    // Set the default action on the frame
-    if FFrameRef.QueryInterface(IAllowsDefaultNodeAction,
-      DefaultAction) = S_OK then
-    begin
-      DefaultAction.MainActionCaption := btnSelect.Caption;
-      DefaultAction.OnMainAction := DefaultActionChosen;
     end;
   end;
 
@@ -137,11 +129,6 @@ begin
   ModalResult := mrOk;
 end;
 
-procedure TFrameHostDialog.FrameHasModalResultChanged;
-begin
-  btnSelect.Enabled := HasModalResult;
-end;
-
 class procedure TFrameHostDialog.HostPick;
 var
   Form: TFrameHostDialog;
@@ -157,6 +144,11 @@ var
 begin
   Form := TFrameHostDialog.Create(nil, cfmDesktop, Factory, nil);
   Form.Show;
+end;
+
+procedure TFrameHostDialog.ModalResultAvailabilityChanged;
+begin
+  btnSelect.Enabled := HasModalResult;
 end;
 
 initialization

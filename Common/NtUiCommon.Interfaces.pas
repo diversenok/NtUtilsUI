@@ -6,10 +6,6 @@ unit NtUiCommon.Interfaces;
 
 interface
 
-uses
-  NtUtilsUI.Tree, VirtualTrees, System.Classes,
-  DelphiUtils.AutoObjects, NtUtils, NtUtilsUI, NtUtilsUI.Base;
-
 type
   { Common interfaces }
 
@@ -23,19 +19,6 @@ type
   IDelayedLoad = interface
     ['{B095F57F-79C5-4205-B9F8-5EE3618AD8CA}']
     procedure DelayedLoad;
-  end;
-
-  { Tree interfaces }
-
-  // Indicates a component that allows controlling default tree menu action
-  IAllowsDefaultNodeAction = interface
-    ['{2B8590CB-A205-4018-9975-97CB0C0F87BD}']
-    function GetOnMainAction: TNodeProviderEvent;
-    procedure SetOnMainAction(const Value: TNodeProviderEvent);
-    function GetMainActionCaption: String;
-    procedure SetMainActionCaption(const Value: String);
-    property OnMainAction: TNodeProviderEvent read GetOnMainAction write SetOnMainAction;
-    property MainActionCaption: String read GetMainActionCaption write SetMainActionCaption;
   end;
 
   { Modal dialog support }
@@ -56,162 +39,10 @@ type
     property AllowsModalReturn: Boolean read GetAllowsModalReturn;
   end;
 
-{ Delegatable implementation }
-
-type
-  TTreeEventSubscription = set of (
-    teChange
-  );
-
-  TTreeNodeInterfaceProvider = class (TInterfacedObject, ICanShowEmptyMessage,
-    IAllowsDefaultNodeAction, IModalResultAvailability)
-  private
-    FTree: TUiLibTree;
-    FModalResultFilter: TGuid;
-    FOnHasModalResultChange: TOnHasModalResultChange;
-    FOnMainAction: TNodeProviderEvent;
-    FOnMainActionSet: TNotifyEvent;
-    procedure TreeSelectionChanged(Sender: TBaseVirtualTree; Node: PVirtualNode);
-    procedure TreeMainAction(Node: INodeProvider);
-    function GetOnMainActionSet: TNotifyEvent;
-    procedure SetOnMainActionSet(const Value: TNotifyEvent);
-  protected
-    property Tree: TUiLibTree read FTree;
-    procedure SetEmptyMessage(const Value: String);
-    function GetOnMainAction: TNodeProviderEvent;
-    procedure SetOnMainAction(const Value: TNodeProviderEvent);
-    function GetMainActionCaption: String;
-    procedure SetMainActionCaption(const Value: String);
-    property OnMainActionSet: TNotifyEvent read GetOnMainActionSet write SetOnMainActionSet;
-    procedure SetOnHasModalResultChange(Value: TOnHasModalResultChange);
-    function GetModalResult: IInterface;
-    constructor Create(Tree: TUiLibTree; SubscribeTo: TTreeEventSubscription = []); virtual;
-  end;
-
-  TTreeNodeInterfaceProviderModal<I: INodeProvider> = class (
-    TTreeNodeInterfaceProvider, IModalResult<I>)
-  protected
-    function GetModalResult: I;
-    function GetModalResultType: Pointer;
-  public
-    constructor Create(Tree: TUiLibTree; SubscribeTo: TTreeEventSubscription = []); override;
-  end;
-
 implementation
-
-uses
-  VirtualTrees.Types, System.SysUtils, NtUtils.Errors, NtUiLib.Errors,
-  DelphiUtils.LiteRTTI.Base;
 
 {$BOOLEVAL OFF}
 {$IFOPT R+}{$DEFINE R+}{$ENDIF}
 {$IFOPT Q+}{$DEFINE Q+}{$ENDIF}
-
-{ TTreeNodeInterfaceProvider }
-
-constructor TTreeNodeInterfaceProvider.Create;
-begin
-  inherited Create;
-  FTree := Tree;
-
-  if Assigned(Tree) and (teChange in SubscribeTo) then
-    Tree.OnChange := TreeSelectionChanged;
-end;
-
-function TTreeNodeInterfaceProvider.GetMainActionCaption;
-begin
-  Result := FTree.MainActionMenuText
-end;
-
-function TTreeNodeInterfaceProvider.GetModalResult;
-var
-  ModalChecker: IOptionalModalResultNode;
-begin
-  // Retrieve the highlighted node and test it against the modal return filter
-  if not Assigned(FTree.HighlightedNode) or not
-    FTree.HighlightedNode.TryGetProvider(FModalResultFilter, Result) then
-    Exit(nil);
-
-  // Ask the node if it's okay with being returned as a modal result
-  if Result.QueryInterface(IOptionalModalResultNode, ModalChecker).IsSuccess and
-    not ModalChecker.AllowsModalReturn then
-    Exit(nil);
-end;
-
-function TTreeNodeInterfaceProvider.GetOnMainAction;
-begin
-  Result := FOnMainAction;
-end;
-
-function TTreeNodeInterfaceProvider.GetOnMainActionSet;
-begin
-  Result := FOnMainActionSet;
-end;
-
-procedure TTreeNodeInterfaceProvider.SetEmptyMessage;
-begin
-  Tree.EmptyListMessage := Value;
-end;
-
-procedure TTreeNodeInterfaceProvider.SetMainActionCaption;
-begin
-  FTree.MainActionMenuText := Value;
-end;
-
-procedure TTreeNodeInterfaceProvider.SetOnMainAction;
-begin
-  FOnMainAction := Value;
-
-  if Assigned(FOnMainAction) then
-    FTree.OnMainAction := TreeMainAction
-  else
-    FTree.OnMainAction := nil;
-
-  if Assigned(FOnMainActionSet) then
-    FOnMainActionSet(Self);
-end;
-
-procedure TTreeNodeInterfaceProvider.SetOnMainActionSet;
-begin
-  FOnMainActionSet := Value;
-end;
-
-procedure TTreeNodeInterfaceProvider.SetOnHasModalResultChange;
-begin
-  FOnHasModalResultChange := Value;
-  TreeSelectionChanged(nil, nil);
-end;
-
-procedure TTreeNodeInterfaceProvider.TreeMainAction;
-begin
-  if Assigned(FOnMainAction) then
-    FOnMainAction(Node);
-end;
-
-procedure TTreeNodeInterfaceProvider.TreeSelectionChanged;
-begin
-  if Assigned(FOnHasModalResultChange) then
-    FOnHasModalResultChange(Assigned(GetModalResult()));
-end;
-
-{ TTreeNodeInterfaceProviderModal<I> }
-
-constructor TTreeNodeInterfaceProviderModal<I>.Create;
-begin
-  inherited;
-
-  if not TryGetIID(TypeInfo(I), FModalResultFilter) then
-    raise EArgumentException.Create('Node provider interface has no IID');
-end;
-
-function TTreeNodeInterfaceProviderModal<I>.GetModalResult;
-begin
-  IInterface(Result) := inherited GetModalResult();
-end;
-
-function TTreeNodeInterfaceProviderModal<I>.GetModalResultType;
-begin
-  Result := TypeInfo(I);
-end;
 
 end.

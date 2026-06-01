@@ -69,13 +69,19 @@ type
     property ModalResultType: Pointer read GetModalResultType;
   end;
 
-  TOnHasModalResultChange = procedure (HasModalResult: Boolean) of object;
+  TOnModalResultAvailabilityChange = procedure (HasModalResult: Boolean) of object;
 
-  // Indicates ability to observe changes to modal result availability
-  IModalResultAvailability = interface
-    ['{1819242C-25BA-4DF5-9CD6-121C039D2D8A}']
-    procedure SetOnHasModalResultChange(Value: TOnHasModalResultChange);
-    property OnHasModalResultChange: TOnHasModalResultChange write SetOnHasModalResultChange;
+  // Indicates that a component that wants to control its modal invocation
+  IModalResultControl = interface
+    ['{9D76A90A-1B72-4D8F-950C-73C4C070F7C6}']
+    procedure SetOnModalResultAvailabilityChange(Event: TOnModalResultAvailabilityChange);
+    procedure SetOnModalComplete(Event: TNotifyEvent);
+
+    // The component wants to notify about a change in modal result's availability
+    property OnAvailabilityChange: TOnModalResultAvailabilityChange write SetOnModalResultAvailabilityChange;
+
+    // The component wants to complete its modal invocation
+    property OnModalComplete: TNotifyEvent write SetOnModalComplete;
   end;
 
   // A reference to a modal result cache

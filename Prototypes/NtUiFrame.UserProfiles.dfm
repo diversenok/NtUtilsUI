@@ -17,6 +17,7 @@ object UserProfilesFrame: TUserProfilesFrame
     EmptyListMessage = ''
     Header.AutoSizeIndex = 0
     TabOrder = 0
+    OnChange = TreeChange
     Touch.InteractiveGestures = [igPan, igPressAndTap]
     Touch.InteractiveGestureOptions = [igoPanSingleFingerHorizontal, igoPanSingleFingerVertical, igoPanInertia, igoPanGutter, igoParentPassthrough]
     Columns = <

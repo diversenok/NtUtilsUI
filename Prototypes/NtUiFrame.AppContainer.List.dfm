@@ -31,7 +31,7 @@ object AppContainerListFrame: TAppContainerListFrame
     Header.AutoSizeIndex = 0
     TabOrder = 0
     TreeOptions.PaintOptions = [toHideFocusRect, toHotTrack, toShowButtons, toShowDropmark, toShowTreeLines, toThemeAware, toUseBlendedImages, toUseExplorerTheme]
-    OnNodeDblClick = TreeNodeDblClick
+    OnChange = TreeChange
     Touch.InteractiveGestures = [igPan, igPressAndTap]
     Touch.InteractiveGestureOptions = [igoPanSingleFingerHorizontal, igoPanSingleFingerVertical, igoPanInertia, igoPanGutter, igoParentPassthrough]
     Columns = <
@@ -67,12 +67,12 @@ object AppContainerListFrame: TAppContainerListFrame
       end>
   end
   object PopupMenu: TPopupMenu
+    OnPopup = PopupMenuPopup
     Left = 72
     Top = 112
     object cmInspect: TMenuItem
       Caption = 'Inspect...'
-      Default = True
-      ShortCut = 13
+      ShortCut = 16397
       OnClick = cmInspectClick
     end
   end
