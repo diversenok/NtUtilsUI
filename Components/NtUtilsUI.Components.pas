@@ -7,8 +7,8 @@ unit NtUtilsUI.Components;
 interface
 
 uses
-  System.Classes, Vcl.Controls, Ntapi.WinNt, Ntapi.ntseapi, NtUtils,
-  NtUtilsUI.Components.Factories, NtUtilsUI.Base;
+  System.Classes, Vcl.Controls, Ntapi.WinNt, Ntapi.ntseapi, Ntapi.ntdef,
+  NtUtils, NtUtilsUI.Components.Factories, NtUtilsUI.Base;
 
 const
   MSG_E_NO_COMPONENT = 'The required component is not registered';
@@ -51,6 +51,22 @@ function UiLibPickSessionId(
   Owner: TComponent;
   InitialChoice: TSessionId = TSessionId(-1)
 ): TSessionId;
+
+// Show a modal dialog to choose a process
+function UiLibPickProcess(
+  Owner: TComponent
+): TProcessId;
+
+// Show a modal dialog to choose a thread within a process
+function UiLibPickProcessThread(
+  Owner: TComponent;
+  ProcessId: TProcessId
+): TClientId;
+
+// Show a modal dialog to choose a thread
+function UiLibPickThread(
+  Owner: TComponent
+): TClientId;
 
 implementation
 
@@ -122,6 +138,32 @@ begin
   if Assigned(UiLibFactorySessionId) then
     Result := UiLibHost.Pick<TSessionId>(Owner,
       UiLibFactorySessionId(InitialChoice))
+  else
+    raise EClassNotFound.Create(MSG_E_NO_COMPONENT);
+end;
+
+function UiLibPickProcess;
+begin
+  if Assigned(UiLibFactoryProcess) then
+    Result := UiLibHost.Pick<TProcessId>(Owner, UiLibFactoryProcess())
+  else
+    raise EClassNotFound.Create(MSG_E_NO_COMPONENT);
+end;
+
+function UiLibPickProcessThread;
+begin
+  if Assigned(UiLibFactoryThread) then
+    Result := UiLibHost.Pick<TClientId>(Owner,
+      UiLibFactoryThread(ProcessId))
+  else
+    raise EClassNotFound.Create(MSG_E_NO_COMPONENT);
+end;
+
+function UiLibPickThread;
+begin
+  if Assigned(UiLibFactoryThread) then
+    Result := UiLibHost.Pick<TClientId>(Owner, UiLibFactoryProcess(),
+      UiLibFactoryProcessToThread)
   else
     raise EClassNotFound.Create(MSG_E_NO_COMPONENT);
 end;

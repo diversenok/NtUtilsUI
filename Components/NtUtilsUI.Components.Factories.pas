@@ -56,6 +56,18 @@ var
     InitialChoice: TSessionId = TSessionId(-1)
   ): TWinControlFactory;
 
+  { Client IDs }
+
+  UiLibFactoryProcess: function (
+  ): TWinControlFactory;
+
+  UiLibFactoryThread: function (
+    ProcessId: TProcessId
+  ): TWinControlFactory;
+
+  UiLibFactoryProcessToThread: function(
+  ): IModalResultCache;
+
 implementation
 
 end.
