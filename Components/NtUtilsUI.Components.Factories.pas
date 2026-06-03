@@ -59,6 +59,7 @@ var
   { Client IDs }
 
   UiLibFactoryProcess: function (
+    ForThreadSelection: Boolean
   ): TWinControlFactory;
 
   UiLibFactoryThread: function (

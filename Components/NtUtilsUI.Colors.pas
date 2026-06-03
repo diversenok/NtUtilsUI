@@ -27,6 +27,7 @@ type
     clBackgroundSystem: TColor;
     clBackgroundUser: TColor;
     clBackgroundGuiThread: TColor;
+    clBackgroundSuspended: TColor;
 
     // Text foreground
     clForeground: TColor;
@@ -53,6 +54,7 @@ var
     clBackgroundSystem: $FFDDBB;               // Light blue
     clBackgroundUser: $AAFFFF;                 // Light yellow
     clBackgroundGuiThread: $77FFFF;            // Light yellow
+    clBackgroundSuspended: $B0B0B0;            // Gray
 
     clForeground: clWindowText;                // Black
     clForegroundError: $0000F0;                // Red

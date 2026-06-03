@@ -7,8 +7,8 @@ unit NtUtilsUI;
 interface
 
 uses
-  System.Classes, NtUtilsUI.Forms, NtUtilsUI.Base,
-  NtUtilsUI.Components.Factories, NtUtilsUI.Colors, NtUtils;
+  Ntapi.WinUser, NtUtils, NtUiLib.TaskDialog, System.Classes, NtUtilsUI.Forms,
+  NtUtilsUI.Base, NtUtilsUI.Components.Factories, NtUtilsUI.Colors;
 
 const
   // Forward child form modes
@@ -41,10 +41,17 @@ type
 // Determine a default caption
 function QueryDefaultCaption(Component: TComponent): String;
 
+// Ask the user for confirmation and abort if not granted
+procedure ConfirmOperation(
+  Owner: THwnd;
+  Message: String;
+  Icon: TDialogIcon = diInfo
+);
+
 implementation
 
 uses
-  NtUtilsUI.Exceptions, DelphiUtils.LiteRTTI.Base;
+  NtUtilsUI.Exceptions, DelphiUtils.LiteRTTI.Base, System.SysUtils;
 
 { Functions }
 
@@ -73,6 +80,13 @@ begin
     // Or fall back to the class name
     Result := Component.ClassName;
   end;
+end;
+
+procedure ConfirmOperation;
+begin
+  if UsrxShowTaskDialog(Owner, 'Confirmation required', 'Confirm the operation',
+    Message, diInfo, dbYesNoCancel, IDYES) <> IDYES then
+    Abort;
 end;
 
 { TCollectionHelper }

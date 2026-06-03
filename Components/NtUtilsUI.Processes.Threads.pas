@@ -11,7 +11,7 @@ uses
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls,
   NtUtilsUI.Base, NtUtilsUI.Tree.Search, NtUtilsUI.SessionID, VirtualTrees,
   NtUtilsUI.Tree, NtUtilsUI.Tree.Hysteresis, NtUtils.Processes.Snapshots,
-  Vcl.ExtCtrls, NtUtils, Ntapi.ntdef, Ntapi.WinNt, NtUtilsUI;
+  Vcl.ExtCtrls, NtUtils, Ntapi.ntdef, Ntapi.WinNt, NtUtilsUI, Vcl.Menus;
 
 type
   TUiLibThreadSnapshotMethod = (
@@ -35,11 +35,25 @@ type
     LabelTotal: TLabel;
     LabelPeak: TLabel;
     RefreshTimer: TTimer;
+    PopupMenu: TPopupMenu;
+    cmTerminate: TMenuItem;
+    cmSuspend: TMenuItem;
+    cmResume: TMenuItem;
+    cmAlert: TMenuItem;
+    cmAlertResume: TMenuItem;
+    cmCancelO: TMenuItem;
     procedure ComboBoxMethodChange(Sender: TObject);
     procedure RefreshTimerTimer(Sender: TObject);
     procedure SessionIdBoxChange(Sender: TObject);
     procedure TreeChange(Sender: TBaseVirtualTree; Node: PVirtualNode);
     procedure TreeMainAction(Node: INodeProvider);
+    procedure PopupMenuPopup(Sender: TObject);
+    procedure cmTerminateClick(Sender: TObject);
+    procedure cmSuspendClick(Sender: TObject);
+    procedure cmResumeClick(Sender: TObject);
+    procedure cmAlertClick(Sender: TObject);
+    procedure cmAlertResumeClick(Sender: TObject);
+    procedure cmCancelOClick(Sender: TObject);
   private
     FProcessId: TProcessId;
     SnapshotMethod: TUiLibThreadSnapshotMethod;
@@ -54,6 +68,8 @@ type
     function GetModalResultType: Pointer;
     procedure SetOnModalResultAvailabilityChange(Event: TOnModalResultAvailabilityChange);
     procedure SetOnModalComplete(Event: TNotifyEvent);
+    procedure AskForConfirmation(Action: String; const ClientId: TClientId);
+    function HighlightedClientId: TClientId;
   protected
     procedure Loaded; override;
   public
@@ -64,10 +80,11 @@ type
 implementation
 
 uses
-  Ntapi.ntpsapi, Ntapi.ntstatus, NtUtils.Threads, NtUtils.Objects,
-  NtUtils.Objects.Snapshots, NtUiLib.Errors, DelphiUiLib.LiteReflection,
-  DelphiUiLib.LiteReflection.Types, DelphiUiLib.HysteresisTree,
-  DelphiUiLib.Strings, NtUtilsUI.Components, NtUtilsUI.Components.Factories;
+  Ntapi.ntpsapi, Ntapi.ntstatus, Ntapi.ntexapi, NtUtils.Threads, NtUtils.NtUser,
+  NtUtils.Objects, NtUtils.Objects.Snapshots, NtUiLib.Errors, NtUiLib.TaskDialog,
+  DelphiUiLib.LiteReflection, DelphiUiLib.LiteReflection.Types,
+  DelphiUiLib.HysteresisTree, DelphiUiLib.Strings, NtUtilsUI.Components,
+  NtUtilsUI.Components.Factories;
 
 {$R *.dfm}
 
@@ -76,7 +93,9 @@ const
   colTid = 1;
   colTidHex = 2;
   colCreateTime = 3;
-  colMax = 4;
+  colWaitReason = 4;
+  colSuspendCount = 5;
+  colMax = 6;
 
 type
   IThreadNode = interface (IHysteresisNodeProvider<TNtxThreadEntry>)
@@ -85,17 +104,34 @@ type
     property Thread: PNtxThreadEntry read GetThread;
   end;
 
+  TThreadNodeCache = (
+    tcHandle,
+    tcName,
+    tcCreationTime,
+    tcIsGui,
+    tcSuspendCount,
+    tcWaitReason
+  );
+
   TThreadNode = class (THysteresisNodeProvider<TNtxThreadEntry>, IThreadNode)
   private
+    FControl: TUiLibThreads;
     hxThread: IHandle;
-    FHandleCached, FNameCached, FCreationTimeCached: Boolean;
+    FCached: array [TThreadNodeCache] of Boolean;
+    IsGui: Boolean;
+    SuspendCountKnown: Boolean;
+    SuspendCount: Cardinal;
     function GetThread: PNtxThreadEntry;
     procedure EnsureHandleCached;
     procedure EnsureNameCached;
     procedure EnsureTimesCached;
+    procedure EnsureIsGuiCached;
+    procedure EnsureSuspendCount;
+    procedure EnsureWaitReason;
   protected
     procedure PreUpdate; override;
     procedure PostUpdate; override;
+    procedure Attach(Value: PVirtualNode); override;
     function GetColumnText(Column: TColumnIndex): String; override;
     function GetColor(out Value: TColor): Boolean; override;
     function GetFontColor(out Value: TColor): Boolean; override;
@@ -116,10 +152,10 @@ procedure TThreadNode.EnsureTimesCached;
 var
   Times: TKernelUserTimes;
 begin
-  if FCreationTimeCached then
+  if FCached[tcCreationTime] then
     Exit;
 
-  FNameCached := True;
+  FCached[tcCreationTime] := True;
   EnsureHandleCached;
 
   if (Thread.Basic.CreateTime <= 0) and Assigned(hxThread) and
@@ -138,12 +174,31 @@ begin
     FColumnText[colCreateTime] := '';
 end;
 
-procedure TThreadNode.EnsureHandleCached;
+procedure TThreadNode.EnsureWaitReason;
 begin
-  if FHandleCached then
+  if FCached[tcWaitReason] then
     Exit;
 
-  FHandleCached := True;
+  FCached[tcWaitReason] := True;
+
+  if FControl.SnapshotMethod in [tsNormal, tsExtended, tsFull, tsSession] then
+    FColumnText[colWaitReason] := Rttix.Format(Thread.Basic.WaitReason)
+  else
+    FColumnText[colWaitReason] := '';
+end;
+
+procedure TThreadNode.Attach;
+begin
+  inherited;
+  FControl := FTree.Owner as TUiLibThreads;
+end;
+
+procedure TThreadNode.EnsureHandleCached;
+begin
+  if FCached[tcHandle] then
+    Exit;
+
+  FCached[tcHandle] := True;
 
   if Assigned(Thread.hxThread) then
   begin
@@ -155,18 +210,44 @@ begin
      THREAD_QUERY_LIMITED_INFORMATION, 0, Thread.Basic.ClientID.UniqueProcess);
 end;
 
-procedure TThreadNode.EnsureNameCached;
+procedure TThreadNode.EnsureIsGuiCached;
 begin
-  if FNameCached then
+  if FCached[tcIsGui] then
     Exit;
 
-  FNameCached := True;
+  FCached[tcIsGui] := True;
+  IsGui := NtxIsGuiThread(Thread.Basic.ClientID.UniqueThread);
+end;
+
+procedure TThreadNode.EnsureNameCached;
+begin
+  if FCached[tcName] then
+    Exit;
+
+  FCached[tcName] := True;
   EnsureHandleCached;
 
   if Assigned(hxThread) then
     NtxQueryNameThread(hxThread, FColumnText[colName])
   else
     FColumnText[colName] := '';
+end;
+
+procedure TThreadNode.EnsureSuspendCount;
+begin
+  if FCached[tcSuspendCount] then
+    Exit;
+
+  FCached[tcSuspendCount] := True;
+  EnsureHandleCached;
+
+  SuspendCountKnown := Assigned(hxThread) and NtxThread.Query(hxThread,
+    ThreadSuspendCount, SuspendCount).IsSuccess;
+
+  if SuspendCountKnown then
+    FColumnText[colSuspendCount] := UiLibUIntToDec(SuspendCount)
+  else
+    FColumnText[colSuspendCount] := '';
 end;
 
 function TThreadNode.GetColor;
@@ -177,14 +258,45 @@ begin
     Exit;
   end;
 
+  // Suspension determined from snapshot
+  if (Thread.Basic.WaitReason = TWaitReason.Suspended) or
+    (Thread.Basic.WaitReason = TWaitReason.WrSuspended) then
+  begin
+    Result := True;
+    Value := ColorSettings.clBackgroundSuspended;
+    Exit;
+  end;
+
+  // Suspension determined from query
+  EnsureSuspendCount;
+
+  if SuspendCountKnown and (SuspendCount > 0) then
+  begin
+    Result := True;
+    Value := ColorSettings.clBackgroundSuspended;
+    Exit;
+  end;
+
+  // GUI state
+  EnsureIsGuiCached;
+
+  if IsGui then
+  begin
+    Result := True;
+    Value := ColorSettings.clBackgroundGuiThread;
+    Exit;
+  end;
+
   Result := False;
 end;
 
 function TThreadNode.GetColumnText;
 begin
   case Column of
-    colName:       EnsureNameCached;
-    colCreateTime: EnsureTimesCached;
+    colName:          EnsureNameCached;
+    colCreateTime:    EnsureTimesCached;
+    colSuspendCount:  EnsureSuspendCount;
+    colWaitReason:    EnsureWaitReason;
   end;
 
   Result := inherited;
@@ -226,10 +338,12 @@ begin
 end;
 
 procedure TThreadNode.PostUpdate;
+var
+  i: TThreadNodeCache;
 begin
-  FHandleCached := False;
-  FNameCached := False;
-  FCreationTimeCached := False;
+  for i := Low(TThreadNodeCache) to High(TThreadNodeCache) do
+    FCached[i] := False;
+
   inherited;
 end;
 
@@ -246,11 +360,92 @@ function TThreadNode.SearchNumber;
 begin
   if (Column < 0) or (Column = colTid) or (Column = colTidHex) then
     Result := Value = Thread.Basic.ClientID.UniqueThread
+  else if (Column = colSuspendCount) and SuspendCountKnown then
+    Result := Value = SuspendCount
   else
     Result := False;
 end;
 
 { TUiLibThreads }
+
+procedure TUiLibThreads.AskForConfirmation;
+begin
+  ConfirmOperation(Handle, 'Are you sure you want to ' + Action + ' ' +
+    Rttix.Format(ClientId));
+end;
+
+procedure TUiLibThreads.cmAlertClick;
+var
+  ClientId: TClientId;
+  hxThread: IHandle;
+begin
+  ClientId := HighlightedClientId;
+  NtxOpenThread(hxThread, ClientId.UniqueThread, THREAD_ALERT, 0,
+    ClientId.UniqueProcess).RaiseOnError;
+  AskForConfirmation('alert', ClientId);
+  NtxAlertThread(hxThread).RaiseOnError;
+end;
+
+procedure TUiLibThreads.cmAlertResumeClick;
+var
+  ClientId: TClientId;
+  hxThread: IHandle;
+begin
+  ClientId := HighlightedClientId;
+  NtxOpenThread(hxThread, ClientId.UniqueThread, THREAD_SUSPEND_RESUME, 0,
+    ClientId.UniqueProcess).RaiseOnError;
+  AskForConfirmation('alert & resume', ClientId);
+  NtxAlertResumeThread(hxThread).RaiseOnError;
+end;
+
+procedure TUiLibThreads.cmCancelOClick(Sender: TObject);
+var
+  ClientId: TClientId;
+  hxThread: IHandle;
+begin
+  ClientId := HighlightedClientId;
+  NtxOpenThread(hxThread, ClientId.UniqueThread, THREAD_TERMINATE, 0,
+    ClientId.UniqueProcess).RaiseOnError;
+  AskForConfirmation('cancel synchronous I/O of',
+    ClientId);
+  NtxCancelSynchronousIoThread(hxThread).RaiseOnError;
+end;
+
+procedure TUiLibThreads.cmResumeClick;
+var
+  ClientId: TClientId;
+  hxThread: IHandle;
+begin
+  ClientId := HighlightedClientId;
+  NtxOpenThread(hxThread, ClientId.UniqueThread, THREAD_RESUME, 0,
+    ClientId.UniqueProcess).RaiseOnError;
+  AskForConfirmation('resume', ClientId);
+  NtxResumeThread(hxThread).RaiseOnError;
+end;
+
+procedure TUiLibThreads.cmSuspendClick;
+var
+  ClientId: TClientId;
+  hxThread: IHandle;
+begin
+  ClientId := HighlightedClientId;
+  NtxOpenThread(hxThread, ClientId.UniqueThread, THREAD_SUSPEND_RESUME, 0,
+    ClientId.UniqueProcess).RaiseOnError;
+  AskForConfirmation('suspend', ClientId);
+  NtxSuspendThread(hxThread).RaiseOnError;
+end;
+
+procedure TUiLibThreads.cmTerminateClick;
+var
+  ClientId: TClientId;
+  hxThread: IHandle;
+begin
+  ClientId := HighlightedClientId;
+  NtxOpenThread(hxThread, ClientId.UniqueThread, THREAD_TERMINATE, 0,
+    ClientId.UniqueProcess).RaiseOnError;
+  AskForConfirmation('terminate', ClientId);
+  NtxTerminateThread(hxThread, STATUS_CANCELLED).RaiseOnError;
+end;
 
 procedure TUiLibThreads.ComboBoxMethodChange;
 begin
@@ -282,12 +477,17 @@ end;
 
 function TUiLibThreads.GetModalResult;
 begin
-  Result := (Tree.HighlightedNode.Provider as IThreadNode).Thread.Basic.ClientID;
+  Result := HighlightedClientId;
 end;
 
 function TUiLibThreads.GetModalResultType;
 begin
   Result := TypeInfo(TClientId);
+end;
+
+function TUiLibThreads.HighlightedClientId;
+begin
+  Result := (Tree.HighlightedNode.Provider as IThreadNode).Thread.Basic.ClientID;
 end;
 
 procedure TUiLibThreads.Loaded;
@@ -297,6 +497,19 @@ begin
   HysteresisContainer := TUiLibHysteresisContainer<TNtxThreadEntry>.Initialize(
     Tree, TThreadNode, RtlxIsSameThread);
   HysteresisContainer.Core.TransitionTime := 1;
+end;
+
+procedure TUiLibThreads.PopupMenuPopup;
+var
+  HasHighlightedNode: Boolean;
+begin
+  HasHighlightedNode := Assigned(Tree.HighlightedNode);
+  cmTerminate.Visible := HasHighlightedNode;
+  cmSuspend.Visible := HasHighlightedNode;
+  cmResume.Visible := HasHighlightedNode;
+  cmAlert.Visible := HasHighlightedNode;
+  cmAlertResume.Visible := HasHighlightedNode;
+  cmCancelO.Visible := HasHighlightedNode;
 end;
 
 procedure TUiLibThreads.Refresh;
@@ -383,6 +596,7 @@ end;
 procedure TUiLibThreads.SetOnModalComplete;
 begin
   FOnModalComplete := Event;
+  Tree.OnMainAction := TreeMainAction;
   Tree.MainActionMenuText := 'Select';
 end;
 

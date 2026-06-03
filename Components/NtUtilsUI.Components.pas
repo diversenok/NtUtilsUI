@@ -52,10 +52,18 @@ function UiLibPickSessionId(
   InitialChoice: TSessionId = TSessionId(-1)
 ): TSessionId;
 
+// Show a process list dialog
+procedure UiLibShowProcesses;
+
 // Show a modal dialog to choose a process
 function UiLibPickProcess(
   Owner: TComponent
 ): TProcessId;
+
+// Show a thread list dialog
+procedure UiLibShowProcessThreads(
+  ProcessId: TProcessId
+);
 
 // Show a modal dialog to choose a thread within a process
 function UiLibPickProcessThread(
@@ -142,10 +150,26 @@ begin
     raise EClassNotFound.Create(MSG_E_NO_COMPONENT);
 end;
 
+procedure UiLibShowProcesses;
+begin
+  if Assigned(UiLibFactoryProcess) then
+    UiLibHost.Show(UiLibFactoryProcess(False))
+  else
+    raise EClassNotFound.Create(MSG_E_NO_COMPONENT);
+end;
+
 function UiLibPickProcess;
 begin
   if Assigned(UiLibFactoryProcess) then
-    Result := UiLibHost.Pick<TProcessId>(Owner, UiLibFactoryProcess())
+    Result := UiLibHost.Pick<TProcessId>(Owner, UiLibFactoryProcess(False))
+  else
+    raise EClassNotFound.Create(MSG_E_NO_COMPONENT);
+end;
+
+procedure UiLibShowProcessThreads;
+begin
+  if Assigned(UiLibFactoryThread) then
+    UiLibHost.Show(UiLibFactoryThread(ProcessId))
   else
     raise EClassNotFound.Create(MSG_E_NO_COMPONENT);
 end;
@@ -162,7 +186,7 @@ end;
 function UiLibPickThread;
 begin
   if Assigned(UiLibFactoryThread) then
-    Result := UiLibHost.Pick<TClientId>(Owner, UiLibFactoryProcess(),
+    Result := UiLibHost.Pick<TClientId>(Owner, UiLibFactoryProcess(True),
       UiLibFactoryProcessToThread)
   else
     raise EClassNotFound.Create(MSG_E_NO_COMPONENT);

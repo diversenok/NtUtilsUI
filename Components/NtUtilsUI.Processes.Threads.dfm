@@ -1,7 +1,7 @@
 object UiLibThreads: TUiLibThreads
   Left = 0
   Top = 0
-  Width = 440
+  Width = 470
   Height = 550
   TabOrder = 0
   object LabelMethod: TLabel
@@ -27,7 +27,7 @@ object UiLibThreads: TUiLibThreads
     Caption = 'Displaying: 0'
   end
   object LabelTotal: TLabel
-    Left = 176
+    Left = 191
     Top = 532
     Width = 90
     Height = 15
@@ -36,7 +36,7 @@ object UiLibThreads: TUiLibThreads
     Caption = 'Total: (unknown)'
   end
   object LabelPeak: TLabel
-    Left = 346
+    Left = 376
     Top = 532
     Width = 89
     Height = 15
@@ -47,7 +47,7 @@ object UiLibThreads: TUiLibThreads
   object SearchBox: TUiLibTreeSearchBox
     Left = 0
     Top = 0
-    Width = 440
+    Width = 470
     Height = 21
     Anchors = [akLeft, akTop, akRight]
     TabOrder = 1
@@ -55,7 +55,7 @@ object UiLibThreads: TUiLibThreads
   object ComboBoxMethod: TComboBox
     Left = 64
     Top = 27
-    Width = 376
+    Width = 406
     Height = 22
     Style = csOwnerDrawFixed
     Anchors = [akLeft, akTop, akRight]
@@ -74,7 +74,7 @@ object UiLibThreads: TUiLibThreads
   object SessionIdBox: TUiLibSessionIdBox
     Left = 64
     Top = 55
-    Width = 376
+    Width = 406
     Height = 23
     Anchors = [akLeft, akTop, akRight]
     Enabled = False
@@ -84,18 +84,18 @@ object UiLibThreads: TUiLibThreads
   object Tree: TUiLibTree
     Left = 0
     Top = 80
-    Width = 440
+    Width = 470
     Height = 448
     Alignment = taCenter
     Anchors = [akLeft, akTop, akRight, akBottom]
     Constraints.MinHeight = 240
     EmptyListMessage = 'No items to display'
     Header.AutoSizeIndex = 0
+    PopupMenu = PopupMenu
     TabOrder = 0
     OnChange = TreeChange
     Touch.InteractiveGestures = [igPan, igPressAndTap]
     Touch.InteractiveGestureOptions = [igoPanSingleFingerHorizontal, igoPanSingleFingerVertical, igoPanInertia, igoPanGutter, igoParentPassthrough]
-    OnMainAction = TreeMainAction
     Columns = <
       item
         Position = 0
@@ -118,12 +118,53 @@ object UiLibThreads: TUiLibThreads
       item
         Position = 3
         Text = 'Creation time'
-        Width = 200
+        Width = 130
+      end
+      item
+        Position = 4
+        Text = 'Wait reason'
+        Width = 100
+      end
+      item
+        Options = [coAllowClick, coDraggable, coEnabled, coParentBidiMode, coParentColor, coResizable, coShowDropMark, coAllowFocus, coEditable, coStyleColor]
+        Position = 5
+        Text = 'Suspend count'
+        Width = 90
       end>
   end
   object RefreshTimer: TTimer
     OnTimer = RefreshTimerTimer
     Left = 368
     Top = 176
+  end
+  object PopupMenu: TPopupMenu
+    OnPopup = PopupMenuPopup
+    Left = 64
+    Top = 216
+    object cmTerminate: TMenuItem
+      Caption = 'Terminate'
+      ShortCut = 46
+      OnClick = cmTerminateClick
+    end
+    object cmSuspend: TMenuItem
+      Caption = 'Suspend'
+      OnClick = cmSuspendClick
+    end
+    object cmResume: TMenuItem
+      Caption = 'Resume'
+      OnClick = cmResumeClick
+    end
+    object cmAlert: TMenuItem
+      Caption = 'Alert'
+      OnClick = cmAlertClick
+    end
+    object cmAlertResume: TMenuItem
+      Caption = 'Alert && Resume'
+      OnClick = cmAlertResumeClick
+    end
+    object cmCancelO: TMenuItem
+      Caption = 'Cancel I/O'
+      OnClick = cmCancelOClick
+    end
   end
 end

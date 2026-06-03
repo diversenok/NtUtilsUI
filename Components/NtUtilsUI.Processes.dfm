@@ -94,12 +94,12 @@ object UiLibProcesses: TUiLibProcesses
     EmptyListMessage = 'No items to display'
     Header.AutoSizeIndex = 0
     Header.TriStateAutoSort = True
+    PopupMenu = PopupMenu
     TabOrder = 0
     TreeOptions.PaintOptions = [toHideFocusRect, toHotTrack, toShowButtons, toShowDropmark, toShowTreeLines, toThemeAware, toUseBlendedImages, toUseExplorerTheme]
     OnChange = TreeChange
     Touch.InteractiveGestures = [igPan, igPressAndTap]
     Touch.InteractiveGestureOptions = [igoPanSingleFingerHorizontal, igoPanSingleFingerVertical, igoPanInertia, igoPanGutter, igoParentPassthrough]
-    OnMainAction = TreeMainAction
     OnSortChange = TreeSortChange
     Columns = <
       item
@@ -135,5 +135,29 @@ object UiLibProcesses: TUiLibProcesses
     OnTimer = RefreshTimerTimer
     Left = 368
     Top = 176
+  end
+  object PopupMenu: TPopupMenu
+    OnPopup = PopupMenuPopup
+    Left = 64
+    Top = 216
+    object cmThreads: TMenuItem
+      Caption = 'Threads...'
+      ShortCut = 16397
+      Visible = False
+      OnClick = cmThreadsClick
+    end
+    object cmTerminate: TMenuItem
+      Caption = 'Terminate'
+      ShortCut = 46
+      OnClick = cmTerminateClick
+    end
+    object cmSuspend: TMenuItem
+      Caption = 'Suspend'
+      OnClick = cmSuspendClick
+    end
+    object cmResume: TMenuItem
+      Caption = 'Resume'
+      OnClick = cmResumeClick
+    end
   end
 end

@@ -37,18 +37,29 @@ type
     LabelCount: TLabel;
     LabelTotal: TLabel;
     LabelPeak: TLabel;
+    PopupMenu: TPopupMenu;
+    cmTerminate: TMenuItem;
+    cmSuspend: TMenuItem;
+    cmResume: TMenuItem;
+    cmThreads: TMenuItem;
     procedure RefreshTimerTimer(Sender: TObject);
     procedure ComboBoxMethodChange(Sender: TObject);
     procedure SessionIdBoxChange(Sender: TObject);
     procedure TreeSortChange(Sender: TObject);
     procedure TreeChange(Sender: TBaseVirtualTree; Node: PVirtualNode);
     procedure TreeMainAction(Node: INodeProvider);
+    procedure PopupMenuPopup(Sender: TObject);
+    procedure cmTerminateClick(Sender: TObject);
+    procedure cmSuspendClick(Sender: TObject);
+    procedure cmResumeClick(Sender: TObject);
+    procedure cmThreadsClick(Sender: TObject);
   private
     SnapshotMethod: TUiLibProcessSnapshotMethod;
     HysteresisContainer: IUiLibHysteresisContainer<TNtxProcessEntry>;
     FRefreshShortcut: TUiLibShortCut;
     FOnModalResultAvailabilityChange: TOnModalResultAvailabilityChange;
     FOnModalComplete: TNotifyEvent;
+    FForThreadSelection: Boolean;
     procedure Refresh;
     procedure RefreshNoDiff;
     procedure RefreshShortcut(Sender: TUiLibShortCut; var Handled: Boolean);
@@ -56,19 +67,23 @@ type
     function GetModalResultType: Pointer;
     procedure SetOnModalResultAvailabilityChange(Event: TOnModalResultAvailabilityChange);
     procedure SetOnModalComplete(Event: TNotifyEvent);
+    procedure AskForConfirmation(Action: String; const ProcessId: TProcessId);
+    function HighlightedProcessId: TProcessId;
   protected
     procedure Loaded; override;
   public
-    class function Factory: TWinControlFactory; static;
+    class function Factory(ForThreadSelection: Boolean): TWinControlFactory; static;
   end;
 
 implementation
 
 uses
-  Ntapi.ntpebteb, NtUtils, NtUtils.SysUtils, NtUtils.Files, NtUtils.Objects,
-  NtUtils.Processes.Info, NtUtils.Objects.Snapshots, NtUiLib.Errors,
-  DelphiUiLib.Strings, DelphiUiLib.HysteresisTree, NtUiCommon.Icons,
-  Vcl.ImgList, System.UITypes, NtUtilsUI.Components.Factories;
+  Ntapi.ntpebteb, Ntapi.ntstatus, NtUtils, NtUtils.SysUtils, NtUtils.Files,
+  NtUtils.Objects, NtUtils.Processes.Info, NtUtils.Objects.Snapshots,
+  NtUtils.Processes, NtUiLib.Errors, DelphiUiLib.Strings,
+  DelphiUiLib.HysteresisTree, DelphiUiLib.LiteReflection, NtUiCommon.Icons,
+  Vcl.ImgList, System.UITypes, NtUtilsUI.Components.Factories,
+  NtUiLib.TaskDialog, NtUtilsUI.Components;
 
 {$R *.dfm}
 
@@ -197,6 +212,50 @@ end;
 
 { TUiLibProcesses }
 
+procedure TUiLibProcesses.AskForConfirmation;
+begin
+  ConfirmOperation(Handle, 'Are you sure you want to ' + Action + ' ' +
+    Rttix.Format(ProcessId));
+end;
+
+procedure TUiLibProcesses.cmResumeClick;
+var
+  ProcessId: TProcessId;
+  hxProcess: IHandle;
+begin
+  ProcessId := HighlightedProcessId;
+  NtxOpenProcess(hxProcess, ProcessId, PROCESS_SUSPEND_RESUME).RaiseOnError;
+  AskForConfirmation('resume', ProcessId);
+  NtxResumeProcess(hxProcess).RaiseOnError;
+end;
+
+procedure TUiLibProcesses.cmSuspendClick;
+var
+  ProcessId: TProcessId;
+  hxProcess: IHandle;
+begin
+  ProcessId := HighlightedProcessId;
+  NtxOpenProcess(hxProcess, ProcessId, PROCESS_SUSPEND_RESUME).RaiseOnError;
+  AskForConfirmation('suspend', ProcessId);
+  NtxSuspendProcess(hxProcess).RaiseOnError;
+end;
+
+procedure TUiLibProcesses.cmTerminateClick;
+var
+  ProcessId: TProcessId;
+  hxProcess: IHandle;
+begin
+  ProcessId := HighlightedProcessId;
+  NtxOpenProcess(hxProcess, ProcessId, PROCESS_TERMINATE).RaiseOnError;
+  AskForConfirmation('terminate', ProcessId);
+  NtxTerminateProcess(hxProcess, DBG_TERMINATE_PROCESS).RaiseOnError;
+end;
+
+procedure TUiLibProcesses.cmThreadsClick;
+begin
+  UiLibShowProcessThreads(HighlightedProcessId);
+end;
+
 procedure TUiLibProcesses.ComboBoxMethodChange;
 begin
   SnapshotMethod := TUiLibProcessSnapshotMethod(ComboBoxMethod.ItemIndex);
@@ -209,6 +268,7 @@ begin
   Result := function (AOwner: TComponent): TWinControl
     begin
       Result := TUiLibProcesses.Create(AOwner);
+      TUiLibProcesses(Result).FForThreadSelection := ForThreadSelection;
     end;
 end;
 
@@ -221,6 +281,12 @@ end;
 function TUiLibProcesses.GetModalResultType;
 begin
   Result := TypeInfo(TProcessId);
+end;
+
+function TUiLibProcesses.HighlightedProcessId;
+begin
+  Result := (Tree.HighlightedNode.Provider as
+    IProcessNode).Process.Basic.ProcessID;
 end;
 
 procedure TUiLibProcesses.Loaded;
@@ -236,6 +302,29 @@ begin
     Tree, TProcessNode, RtlxIsSameProcess);
   HysteresisContainer.Core.ParentCheck := RtlxIsParentProcess;
   HysteresisContainer.Core.TransitionTime := 1;
+
+  if Assigned(UiLibFactoryThread) then
+  begin
+    Tree.OnMainAction := TreeMainAction;
+    Tree.MainActionMenuText := 'Threads...';
+  end
+  else
+  begin
+    cmThreads.ShortCut := 0;
+    Tree.RefreshPopupMenuShortcuts;
+  end;
+end;
+
+procedure TUiLibProcesses.PopupMenuPopup;
+var
+  HasHighlightedNode: Boolean;
+begin
+  HasHighlightedNode := Assigned(Tree.HighlightedNode);
+  cmThreads.Visible := HasHighlightedNode and Assigned(UiLibFactoryThread) and
+    (Assigned(FOnModalComplete) and not FForThreadSelection);
+  cmTerminate.Visible := HasHighlightedNode;
+  cmSuspend.Visible := HasHighlightedNode;
+  cmResume.Visible := HasHighlightedNode;
 end;
 
 procedure TUiLibProcesses.Refresh;
@@ -338,7 +427,14 @@ end;
 procedure TUiLibProcesses.SetOnModalComplete;
 begin
   FOnModalComplete := Event;
+  Tree.OnMainAction := TreeMainAction;
   Tree.MainActionMenuText := 'Select';
+
+  if FForThreadSelection then
+  begin
+    cmThreads.ShortCut := 0;
+    Tree.RefreshPopupMenuShortcuts;
+  end;
 end;
 
 procedure TUiLibProcesses.SetOnModalResultAvailabilityChange;
@@ -356,7 +452,9 @@ end;
 procedure TUiLibProcesses.TreeMainAction;
 begin
   if Assigned(FOnModalComplete) then
-    FOnModalComplete(Self);
+    FOnModalComplete(Self)
+  else if Assigned(UiLibFactoryThread) then
+    UiLibShowProcessThreads(HighlightedProcessId);
 end;
 
 procedure TUiLibProcesses.TreeSortChange;
