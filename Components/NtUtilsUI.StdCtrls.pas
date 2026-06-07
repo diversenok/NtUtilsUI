@@ -50,6 +50,7 @@ type
     procedure WMTimer(var Message: TWMTimer); message WM_TIMER;
     procedure WMKeyDown(var Message: TWMKeyDown); message WM_KEYDOWN;
     procedure KeyPress(var Key: Char); override;
+    procedure ChangeScale(M, D: Integer; isDpiChange: Boolean); override;
     procedure CreateWindowHandle(const Params: TCreateParams); override;
     procedure DelayedChange; virtual;
     procedure Change; override;
@@ -376,6 +377,15 @@ begin
     SetTimer(Handle, DELAYED_CHANGE_TIMER_ID, FDelayedChangeTimeout, nil);
     SetTyping(True);
   end;
+end;
+
+procedure TUiLibButtonedEdit.ChangeScale(M, D: Integer; isDpiChange: Boolean);
+begin
+  // Resize images so the buttons also resize accordingly
+  if isDpiChange and Assigned(Images) then
+    Images.SetSize(16 * CurrentPPI div 96, 16 * CurrentPPI div 96);
+
+  inherited;
 end;
 
 constructor TUiLibButtonedEdit.Create;

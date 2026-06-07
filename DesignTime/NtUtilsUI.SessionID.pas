@@ -53,7 +53,8 @@ begin
   FComboBox := TUiLibComboBox.Create(Self);
   FComboBox.Width := Width;
   FComboBox.Height := Height;
-  FComboBox.Anchors := [akLeft, akTop, akRight];
+  FComboBox.Anchors := [akLeft, akTop, akRight, akBottom];
+  FComboBox.Align := alClient;
   FComboBox.Text := '1: Console';
   FComboBox.Parent := Self;
 

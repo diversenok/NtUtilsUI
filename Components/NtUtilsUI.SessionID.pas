@@ -68,7 +68,8 @@ begin
   FComboBox := TUiLibNumberComboBox.Create(Self);
   FComboBox.Width := Width;
   FComboBox.Height := Height;
-  FComboBox.Anchors := [akLeft, akTop, akRight];
+  FComboBox.Anchors := [akLeft, akTop, akRight, akBottom];
+  FComboBox.Align := alClient;
   FComboBox.NumberBase := nsDecimal;
   FComboBox.NumberSize := isCardinal;
   FComboBox.OnChange := ComboBoxChange;

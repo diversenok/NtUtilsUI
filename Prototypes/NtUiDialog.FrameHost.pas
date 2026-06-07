@@ -70,8 +70,8 @@ begin
     BottomMargin := SMALL_MARGIN * CurrentPPI div 96;
 
   OtherMargin := SMALL_MARGIN * CurrentPPI div 96;
-  ClientWidth := FFrame.Width + OtherMargin * 2;
-  ClientHeight := FFrame.Height + OtherMargin + BottomMargin;
+  ClientWidth := FFrame.Width * CurrentPPI div 96 + OtherMargin * 2;
+  ClientHeight := FFrame.Height * CurrentPPI div 96 + OtherMargin + BottomMargin;
   FFrame.Parent := Self;
   FFrame.AlignWithMargins := True;
   FFrame.Margins.SetBounds(OtherMargin, OtherMargin, OtherMargin, BottomMargin);
