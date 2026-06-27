@@ -188,6 +188,9 @@ end;
 
 procedure TAclFrame.SelectionChanged;
 begin
+  if csDestroying in ComponentState then
+    Exit;
+
   btnUp.Enabled := Tree.CanMoveSelectedNodesUp;
   btnDelete.Enabled := Tree.SelectedCount > 0;
   btnDown.Enabled := Tree.CanMoveSelectedNodesDown;
