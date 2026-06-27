@@ -8,12 +8,13 @@ interface
 
 uses
   System.Classes, Vcl.Controls, Vcl.StdCtrls, NtUtilsUI.Tree, NtUtilsUI.Base,
-  NtUtilsUI.Forms, NtUtilsUI.Components.Factories;
+  NtUtilsUI.Forms, NtUtilsUI.Components.Factories, Vcl.Menus;
 
 type
   TFrameHostDialog = class(TUiLibChildForm)
     btnClose: TButton;
     btnSelect: TButton;
+    MainMenu: TMainMenu;
     procedure btnCloseClick(Sender: TObject);
     procedure DefaultActionChosen(Node: INodeProvider);
     procedure btnSelectClick(Sender: TObject);
@@ -44,6 +45,22 @@ uses
 {$IFOPT Q+}{$DEFINE Q+}{$ENDIF}
 
 {$R *.dfm}
+
+function FindMainMenu(Control: TComponent): TMainMenu;
+var
+  i: Integer;
+begin
+  Result := nil;
+
+  for i := 0 to Pred(Control.ComponentCount) do
+    if Control.Components[i] is TMainMenu then
+    begin
+      Result := TMainMenu(Control.Components[i]);
+      Exit;
+    end
+    else
+      Result := FindMainMenu(Control.Components[i]);
+end;
 
 { TFrameHostDialog }
 
@@ -79,6 +96,7 @@ begin
   FFrame.TabOrder := 0;
   btnClose.Visible := Assigned(FModalResultCache);
   btnSelect.Visible := Assigned(FModalResultCache);
+  MainMenu.Merge(FindMainMenu(FFrame));
   Caption := QueryDefaultCaption(FFrame);
 
   if Assigned(FModalResultCache) then

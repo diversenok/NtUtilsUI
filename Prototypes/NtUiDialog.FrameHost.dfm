@@ -13,6 +13,7 @@ object FrameHostDialog: TFrameHostDialog
   Font.Name = 'Tahoma'
   Font.Style = []
   KeyPreview = True
+  Menu = MainMenu
   Position = poOwnerFormCenter
   ShowHint = True
   CloseOnEscape = True
@@ -38,5 +39,9 @@ object FrameHostDialog: TFrameHostDialog
     Default = True
     TabOrder = 1
     OnClick = btnSelectClick
+  end
+  object MainMenu: TMainMenu
+    Left = 256
+    Top = 240
   end
 end
