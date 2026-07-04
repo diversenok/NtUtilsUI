@@ -17,11 +17,11 @@ type
   private
     FOnDelayedChange: TNotifyEvent;
     FOnTypingChange: TNotifyEvent;
-    FDelayedChangeTimeout: Cardinal;
+    FTypingTimeout: Cardinal;
   public
     constructor Create(AOwner: TComponent); override;
   published
-    property DelayedChangeTimeout: Cardinal read FDelayedChangeTimeout write FDelayedChangeTimeout default 500;
+    property TypingTimeout: Cardinal read FTypingTimeout write FTypingTimeout default 500;
     property OnDelayedChange: TNotifyEvent read FOnDelayedChange write FOnDelayedChange;
     property OnTypingChange: TNotifyEvent read FOnTypingChange write FOnTypingChange;
   end;
@@ -30,11 +30,11 @@ type
   private
     FOnDelayedChange: TNotifyEvent;
     FOnTypingChange: TNotifyEvent;
-    FDelayedChangeTimeout: Cardinal;
+    FTypingTimeout: Cardinal;
   public
     constructor Create(AOwner: TComponent); override;
   published
-    property DelayedChangeTimeout: Cardinal read FDelayedChangeTimeout write FDelayedChangeTimeout default 500;
+    property TypingTimeout: Cardinal read FTypingTimeout write FTypingTimeout default 500;
     property OnDelayedChange: TNotifyEvent read FOnDelayedChange write FOnDelayedChange;
     property OnTypingChange: TNotifyEvent read FOnTypingChange write FOnTypingChange;
   end;
@@ -75,7 +75,7 @@ end;
 constructor TUiLibEdit.Create;
 begin
   inherited;
-  FDelayedChangeTimeout := 500;
+  FTypingTimeout := 500;
 end;
 
 { TUiLibButtonedEdit }
@@ -83,7 +83,7 @@ end;
 constructor TUiLibButtonedEdit.Create;
 begin
   inherited;
-  FDelayedChangeTimeout := 500;
+  FTypingTimeout := 500;
 end;
 
 { TUiLibComboBox }

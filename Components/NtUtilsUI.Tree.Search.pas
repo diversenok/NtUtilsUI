@@ -24,12 +24,20 @@ type
     FTree: TUiLibTree;
     FTreeWeakRef: IWeak;
     FColumnIndexes: TArray<TColumnIndex>;
+    FOnTypingChange, FOnChange, FOnSearch: TNotifyEvent;
     function HasTree: Boolean;
+    procedure SearchBoxTypingChange(Sender: TObject);
+    procedure SearchBoxChange(Sender: TObject);
     procedure SearchBoxSearch(Sender: TObject);
     procedure SearchBoxArrow(Sender: TObject);
     procedure OnEscShortcut(Sender: TUiLibShortCut; var Handled: Boolean);
     procedure ColumnVisibilityChanged(const Sender: TBaseVirtualTree; const Column: TColumnIndex; Visible: Boolean);
     procedure UpdateColumns;
+    function GetHasQuery: Boolean;
+    function GetQuery: String;
+    function GetTypingTimeout: Cardinal;
+    procedure SetTypingTimeout(Value: Cardinal);
+    function GetTyping: Boolean;
   protected
     procedure CreateWnd; override;
   public
@@ -37,6 +45,15 @@ type
     destructor Destroy; override;
     procedure AttachToTree(Tree: TUiLibTree);
     procedure ReapplySearch;
+    procedure ClearQuery;
+    property HasQuery: Boolean read GetHasQuery;
+    property Query: String read GetQuery;
+    property Typing: Boolean read GetTyping;
+  published
+    property TypingTimeout: Cardinal read GetTypingTimeout write SetTypingTimeout default 500;
+    property OnTypingChange: TNotifyEvent read FOnTypingChange write FOnTypingChange;
+    property OnChange: TNotifyEvent read FOnChange write FOnChange;
+    property OnSearch: TNotifyEvent read FOnSearch write FOnSearch;
   end;
 
 implementation
@@ -67,6 +84,11 @@ begin
     UpdateColumns;
 end;
 
+procedure TUiLibTreeSearchBox.ClearQuery;
+begin
+  FSearchBox.ClearQuery;
+end;
+
 procedure TUiLibTreeSearchBox.ColumnVisibilityChanged;
 begin
   UpdateColumns;
@@ -89,6 +111,8 @@ begin
   FSearchBox.Height := Height;
   FSearchBox.Align := alClient;
   FSearchBox.TabOrder := 0;
+  FSearchBox.OnTypingChange := SearchBoxTypingChange;
+  FSearchBox.OnChange := SearchBoxChange;
   FSearchBox.OnSearch := SearchBoxSearch;
   FSearchBox.OnArrowUp := SearchBoxArrow;
   FSearchBox.OnArrowDown := SearchBoxArrow;
@@ -140,6 +164,26 @@ begin
   inherited;
 end;
 
+function TUiLibTreeSearchBox.GetHasQuery;
+begin
+  Result := FSearchBox.HasQuery;
+end;
+
+function TUiLibTreeSearchBox.GetQuery;
+begin
+  Result := FSearchBox.Query;
+end;
+
+function TUiLibTreeSearchBox.GetTyping;
+begin
+  Result := FSearchBox.Typing;
+end;
+
+function TUiLibTreeSearchBox.GetTypingTimeout;
+begin
+  Result := FSearchBox.TypingTimeout;
+end;
+
 function TUiLibTreeSearchBox.HasTree;
 begin
   Result := Assigned(FTreeWeakRef) and FTreeWeakRef.HasRef and Assigned(FTree);
@@ -180,9 +224,29 @@ begin
     FTree.SetFocus;
 end;
 
+procedure TUiLibTreeSearchBox.SearchBoxChange;
+begin
+  if Assigned(FOnChange) then
+    FOnChange(Self);
+end;
+
 procedure TUiLibTreeSearchBox.SearchBoxSearch;
 begin
   ReapplySearch;
+
+  if Assigned(FOnSearch) then
+    FOnSearch(Self);
+end;
+
+procedure TUiLibTreeSearchBox.SearchBoxTypingChange;
+begin
+  if Assigned(FOnTypingChange) then
+    FOnTypingChange(Self);
+end;
+
+procedure TUiLibTreeSearchBox.SetTypingTimeout;
+begin
+  FSearchBox.TypingTimeout := Value;
 end;
 
 procedure TUiLibTreeSearchBox.UpdateColumns;

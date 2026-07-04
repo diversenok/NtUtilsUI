@@ -17,13 +17,18 @@ type
   private
     FEdit: TUiLibButtonedEdit;
     FImageList: TCustomImageList;
-    FOnSearch, FOnArrowUp, FOnArrowDown: TNotifyEvent;
+    FOnTypingChange, FOnChange, FOnSearch, FOnArrowUp, FOnArrowDown: TNotifyEvent;
     procedure ReloadIcons;
+    function GetTypingTimeout: Cardinal;
+    procedure SetTypingTimeout(Value: Cardinal);
   protected
     procedure ChangeScale(M, D: Integer; isDpiChange: Boolean); override;
   public
     constructor Create(AOwner: TComponent); override;
   published
+    property TypingTimeout: Cardinal read GetTypingTimeout write SetTypingTimeout default 500;
+    property OnTypingChange: TNotifyEvent read FOnTypingChange write FOnTypingChange;
+    property OnChange: TNotifyEvent read FOnChange write FOnChange;
     property OnSearch: TNotifyEvent read FOnSearch write FOnSearch;
     property OnArrowUp: TNotifyEvent read FOnArrowUp write FOnArrowUp;
     property OnArrowDown: TNotifyEvent read FOnArrowDown write FOnArrowDown;
@@ -74,6 +79,11 @@ begin
   ReloadIcons;
 end;
 
+function TUiLibSearchBox.GetTypingTimeout;
+begin
+  Result := FEdit.TypingTimeout;
+end;
+
 procedure TUiLibSearchBox.ReloadIcons;
 begin
   FImageList.Clear;
@@ -82,6 +92,11 @@ begin
 
   FEdit.LeftButton.ImageIndex := FImageList.AddIconFromResource(HInstance,
     'SearchBox.Search');
+end;
+
+procedure TUiLibSearchBox.SetTypingTimeout;
+begin
+  FEdit.TypingTimeout := Value;
 end;
 
 end.

@@ -20,17 +20,21 @@ type
     FLeftImageIndex: array [Boolean] of Integer;
     FFocusShortCut: TUiLibShortCut;
     FEscShortCut: TUiLibShortCut;
-    FOnSearch, FOnArrowUp, FOnArrowDown: TNotifyEvent;
+    FOnTypingChange, FOnChange, FOnSearch, FOnArrowUp, FOnArrowDown: TNotifyEvent;
     procedure OnFocusShortCut(Sender: TUiLibShortCut; var Handled: Boolean);
     procedure OnEscapeShortCut(Sender: TUiLibShortCut; var Handled: Boolean);
     function GetHasQuery: Boolean;
     function GetQuery: String;
     procedure ReloadIcons;
     procedure RefreshLeftIcon;
-    procedure QueryChanged(Sender: TObject);
+    procedure TextChanged(Sender: TObject);
+    procedure TypingComplete(Sender: TObject);
     procedure RightButtonClick(Sender: TObject);
     procedure TypingChange(Sender: TObject);
     procedure EditKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
+    function GetTypingTimeout: Cardinal;
+    procedure SetTypingTimeout(Value: Cardinal);
+    function GetTyping: Boolean;
   protected
     procedure ChangeScale(M, D: Integer; isDpiChange: Boolean); override;
   public
@@ -38,7 +42,11 @@ type
     procedure ClearQuery;
     property HasQuery: Boolean read GetHasQuery;
     property Query: String read GetQuery;
+    property Typing: Boolean read GetTyping;
   published
+    property TypingTimeout: Cardinal read GetTypingTimeout write SetTypingTimeout default 500;
+    property OnTypingChange: TNotifyEvent read FOnTypingChange write FOnTypingChange;
+    property OnChange: TNotifyEvent read FOnChange write FOnChange;
     property OnSearch: TNotifyEvent read FOnSearch write FOnSearch;
     property OnArrowUp: TNotifyEvent read FOnArrowUp write FOnArrowUp;
     property OnArrowDown: TNotifyEvent read FOnArrowDown write FOnArrowDown;
@@ -78,7 +86,8 @@ begin
   FEdit.Height := Height;
   FEdit.Align := alClient;
   FEdit.TextHint := 'Search';
-  FEdit.OnDelayedChange := QueryChanged;
+  FEdit.OnChange := TextChanged;
+  FEdit.OnDelayedChange := TypingComplete;
   FEdit.OnRightButtonClick := RightButtonClick;
   FEdit.OnTypingChange := TypingChange;
   FEdit.OnKeyDown := EditKeyDown;
@@ -121,6 +130,16 @@ begin
   Result := FEdit.Text;
 end;
 
+function TUiLibSearchBox.GetTyping;
+begin
+  Result := FEdit.Typing;
+end;
+
+function TUiLibSearchBox.GetTypingTimeout;
+begin
+  Result := FEdit.TypingTimeout;
+end;
+
 procedure TUiLibSearchBox.OnEscapeShortCut;
 begin
   if FEdit.Focused and HasQuery then
@@ -137,14 +156,6 @@ begin
     FEdit.SetFocus;
     Handled := True;
   end;
-end;
-
-procedure TUiLibSearchBox.QueryChanged;
-begin
-  FEdit.RightButton.Visible := HasQuery;
-
-  if Assigned(FOnSearch) then
-    FOnSearch(Self);
 end;
 
 procedure TUiLibSearchBox.RefreshLeftIcon;
@@ -176,9 +187,31 @@ begin
   ClearQuery;
 end;
 
+procedure TUiLibSearchBox.SetTypingTimeout;
+begin
+  FEdit.TypingTimeout := Value;
+end;
+
+procedure TUiLibSearchBox.TextChanged;
+begin
+  if Assigned(FOnChange) then
+    FOnChange(Self);
+end;
+
 procedure TUiLibSearchBox.TypingChange;
 begin
   RefreshLeftIcon;
+
+  if Assigned(FOnTypingChange) then
+    FOnTypingChange(Self);
+end;
+
+procedure TUiLibSearchBox.TypingComplete;
+begin
+  FEdit.RightButton.Visible := HasQuery;
+
+  if Assigned(FOnSearch) then
+    FOnSearch(Self);
 end;
 
 end.

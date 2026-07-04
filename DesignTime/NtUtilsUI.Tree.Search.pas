@@ -19,10 +19,18 @@ type
     FSearchBox: TUiLibSearchBox;
     FColumnsBox: TUiLibComboBox;
     FSplitter: TSplitter;
+    FOnTypingChange, FOnChange, FOnSearch: TNotifyEvent;
+    function GetTypingTimeout: Cardinal;
+    procedure SetTypingTimeout(Value: Cardinal);
   protected
     procedure CreateWnd; override;
   public
     constructor Create(AOwner: TComponent); override;
+  published
+    property TypingTimeout: Cardinal read GetTypingTimeout write SetTypingTimeout default 500;
+    property OnTypingChange: TNotifyEvent read FOnTypingChange write FOnTypingChange;
+    property OnChange: TNotifyEvent read FOnChange write FOnChange;
+    property OnSearch: TNotifyEvent read FOnSearch write FOnSearch;
   end;
 
 procedure Register;
@@ -88,6 +96,16 @@ begin
   inherited;
   FColumnsBox.Items.Add('All visible columns');
   FColumnsBox.ItemIndex := 0;
+end;
+
+function TUiLibTreeSearchBox.GetTypingTimeout;
+begin
+  Result := FSearchBox.TypingTimeout;
+end;
+
+procedure TUiLibTreeSearchBox.SetTypingTimeout;
+begin
+  FSearchBox.TypingTimeout := Value;
 end;
 
 end.

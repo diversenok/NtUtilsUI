@@ -18,7 +18,7 @@ type
   private
     FOnDelayedChange: TNotifyEvent;
     FOnTypingChange: TNotifyEvent;
-    FDelayedChangeTimeout: Cardinal;
+    FTypingTimeout: Cardinal;
     FTyping: Boolean;
     procedure SetTyping(Value: Boolean);
     function GetText: String;
@@ -33,7 +33,7 @@ type
     constructor Create(AOwner: TComponent); override;
     property Typing: Boolean read FTyping;
   published
-    property DelayedChangeTimeout: Cardinal read FDelayedChangeTimeout write FDelayedChangeTimeout default 500;
+    property TypingTimeout: Cardinal read FTypingTimeout write FTypingTimeout default 500;
     property OnDelayedChange: TNotifyEvent read FOnDelayedChange write FOnDelayedChange;
     property OnTypingChange: TNotifyEvent read FOnTypingChange write FOnTypingChange;
   end;
@@ -42,7 +42,7 @@ type
   private
     FOnDelayedChange: TNotifyEvent;
     FOnTypingChange: TNotifyEvent;
-    FDelayedChangeTimeout: Cardinal;
+    FTypingTimeout: Cardinal;
     FTyping: Boolean;
     procedure SetTyping(Value: Boolean);
     function GetText: String;
@@ -58,7 +58,7 @@ type
     constructor Create(AOwner: TComponent); override;
     property Typing: Boolean read FTyping;
   published
-    property DelayedChangeTimeout: Cardinal read FDelayedChangeTimeout write FDelayedChangeTimeout default 500;
+    property TypingTimeout: Cardinal read FTypingTimeout write FTypingTimeout default 500;
     property OnDelayedChange: TNotifyEvent read FOnDelayedChange write FOnDelayedChange;
     property OnTypingChange: TNotifyEvent read FOnTypingChange write FOnTypingChange;
   end;
@@ -284,11 +284,11 @@ begin
     SetTyping(False);
     DelayedChange;
   end
-  else if FDelayedChangeTimeout = 0 then
+  else if FTypingTimeout = 0 then
     DelayedChange
   else
   begin
-    SetTimer(Handle, DELAYED_CHANGE_TIMER_ID, FDelayedChangeTimeout, nil);
+    SetTimer(Handle, DELAYED_CHANGE_TIMER_ID, FTypingTimeout, nil);
     SetTyping(True);
   end;
 end;
@@ -296,7 +296,7 @@ end;
 constructor TUiLibEdit.Create;
 begin
   inherited;
-  FDelayedChangeTimeout := 500;
+  FTypingTimeout := 500;
 end;
 
 procedure TUiLibEdit.CreateWindowHandle;
@@ -370,11 +370,11 @@ begin
     SetTyping(False);
     DelayedChange;
   end
-  else if FDelayedChangeTimeout = 0 then
+  else if FTypingTimeout = 0 then
     DelayedChange
   else
   begin
-    SetTimer(Handle, DELAYED_CHANGE_TIMER_ID, FDelayedChangeTimeout, nil);
+    SetTimer(Handle, DELAYED_CHANGE_TIMER_ID, FTypingTimeout, nil);
     SetTyping(True);
   end;
 end;
@@ -391,7 +391,7 @@ end;
 constructor TUiLibButtonedEdit.Create;
 begin
   inherited;
-  FDelayedChangeTimeout := 500;
+  FTypingTimeout := 500;
 end;
 
 procedure TUiLibButtonedEdit.CreateWindowHandle;
