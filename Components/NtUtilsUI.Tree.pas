@@ -196,6 +196,7 @@ type
     function DoGetPopupMenu(Node: PVirtualNode; Column: TColumnIndex; Position: TPoint): TPopupMenu; override;
     procedure DoGetText(var EventArgs: TVSTGetCellTextEventArgs); override;
     procedure DoHeaderClick(const HitInfo: TVTHeaderHitInfo); override;
+    function DoIncrementalSearch(Node: PVirtualNode; const Text: string): Integer; override;
     function DoInitChildren(Node: PVirtualNode; var ChildCount: Cardinal): Boolean; override;
     procedure DoInitNode(Parent, Node: PVirtualNode; var InitStates: TVirtualNodeInitStates); override;
     procedure DoSortChange; virtual;
@@ -1307,6 +1308,16 @@ begin
   end;
 
   inherited;
+end;
+
+function TUiLibTree.DoIncrementalSearch;
+begin
+  // Workaround incremental search not working initially until the user selects
+  // something or re-focuses the control.
+  if FocusedColumn = NoColumn then
+    FocusedColumn := Header.Columns.GetFirstVisibleColumn;
+
+  Result := inherited;
 end;
 
 function TUiLibTree.DoInitChildren;
