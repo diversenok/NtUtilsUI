@@ -42,6 +42,10 @@ type
     cmAlert: TMenuItem;
     cmAlertResume: TMenuItem;
     cmCancelO: TMenuItem;
+    MainMenu: TMainMenu;
+    cmOptions: TMenuItem;
+    cmRefresh: TMenuItem;
+    cmAutoRefresh: TMenuItem;
     procedure ComboBoxMethodChange(Sender: TObject);
     procedure RefreshTimerTimer(Sender: TObject);
     procedure SessionIdBoxChange(Sender: TObject);
@@ -54,12 +58,17 @@ type
     procedure cmAlertClick(Sender: TObject);
     procedure cmAlertResumeClick(Sender: TObject);
     procedure cmCancelOClick(Sender: TObject);
+    procedure SearchBoxSearch(Sender: TObject);
+    procedure SearchBoxTypingChange(Sender: TObject);
+    procedure cmRefreshClick(Sender: TObject);
+    procedure cmAutoRefreshClick(Sender: TObject);
   private
     FProcessId: TProcessId;
     SnapshotMethod: TUiLibThreadSnapshotMethod;
     HysteresisContainer: IUiLibHysteresisContainer<TNtxThreadEntry>;
     FOnModalResultAvailabilityChange: TOnModalResultAvailabilityChange;
     FOnModalComplete: TNotifyEvent;
+    FAutoRefresh: Boolean;
     function Snapshot(out Threads: TArray<TNtxThreadEntry>): TNtxStatus;
     procedure Refresh;
     procedure RefreshNoDiff;
@@ -70,10 +79,11 @@ type
     procedure SetOnModalComplete(Event: TNotifyEvent);
     procedure AskForConfirmation(Action: String; const ClientId: TClientId);
     function HighlightedClientId: TClientId;
+    procedure SetProcessId(const Value: TProcessId);
   protected
     procedure Loaded; override;
   public
-    property ProcessId: TProcessId read FProcessId write FProcessId;
+    property ProcessId: TProcessId read FProcessId write SetProcessId;
     class function Factory(ProcessId: TProcessId): TWinControlFactory; static;
   end;
 
@@ -398,6 +408,12 @@ begin
   NtxAlertResumeThread(hxThread).RaiseOnError;
 end;
 
+procedure TUiLibThreads.cmAutoRefreshClick;
+begin
+  FAutoRefresh := not FAutoRefresh;
+  RefreshTimer.Enabled := FAutoRefresh and not SearchBox.Typing;
+end;
+
 procedure TUiLibThreads.cmCancelOClick(Sender: TObject);
 var
   ClientId: TClientId;
@@ -409,6 +425,11 @@ begin
   AskForConfirmation('cancel synchronous I/O of',
     ClientId);
   NtxCancelSynchronousIoThread(hxThread).RaiseOnError;
+end;
+
+procedure TUiLibThreads.cmRefreshClick;
+begin
+  Refresh;
 end;
 
 procedure TUiLibThreads.cmResumeClick;
@@ -497,6 +518,7 @@ begin
   HysteresisContainer := TUiLibHysteresisContainer<TNtxThreadEntry>.Initialize(
     Tree, TThreadNode, RtlxIsSameThread);
   HysteresisContainer.Core.TransitionTime := 1;
+  FAutoRefresh := True;
 end;
 
 procedure TUiLibThreads.PopupMenuPopup;
@@ -583,9 +605,21 @@ begin
     Refresh;
   except
     // If something breaks, stop auto-refreshing to prevent spamming errors
+    FAutoRefresh := False;
     RefreshTimer.Enabled := False;
     raise;
   end;
+end;
+
+procedure TUiLibThreads.SearchBoxSearch;
+begin
+  if SearchBox.HasQuery then
+    Tree.HighlightedNode := Tree.GetFirstVisibleNoInit;
+end;
+
+procedure TUiLibThreads.SearchBoxTypingChange;
+begin
+  RefreshTimer.Enabled := FAutoRefresh and not SearchBox.Typing;
 end;
 
 procedure TUiLibThreads.SessionIdBoxChange;
@@ -604,6 +638,13 @@ procedure TUiLibThreads.SetOnModalResultAvailabilityChange;
 begin
   FOnModalResultAvailabilityChange := Event;
   TreeChange(nil, nil);
+end;
+
+procedure TUiLibThreads.SetProcessId;
+begin
+  FProcessId := Value;
+  RefreshNoDiff;
+  Tree.HighlightedNode := Tree.GetFirstVisibleNoInit;
 end;
 
 function TUiLibThreads.Snapshot;

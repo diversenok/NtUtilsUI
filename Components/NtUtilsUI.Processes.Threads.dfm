@@ -51,6 +51,8 @@ object UiLibThreads: TUiLibThreads
     Height = 21
     Anchors = [akLeft, akTop, akRight]
     TabOrder = 1
+    OnTypingChange = SearchBoxTypingChange
+    OnSearch = SearchBoxSearch
   end
   object ComboBoxMethod: TComboBox
     Left = 64
@@ -165,6 +167,25 @@ object UiLibThreads: TUiLibThreads
     object cmCancelO: TMenuItem
       Caption = 'Cancel I/O'
       OnClick = cmCancelOClick
+    end
+  end
+  object MainMenu: TMainMenu
+    Left = 152
+    Top = 224
+    object cmOptions: TMenuItem
+      Caption = 'Options'
+      object cmRefresh: TMenuItem
+        Caption = 'Refresh'
+        ShortCut = 116
+        OnClick = cmRefreshClick
+      end
+      object cmAutoRefresh: TMenuItem
+        AutoCheck = True
+        Caption = 'Auto-refresh'
+        Checked = True
+        ShortCut = 117
+        OnClick = cmAutoRefreshClick
+      end
     end
   end
 end

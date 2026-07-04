@@ -42,6 +42,10 @@ type
     cmSuspend: TMenuItem;
     cmResume: TMenuItem;
     cmThreads: TMenuItem;
+    MainMenu: TMainMenu;
+    cmOptions: TMenuItem;
+    cmRefresh: TMenuItem;
+    cmAutoRefresh: TMenuItem;
     procedure RefreshTimerTimer(Sender: TObject);
     procedure ComboBoxMethodChange(Sender: TObject);
     procedure SessionIdBoxChange(Sender: TObject);
@@ -53,16 +57,18 @@ type
     procedure cmSuspendClick(Sender: TObject);
     procedure cmResumeClick(Sender: TObject);
     procedure cmThreadsClick(Sender: TObject);
+    procedure cmRefreshClick(Sender: TObject);
+    procedure cmAutoRefreshClick(Sender: TObject);
+    procedure SearchBoxSearch(Sender: TObject);
+    procedure SearchBoxTypingChange(Sender: TObject);
   private
     SnapshotMethod: TUiLibProcessSnapshotMethod;
     HysteresisContainer: IUiLibHysteresisContainer<TNtxProcessEntry>;
-    FRefreshShortcut: TUiLibShortCut;
     FOnModalResultAvailabilityChange: TOnModalResultAvailabilityChange;
     FOnModalComplete: TNotifyEvent;
-    FForThreadSelection: Boolean;
+    FAutoRefresh, FForThreadSelection: Boolean;
     procedure Refresh;
     procedure RefreshNoDiff;
-    procedure RefreshShortcut(Sender: TUiLibShortCut; var Handled: Boolean);
     function GetModalResult: TProcessId;
     function GetModalResultType: Pointer;
     procedure SetOnModalResultAvailabilityChange(Event: TOnModalResultAvailabilityChange);
@@ -218,6 +224,17 @@ begin
     Rttix.Format(ProcessId));
 end;
 
+procedure TUiLibProcesses.cmAutoRefreshClick;
+begin
+  FAutoRefresh := not FAutoRefresh;
+  RefreshTimer.Enabled := FAutoRefresh and not SearchBox.Typing;
+end;
+
+procedure TUiLibProcesses.cmRefreshClick;
+begin
+  Refresh;
+end;
+
 procedure TUiLibProcesses.cmResumeClick;
 var
   ProcessId: TProcessId;
@@ -293,15 +310,12 @@ procedure TUiLibProcesses.Loaded;
 begin
   inherited;
 
-  FRefreshShortcut := TUiLibShortCut.Create(Self);
-  FRefreshShortcut.ShortCut := VK_F5;
-  FRefreshShortcut.OnExecute := RefreshShortcut;
-
   SearchBox.AttachToTree(Tree);
   HysteresisContainer := TUiLibHysteresisContainer<TNtxProcessEntry>.Initialize(
     Tree, TProcessNode, RtlxIsSameProcess);
   HysteresisContainer.Core.ParentCheck := RtlxIsParentProcess;
   HysteresisContainer.Core.TransitionTime := 1;
+  FAutoRefresh := True;
 
   if Assigned(UiLibFactoryThread) then
   begin
@@ -313,6 +327,8 @@ begin
     cmThreads.ShortCut := 0;
     Tree.RefreshPopupMenuShortcuts;
   end;
+
+  RefreshNoDiff;
 end;
 
 procedure TUiLibProcesses.PopupMenuPopup;
@@ -403,20 +419,28 @@ begin
   HysteresisContainer.Core.TransitionTime := TTL;
 end;
 
-procedure TUiLibProcesses.RefreshShortcut;
-begin
-  Refresh;
-end;
-
 procedure TUiLibProcesses.RefreshTimerTimer;
 begin
   try
     Refresh;
   except
     // If something breaks, stop auto-refreshing to prevent spamming errors
+    FAutoRefresh := False;
     RefreshTimer.Enabled := False;
+    cmAutoRefresh.Checked := False;
     raise;
   end;
+end;
+
+procedure TUiLibProcesses.SearchBoxSearch;
+begin
+  if SearchBox.HasQuery then
+    Tree.HighlightedNode := Tree.GetLastVisibleNoInit;
+end;
+
+procedure TUiLibProcesses.SearchBoxTypingChange;
+begin
+  RefreshTimer.Enabled := FAutoRefresh and not SearchBox.Typing;
 end;
 
 procedure TUiLibProcesses.SessionIdBoxChange;
