@@ -36,7 +36,7 @@ type
     property AutoExpandParent: Boolean read FAutoExpandParent write FAutoExpandParent default True;
     property AutoOptions default [toAutoDropExpand, toAutoScrollOnExpand, toAutoTristateTracking, toAutoDeleteMovedNodes, toAutoChangeScale];
     property ExportMode default emSelected;
-    property MiscOptions default [toAcceptOLEDrop, toFullRepaintOnResize, toInitOnSave, toToggleOnDblClick, toWheelPanning];
+    property MiscOptions default [toAcceptOLEDrop, toFullRepaintOnResize, toInitOnSave, toWheelPanning];
     property PaintOptions default [toHideFocusRect, toHotTrack, toShowButtons, toShowDropmark, toThemeAware, toUseBlendedImages, toUseExplorerTheme];
     property SelectionOptions default [toFullRowSelect, toMultiSelect, toRightClickSelect];
   end;
@@ -131,8 +131,8 @@ begin
   AutoOptions := [toAutoDropExpand, toAutoScrollOnExpand,
     toAutoTristateTracking, toAutoDeleteMovedNodes, toAutoChangeScale];
   ExportMode := emSelected;
-  MiscOptions := [toAcceptOLEDrop, toFullRepaintOnResize,
-    toInitOnSave, toToggleOnDblClick, toWheelPanning];
+  MiscOptions := [toAcceptOLEDrop, toFullRepaintOnResize, toInitOnSave,
+    toWheelPanning];
   PaintOptions := [toHideFocusRect, toHotTrack, toShowButtons,
     toShowDropmark, toThemeAware, toUseBlendedImages, toUseExplorerTheme];
   SelectionOptions := [toFullRowSelect, toMultiSelect,
