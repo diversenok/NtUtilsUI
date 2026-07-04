@@ -33,7 +33,7 @@ type
     procedure Refresh;
     class function Factory(InitialChoice: TSessionId): TWinControlFactory; static;
   published
-    property SessionID: TSessionId read GetSessionID write SetSessionID;
+    property SessionID: TSessionId read GetSessionID write SetSessionID default TSessionId(-1);
     property OnChange: TNotifyEvent read FOnChange write FOnChange;
   end;
 
@@ -72,7 +72,6 @@ begin
   FComboBox.Align := alClient;
   FComboBox.NumberBase := nsDecimal;
   FComboBox.NumberSize := isCardinal;
-  FComboBox.OnChange := ComboBoxChange;
   FComboBox.Parent := Self;
 
   FRefreshShortcut := TUiLibShortCut.Create(Self);
@@ -85,6 +84,7 @@ begin
   inherited;
   Refresh;
   FComboBox.Number := RtlGetCurrentPeb.SessionID;
+  FComboBox.OnChange := ComboBoxChange;
 end;
 
 class function TUiLibSessionIdBox.Factory;
