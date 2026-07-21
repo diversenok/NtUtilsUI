@@ -84,9 +84,9 @@ type
 implementation
 
 uses
-  Ntapi.ntpebteb, Ntapi.ntstatus, NtUtils, NtUtils.SysUtils, NtUtils.Files,
-  NtUtils.Objects, NtUtils.Processes.Info, NtUtils.Objects.Snapshots,
-  NtUtils.Processes, NtUiLib.Errors, DelphiUiLib.Strings,
+  Ntapi.ntpebteb, Ntapi.ntstatus, Ntapi.ntexapi, NtUtils, NtUtils.SysUtils,
+  NtUtils.Files, NtUtils.Objects, NtUtils.Processes.Info, NtUtils.Processes,
+  NtUtils.Objects.Snapshots, NtUiLib.Errors, DelphiUiLib.Strings,
   DelphiUiLib.HysteresisTree, DelphiUiLib.LiteReflection, NtUiCommon.Icons,
   Vcl.ImgList, System.UITypes, NtUtilsUI.Components.Factories,
   NtUiLib.TaskDialog, NtUtilsUI.Components;
@@ -139,6 +139,16 @@ begin
   begin
     Result := True;
     Value := ColorSettings.clBackgroundUser;
+  end
+
+  // Highlight processes with a suspended main thread
+  else if (FTree.Owner is TUiLibProcesses) and
+    (TUiLibProcesses(FTree.Owner).SnapshotMethod in [psNormal..psSession]) and
+    (Length(Process.Threads) > 0) and (Process.Threads[0].Basic.WaitReason in
+    [TWaitReason.Suspended, TWaitReason.WrSuspended]) then
+  begin
+    Result := True;
+    Value := ColorSettings.clBackgroundSuspended;
   end;
 end;
 
