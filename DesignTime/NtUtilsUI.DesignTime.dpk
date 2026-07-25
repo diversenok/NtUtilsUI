@@ -48,6 +48,7 @@ contains
   NtUtilsUI.Number in 'NtUtilsUI.Number.pas',
   NtUtilsUI.Sid.Trust in 'NtUtilsUI.Sid.Trust.pas',
   NtUtilsUI.Privileges in 'NtUtilsUI.Privileges.pas',
-  NtUtilsUI.SessionID in 'NtUtilsUI.SessionID.pas';
+  NtUtilsUI.SessionID in 'NtUtilsUI.SessionID.pas',
+  NtUtilsUI.UmgrContext in 'NtUtilsUI.UmgrContext.pas';
 
 end.

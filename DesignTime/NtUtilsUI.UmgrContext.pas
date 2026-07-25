@@ -1,8 +1,8 @@
-unit NtUtilsUI.SessionID;
+unit NtUtilsUI.UmgrContext;
 
 {
   This module contains a (stripped down) design-time component definition for
-  a session ID selection control.
+  a user manager context selection control.
 
   NOTE: Keep the published interface in sync with the runtime definitions!
 }
@@ -13,17 +13,17 @@ uses
   System.Classes, NtUtilsUI.Base, NtUtilsUI.StdCtrls;
 
 type
-  TSessionId = type Cardinal;
+  TUmgrContext = type UInt64;
 
-  TUiLibSessionIdBox = class (TUiLibControl)
+  TUiLibUmgrContextBox = class (TUiLibControl)
   private
     FOnChange: TNotifyEvent;
     FComboBox: TUiLibComboBox;
-    FSessionId: TSessionId;
+    FUserContext: TUmgrContext;
   public
     constructor Create(AOwner: TComponent); override;
   published
-    property SessionID: TSessionId read FSessionId write FSessionId default TSessionId(-1);
+    property UserContext: TUmgrContext read FUserContext write FUserContext default 0;
     property OnChange: TNotifyEvent read FOnChange write FOnChange;
   end;
 
@@ -34,20 +34,20 @@ implementation
 uses
   Vcl.Controls;
 
-{$R 'Icons\TUiLibSessionIdBox.res'}
+{$R 'Icons\TUiLibUmgrContextBox.res'}
 
 procedure Register;
 begin
-  RegisterComponents('NtUtilsUI', [TUiLibSessionIdBox]);
+  RegisterComponents('NtUtilsUI', [TUiLibUmgrContextBox]);
 end;
 
-{ TUiLibSessionIdBox }
+{ TUiLibUmgrContextBox }
 
-constructor TUiLibSessionIdBox.Create;
+constructor TUiLibUmgrContextBox.Create;
 begin
   inherited;
 
-  Width := 240;
+  Width := 260;
   Height := 23;
 
   FComboBox := TUiLibComboBox.Create(Self);
@@ -55,10 +55,8 @@ begin
   FComboBox.Height := Height;
   FComboBox.Anchors := [akLeft, akTop, akRight, akBottom];
   FComboBox.Align := alClient;
-  FComboBox.Text := '1: Console';
+  FComboBox.Text := '0x1234 5678 (User @ 1)';
   FComboBox.Parent := Self;
-
-  FSessionId := TSessionId(-1);
 end;
 
 end.
