@@ -391,6 +391,7 @@ begin
     BitwiseType := RttiType as IRttixBitwiseType;
 
     // Collect flags and sub-enums from all (explicit + inherited) attributes
+    TypeSize := ByteSizeToIntegerSize(BitwiseType.Size);
     Groups := UiLibCollectAllFlagNodes(BitwiseType, TypeSize);
     Groups := Groups + UiLibCollectSubEnumNodes(BitwiseType, TypeSize);
     FullMask := BitwiseType.ValidMask;
