@@ -46,6 +46,9 @@ type
     property DropDownCount default 24;
   end;
 
+  TUiLibMemo = class (TMemo)
+  end;
+
   TUiLibButton = class(TButton)
   private
     FImageResource: String;
@@ -67,7 +70,7 @@ uses
 procedure Register;
 begin
   RegisterComponents('NtUtilsUI', [TUiLibEdit, TUiLibButtonedEdit,
-    TUiLibComboBox, TUiLibButton]);
+    TUiLibComboBox, TUiLibMemo, TUiLibButton]);
 end;
 
 { TUiLibEdit }

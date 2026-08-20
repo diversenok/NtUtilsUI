@@ -88,6 +88,15 @@ type
     property Text: String read GetText write SetText;
   end;
 
+  TUiLibMemo = class (TMemo)
+  private
+    function GetText: String;
+  protected
+    procedure WMKeyDown(var Message: TWMKeyDown); message WM_KEYDOWN;
+    procedure KeyPress(var Key: Char); override;
+    procedure CreateWindowHandle(const Params: TCreateParams); override;
+  end;
+
   TUiLibButton = class(TButton)
   private
     FImageList: TCustomImageList;
@@ -133,7 +142,7 @@ var
   const
     DELIMITERS = [#9, ' ', '!', '"', '#', '$', '%', '&', '''', '(', ')', '*',
       '+', ',', '-', '.', '/', ':', ';', '<', '=', '>', '?', '@', '[', '\', ']',
-      '^', '_', '`', '{', '|', '}', '~'];
+      '^', '_', '`', '{', '|', '}', '~', #$D, #$A];
   begin
     Result := (Cursor < TextStart) or (Cursor > LastChar) or CharInSet(Cursor^,
       DELIMITERS);
@@ -592,6 +601,34 @@ begin
   // Restore the selection after resizing
   SendMessage(Handle, CB_SETEDITSEL, 0, MakeLParam(Word(Selection.StartPos),
     Word(Selection.EndPos)));
+end;
+
+{ TUiLibMemo }
+
+procedure TUiLibMemo.CreateWindowHandle;
+begin
+  inherited;
+  SendMessageW(Handle, EM_SETWORDBREAKPROC, 0, LPARAM(@EditWordBreakProc));
+end;
+
+function TUiLibMemo.GetText;
+begin
+  Result := Text;
+end;
+
+procedure TUiLibMemo.KeyPress;
+begin
+  // Avoid adding the DEL character on Crtl+Backspace
+  if (GetKeyState(VK_CONTROL) < 0) and (Key = #$7F) then
+    Key := #0;
+
+  inherited;
+end;
+
+procedure TUiLibMemo.WMKeyDown;
+begin
+  if not HandleCtrlBackspace(Handle, GetText, Message) then
+    inherited;
 end;
 
 { TUiLibButton }
