@@ -8,7 +8,7 @@ interface
 
 uses
   System.Classes, Vcl.Controls, Ntapi.WinNt, Ntapi.ntseapi, Ntapi.ntdef,
-  NtUtils, NtUtilsUI.Components.Factories, NtUtilsUI.Base;
+  NtUtils, NtUtils.Environment, NtUtilsUI.Components.Factories, NtUtilsUI.Base;
 
 const
   MSG_E_NO_COMPONENT = 'The required component is not registered';
@@ -75,6 +75,18 @@ function UiLibPickProcessThread(
 function UiLibPickThread(
   Owner: TComponent
 ): TClientId;
+
+// Show a modal dialog for adding an environment variable
+function UiLibNewEnvVariable(
+  Owner: TComponent
+): TRtlxEnvVariable;
+
+// Show a modal dialog for editing an environment variable
+function UiLibEditEnvVariable(
+  Owner: TComponent;
+  const Variable: TRtlxEnvVariable
+): TRtlxEnvVariable;
+
 
 implementation
 
@@ -188,6 +200,24 @@ begin
   if Assigned(UiLibFactoryThread) then
     Result := UiLibHost.Pick<TClientId>(Owner, UiLibFactoryProcess(True),
       UiLibFactoryProcessToThread)
+  else
+    raise EClassNotFound.Create(MSG_E_NO_COMPONENT);
+end;
+
+function UiLibNewEnvVariable;
+begin
+  if Assigned(UiLibFactoryEnvVariableNew) then
+    Result := UiLibHost.Pick<TRtlxEnvVariable>(Owner,
+      UiLibFactoryEnvVariableNew())
+  else
+    raise EClassNotFound.Create(MSG_E_NO_COMPONENT);
+end;
+
+function UiLibEditEnvVariable;
+begin
+  if Assigned(UiLibFactoryEnvVariableEdit) then
+    Result := UiLibHost.Pick<TRtlxEnvVariable>(Owner,
+      UiLibFactoryEnvVariableEdit(Variable))
   else
     raise EClassNotFound.Create(MSG_E_NO_COMPONENT);
 end;

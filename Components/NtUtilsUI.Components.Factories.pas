@@ -8,7 +8,7 @@ interface
 
 uses
   System.Classes, Vcl.Controls, Ntapi.WinNt, Ntapi.ntseapi, NtUtils,
-  NtUtilsUI.Base;
+  NtUtils.Environment, NtUtilsUI.Base;
 
 type
   // An anonymous function that can instantiate visual controls
@@ -68,6 +68,15 @@ var
 
   UiLibFactoryProcessToThread: function(
   ): IModalResultCache;
+
+  { Environment }
+
+  UiLibFactoryEnvVariableNew: function(
+  ): TWinControlFactory;
+
+  UiLibFactoryEnvVariableEdit: function(
+    const Variable: TRtlxEnvVariable
+  ): TWinControlFactory;
 
 implementation
 
