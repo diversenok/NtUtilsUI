@@ -10,8 +10,8 @@ unit NtUtilsUI.StdCtrls;
 interface
 
 uses
-  System.Classes, Vcl.Controls, Vcl.StdCtrls, Vcl.ExtCtrls, Vcl.ImgList,
-  Winapi.Windows, Winapi.Messages, NtUtilsUI.Base;
+  System.Classes, Vcl.Controls, Vcl.StdCtrls, Vcl.ExtCtrls, Vcl.ComCtrls,
+  Vcl.ImgList, Winapi.Windows, Winapi.Messages, NtUtilsUI.Base;
 
 type
   TUiLibEdit = class(TEdit)
@@ -119,6 +119,14 @@ type
 
   TUiLibImageListHelper = class helper for TCustomImageList
     function AddIconFromResource(Instance: THandle; const ResourceName: String): Integer;
+  end;
+
+  TUiLibPageControl = class (TPageControl)
+  private
+    FShortcuts: TUiLibMultiShortCut;
+    procedure ProcessShortCut(Sender: TObject; ShortCut: TShortCut; var Handled: Boolean);
+  protected
+    procedure CreateWnd; override;
   end;
 
 implementation
@@ -698,6 +706,47 @@ function TUiLibImageListHelper.AddIconFromResource;
 begin
   Result := ImageList_AddIcon(Handle, LoadIcon(Instance, PChar(ResourceName)));
   Change;
+end;
+
+{ TUiLibPageControl }
+
+procedure TUiLibPageControl.CreateWnd;
+var
+  Shortcuts: TArray<TShortCut>;
+  i: Integer;
+begin
+  inherited;
+
+  // Create shortcuts for Cttl+Digit
+  SetLength(ShortCuts, 10);
+  ShortCuts[9] := scCtrl or Ord('0');
+
+  for i := 0 to 8 do
+    ShortCuts[i] := scCtrl or (Ord('1') + i);
+
+  FShortcuts := TUiLibMultiShortCut.Create(Self);
+  FShortcuts.ShortCuts := ShortCuts;
+  FShortCuts.OnExecute := ProcessShortCut;
+end;
+
+procedure TUiLibPageControl.ProcessShortCut;
+begin
+  ShortCut := ShortCut and not scCtrl;
+
+  // Ctrl+1 to Ctrl+9 switch to pages 0 to 8
+  if (ShortCut >= Ord('1')) and (ShortCut <= Ord('9')) and
+    (ShortCut - Ord('1') < PageCount) then
+  begin
+    ActivePageIndex := ShortCut - Ord('1');
+    Handled := True;
+  end
+
+  // Ctrl+0 switches to page 9
+  else if (ShortCut = Ord('0')) and (PageCount >= 10) then
+  begin
+    ActivePageIndex := 9;
+    Handled := True;
+  end;
 end;
 
 end.

@@ -10,7 +10,7 @@ unit NtUtilsUI.StdCtrls;
 interface
 
 uses
-  System.Classes, Vcl.StdCtrls, Vcl.ExtCtrls, Vcl.ImgList;
+  System.Classes, Vcl.StdCtrls, Vcl.ExtCtrls, Vcl.ComCtrls, Vcl.ImgList;
 
 type
   TUiLibEdit = class(TEdit)
@@ -60,6 +60,9 @@ type
     function AddIconFromResource(Instance: THandle; const ResourceName: String): Integer;
   end;
 
+  TUiLibPageControl = class (TPageControl)
+  end;
+
 procedure Register;
 
 implementation
@@ -70,7 +73,7 @@ uses
 procedure Register;
 begin
   RegisterComponents('NtUtilsUI', [TUiLibEdit, TUiLibButtonedEdit,
-    TUiLibComboBox, TUiLibMemo, TUiLibButton]);
+    TUiLibComboBox, TUiLibMemo, TUiLibButton, TUiLibPageControl]);
 end;
 
 { TUiLibEdit }

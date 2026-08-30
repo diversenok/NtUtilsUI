@@ -6,7 +6,7 @@ object FramePages: TFramePages
   ParentShowHint = False
   ShowHint = True
   TabOrder = 0
-  object PageControl: TPageControl
+  object PageControl: TUiLibPageControl
     Left = 0
     Top = 0
     Width = 320

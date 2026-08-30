@@ -9,11 +9,11 @@ interface
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes,
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.ComCtrls,
-  NtUiCommon.Prototypes, NtUiCommon.Interfaces, NtUtilsUI;
+  NtUiCommon.Prototypes, NtUiCommon.Interfaces, NtUtilsUI, NtUtilsUI.StdCtrls;
 
 type
   TFramePages = class(TFrame, IDefaultCaption)
-    PageControl: TPageControl;
+    PageControl: TUiLibPageControl;
     procedure PageControlChange(Sender: TObject);
   private
     FTabs: TArray<TTabSheet>;
