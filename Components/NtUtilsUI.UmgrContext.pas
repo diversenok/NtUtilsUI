@@ -20,7 +20,7 @@ type
     FOnChange: TNotifyEvent;
     FComboBox: TUiLibNumberComboBox;
     FRefreshShortcut: TUiLibShortCut;
-    procedure RefreshShortcut(Sender: TUiLibShortCut; var Handled: Boolean);
+    procedure RefreshShortcut(Sender: TObject; ShortCut: TShortCut; var Handled: Boolean);
     procedure ComboBoxChange(Sender: TObject);
     function GetUserContext: TUmgrContext;
     procedure SetUserContext(Value: TUmgrContext);

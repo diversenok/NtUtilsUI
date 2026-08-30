@@ -71,7 +71,7 @@ type
     function GetText: String;
     procedure SetText(const Value: String);
     procedure RefreshStableState;
-    procedure OnEscShortcut(Sender: TUiLibShortcut; var Handled: Boolean);
+    procedure OnEscShortcut(Sender: TObject; Shortcut: TShortCut; var Handled: Boolean);
   protected
     procedure Change; override;
     procedure CreateWnd; override;

@@ -13,18 +13,37 @@ uses
   Winapi.Messages, System.Classes, Vcl.Controls;
 
 type
-  TUiLibShortCut = class;
-  TUiLibShortCutEvent = procedure (Sender: TUiLibShortCut; var Handled: Boolean) of object;
+  TUiLibShortCutEvent = procedure (
+    Sender: TObject;
+    ShortCut: TShortCut;
+    var Handled: Boolean
+  ) of object;
 
-  // An auto-registering shortcut handler
-  TUiLibShortCut = class (TComponent)
+  // A base class for shorcut handlers
+  TUiLibCustomShortCut = class abstract (TComponent)
   private
-    FShortCut: TShortCut;
     FOnExecute: TUiLibShortCutEvent;
   public
-    property ShortCut: TShortCut read FShortCut write FShortCut;
     property OnExecute: TUiLibShortCutEvent read FOnExecute write FOnExecute;
-    function Invoke: Boolean;
+    function Invoke(Shortcut: TShortCut): Boolean; virtual; abstract;
+  end;
+
+  // An auto-registering single shortcut handler
+  TUiLibShortCut = class (TUiLibCustomShortCut)
+  private
+    FShortCut: TShortCut;
+  public
+    property ShortCut: TShortCut read FShortCut write FShortCut;
+    function Invoke(Shortcut: TShortCut): Boolean; override;
+  end;
+
+  // An auto-registering multi-shortcut handler
+  TUiLibMultiShortCut = class (TUiLibCustomShortCut)
+  private
+    FShortCuts: TArray<TShortCut>;
+  public
+    property ShortCuts: TArray<TShortCut> read FShortCuts write FShortCuts;
+    function Invoke(Shortcut: TShortCut): Boolean; override;
   end;
 
   // A base class for composite visual controls
@@ -140,8 +159,27 @@ function TUiLibShortCut.Invoke;
 begin
   Result := False;
 
-  if Assigned(FOnExecute) then
-    FOnExecute(Self, Result);
+  if Assigned(FOnExecute) and (FShortCut = Shortcut) then
+    FOnExecute(Self, ShortCut, Result);
+end;
+
+{ TUiLibMultiShortCut }
+
+function TUiLibMultiShortCut.Invoke;
+var
+  i: Integer;
+begin
+  Result := False;
+
+  if not Assigned(FOnExecute) then
+    Exit;
+
+  for i := 0 to High(FShortCuts) do
+    if FShortCuts[i] = Shortcut then
+    begin
+      FOnExecute(Self, Shortcut, Result);
+      Break;
+    end;
 end;
 
 { TUiLibControl }

@@ -48,8 +48,8 @@ type
     FEditShortCut: TUiLibShortCut;
     procedure AclChanged;
     function GetAces: TArray<TAceData>;
-    procedure OnAddShortCut(Sender: TUiLibShortCut; var Handled: Boolean);
-    procedure OnEditShortCut(Sender: TUiLibShortCut; var Handled: Boolean);
+    procedure OnAddShortCut(Sender: TObject; ShortCut: TShortCut; var Handled: Boolean);
+    procedure OnEditShortCut(Sender: TObject; ShortCut: TShortCut; var Handled: Boolean);
   protected
     procedure CreateWnd; override;
   public

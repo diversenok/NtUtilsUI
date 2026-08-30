@@ -20,7 +20,7 @@ type
     FOnChange: TNotifyEvent;
     FComboBox: TUiLibNumberComboBox;
     FRefreshShortcut: TUiLibShortCut;
-    procedure RefreshShortcut(Sender: TUiLibShortCut; var Handled: Boolean);
+    procedure RefreshShortcut(Sender: TObject; ShortCut: TShortCut; var Handled: Boolean);
     procedure ComboBoxChange(Sender: TObject);
     function GetSessionID: TSessionId;
     procedure SetSessionID(Value: TSessionId);

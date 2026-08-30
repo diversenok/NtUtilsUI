@@ -42,7 +42,7 @@ type
     function GetDefaultCaption: String;
     procedure DelayedLoad;
     procedure AclChanged(Sender: TObject);
-    procedure OnRefreshShortCut(Sender: TUiLibShortCut; var Handled: Boolean);
+    procedure OnRefreshShortCut(Sender: TObject; ShortCut: TShortCut; var Handled: Boolean);
   protected
     procedure Loaded; override;
   public

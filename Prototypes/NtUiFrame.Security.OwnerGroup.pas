@@ -32,7 +32,7 @@ type
     function Apply: TNtxStatus;
     function GetDefaultCaption: String;
     procedure DelayedLoad;
-    procedure OnRefreshShortCut(Sender: TUiLibShortCut; var Handled: Boolean);
+    procedure OnRefreshShortCut(Sender: TObject; ShortCut: TShortCut; var Handled: Boolean);
   public
     constructor Create(AOwner: TComponent); override;
     procedure LoadFor(

@@ -30,7 +30,7 @@ type
     procedure SearchBoxChange(Sender: TObject);
     procedure SearchBoxSearch(Sender: TObject);
     procedure SearchBoxArrow(Sender: TObject);
-    procedure OnEscShortcut(Sender: TUiLibShortCut; var Handled: Boolean);
+    procedure OnEscShortcut(Sender: TObject; ShortCut: TShortCut; var Handled: Boolean);
     procedure ColumnVisibilityChanged(const Sender: TBaseVirtualTree; const Column: TColumnIndex; Visible: Boolean);
     procedure UpdateColumns;
     function GetHasQuery: Boolean;

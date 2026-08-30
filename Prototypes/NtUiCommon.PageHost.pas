@@ -18,10 +18,8 @@ type
   private
     FTabs: TArray<TTabSheet>;
     FFrames: TArray<TWinControl>;
-    FShortCuts: TArray<TUiLibShortCut>;
     FDelayLoaded: TArray<Boolean>;
     FDefaultCaption: String;
-    procedure OnTabShortCut(Sender: TUiLibShortCut; var Handled: Boolean);
     function GetDefaultCaption: String;
     procedure NotifyDelayedLoading(Index: Integer);
   protected
@@ -79,7 +77,6 @@ begin
   end;
 
   SetLength(FTabs, Length(Frames));
-  SetLength(FShortCuts, Length(Frames));
   SetLength(FDelayLoaded, Length(Frames));
 
   for i := 0 to High(Frames) do
@@ -102,14 +99,6 @@ begin
     FFrames[i].Parent := FTabs[i];
     FFrames[i].Align := alClient;
     FDelayLoaded[i] := False;
-
-    if i < 9 then
-    begin
-      // Handle page switching on Ctrl+<number>
-      FShortCuts[i] := TUiLibShortCut.Create(Self);
-      FShortCuts[i].ShortCut := scCtrl or (Ord('1') + i);
-      FShortCuts[i].OnExecute := OnTabShortCut;
-    end;
   end;
 
   FDefaultCaption := DefaultCaption;
@@ -130,24 +119,6 @@ begin
     FDelayLoaded[Index] := True;
   end;
 end;
-
-procedure TFramePages.OnTabShortCut;
-var
-  i: Integer;
-begin
-  if not CanFocus then
-    Exit;
-
-  for i := 0 to High(FShortCuts) do
-    if Sender = FShortCuts[i] then
-    begin
-      PageControl.ActivePageIndex := i;
-      PageControlChange(Sender);
-      Handled := True;
-      Break;
-    end;
-end;
-
 
 procedure TFramePages.PageControlChange;
 begin

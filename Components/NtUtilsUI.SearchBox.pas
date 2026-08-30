@@ -21,8 +21,8 @@ type
     FFocusShortCut: TUiLibShortCut;
     FEscShortCut: TUiLibShortCut;
     FOnTypingChange, FOnChange, FOnSearch, FOnArrowUp, FOnArrowDown: TNotifyEvent;
-    procedure OnFocusShortCut(Sender: TUiLibShortCut; var Handled: Boolean);
-    procedure OnEscapeShortCut(Sender: TUiLibShortCut; var Handled: Boolean);
+    procedure OnFocusShortCut(Sender: TObject; ShortCut: TShortCut; var Handled: Boolean);
+    procedure OnEscapeShortCut(Sender: TObject; ShortCut: TShortCut; var Handled: Boolean);
     function GetHasQuery: Boolean;
     function GetQuery: String;
     procedure ReloadIcons;

@@ -25,6 +25,7 @@ type
   TUiLibMainForm = NtUtilsUI.Forms.TUiLibMainForm;
   TUiLibChildForm = NtUtilsUI.Forms.TUiLibChildForm;
   TUiLibShortCut = NtUtilsUI.Base.TUiLibShortCut;
+  TUiLibMultiShortCut = NtUtilsUI.Base.TUiLibMultiShortCut;
   TUiLibControl = NtUtilsUI.Base.TUiLibControl;
   TWinControlFactory = NtUtilsUI.Components.Factories.TWinControlFactory;
   DefaultCaptionAttribute = NtUtilsUI.Base.DefaultCaptionAttribute;
