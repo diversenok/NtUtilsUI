@@ -23,7 +23,7 @@ uses
 
 procedure ReportException;
 begin
-  ShowNtxException(Application.Handle, E);
+  UiLibShowNtxException(Application.Handle, E);
 end;
 
 type
