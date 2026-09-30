@@ -52,6 +52,12 @@ function UiLibPickSessionId(
   InitialChoice: TSessionId = TSessionId(-1)
 ): TSessionId;
 
+// Show a modal dialog to choose a logon session ID
+function UiLibPickLogonId(
+  Owner: TComponent;
+  InitialChoice: TLogonId = TLogonId(-1)
+): TLogonId;
+
 // Show a process list dialog
 procedure UiLibShowProcesses;
 
@@ -158,6 +164,15 @@ begin
   if Assigned(UiLibFactorySessionId) then
     Result := UiLibHost.Pick<TSessionId>(Owner,
       UiLibFactorySessionId(InitialChoice))
+  else
+    raise EClassNotFound.Create(MSG_E_NO_COMPONENT);
+end;
+
+function UiLibPickLogonId;
+begin
+  if Assigned(UiLibFactoryLogonId) then
+    Result := UiLibHost.Pick<TLogonId>(Owner,
+      UiLibFactoryLogonId(InitialChoice))
   else
     raise EClassNotFound.Create(MSG_E_NO_COMPONENT);
 end;

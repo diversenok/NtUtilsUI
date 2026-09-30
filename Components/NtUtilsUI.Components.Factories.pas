@@ -56,6 +56,12 @@ var
     InitialChoice: TSessionId = TSessionId(-1)
   ): TWinControlFactory;
 
+  { Logon ID }
+
+  UiLibFactoryLogonId: function (
+    InitialChoice: TLogonId = TLogonId(-1)
+  ): TWinControlFactory;
+
   { Client IDs }
 
   UiLibFactoryProcess: function (
