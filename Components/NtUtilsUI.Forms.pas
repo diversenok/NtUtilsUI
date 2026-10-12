@@ -16,12 +16,17 @@ uses
 type
   TUiLibForm = class abstract (TForm)
   strict private
-    const idOnTop = 10001;
+    const idStayOnTop = 10001;
+    const idPersistStayOnTop = 10002;
     var FCloseOnEscape: Boolean;
     procedure WMSysCommand(var Message: TWMSysCommand); message WM_SYSCOMMAND;
     procedure WMInitMenuPopup(var Message: TWMInitMenuPopup); message WM_INITMENUPOPUP;
+    procedure WMWindowPosChanging(var Message: TWMWindowPosChanging); message WM_WINDOWPOSCHANGING;
     procedure WMWindowPosChanged(var Message: TWMWindowPosChanged); message WM_WINDOWPOSCHANGED;
+    function GetFormStyle: TFormStyle;
+    procedure SetFormStyle(Value: TFormStyle);
   strict protected
+    class var FPersistStayOnTop: Boolean;
     procedure DoClose(var Action: TCloseAction); override;
     procedure DoCreate; override;
     procedure DoShow; override;
@@ -30,6 +35,7 @@ type
     function IsShortCut(var Message: TWMKey): Boolean; override;
   published
     property CloseOnEscape: Boolean read FCloseOnEscape write FCloseOnEscape;
+    property FormStyle: TFormStyle read GetFormStyle write SetFormStyle default fsNormal;
   end;
 
   TUiLibMainForm = class abstract (TUiLibForm)
@@ -75,7 +81,7 @@ uses
 
 function IsWindowTopmost;
 begin
-  Result := GetWindowLongPtrW(Handle, GWL_EXSTYLE) and WS_EX_TOPMOST <> 0
+  Result := BitTest(GetWindowLong(Handle, GWL_EXSTYLE) and WS_EX_TOPMOST);
 end;
 
 function DispatchShortCut(const Owner: TComponent; ShortCut: TShortCut): Boolean;
@@ -111,13 +117,19 @@ begin
 end;
 
 procedure TUiLibForm.DoCreate;
+var
+  SystemMenu: HMENU;
 begin
   inherited;
 
   // Add an item to toggle stay-on-top from the system menu
   if FormStyle in [fsNormal, fsStayOnTop] then
-    InsertMenu(GetSystemMenu(Handle, False), 0, MF_STRING, idOnTop,
-      'Stay On &Top');
+  begin
+    SystemMenu := GetSystemMenu(Handle, False);
+    InsertMenu(SystemMenu, 0, MF_STRING, idStayOnTop, 'Stay-On-&Top');
+    InsertMenu(SystemMenu, 0, MF_STRING, idPersistStayOnTop,
+      '&Persist Stay-On-Top');
+  end;
 end;
 
 procedure TUiLibForm.DoShow;
@@ -137,6 +149,11 @@ begin
     if (Control is TForm) and IsWindowTopmost(Control.Handle) then
       FormStyle := fsStayOnTop;
   end;
+end;
+
+function TUiLibForm.GetFormStyle;
+begin
+  Result := inherited FormStyle;
 end;
 
 function TUiLibForm.IsShortCut;
@@ -161,6 +178,17 @@ begin
   end;
 end;
 
+procedure TUiLibForm.SetFormStyle;
+var
+  PreviousPersist: Boolean;
+begin
+  // Temporarily suppress the logic that prevents stay-on-top from changing
+  PreviousPersist := FPersistStayOnTop;
+  FPersistStayOnTop := False;
+  inherited FormStyle := Value;
+  FPersistStayOnTop := PreviousPersist;
+end;
+
 function TUiLibForm.ShowModal;
 begin
   Result := inherited;
@@ -175,7 +203,10 @@ const
 begin
   // Update the check state of our stay-on-top menu item
   if Message.SystemMenu then
-    CheckMenuItem(Message.MenuPopup, idOnTop, STATE[IsWindowTopmost(Handle)]);
+  begin
+    CheckMenuItem(Message.MenuPopup, idStayOnTop, STATE[IsWindowTopmost(Handle)]);
+    CheckMenuItem(Message.MenuPopup, idPersistStayOnTop, STATE[FPersistStayOnTop]);
+  end;
 
   inherited;
 end;
@@ -183,11 +214,13 @@ end;
 procedure TUiLibForm.WMSysCommand;
 begin
   // Toggle the stay-on-top state from the menu
-  if Message.CmdType = idOnTop then
+  if Message.CmdType = idStayOnTop then
     case FormStyle of
       fsNormal:    FormStyle := fsStayOnTop;
       fsStayOnTop: FormStyle := fsNormal;
     end
+  else if Message.CmdType = idPersistStayOnTop then
+    FPersistStayOnTop := not FPersistStayOnTop
   else
     inherited;
 end;
@@ -216,6 +249,21 @@ begin
       SetWindowPos(Application.Handle, HWND_TOPMOST, 0, 0, 0, 0,
         SWP_NOMOVE or SWP_NOSIZE or SWP_NOACTIVATE or SWP_NOOWNERZORDER);
   end;
+end;
+
+procedure TUiLibForm.WMWindowPosChanging;
+begin
+  // Overwrite requests that change the topmost position if asked to persist it
+  if FPersistStayOnTop and not BitTest(Message.WindowPos.flags and
+    SWP_NOZORDER) then
+  begin
+    if IsWindowTopmost(Handle) then
+      Message.WindowPos.hwndInsertAfter := HWND_TOPMOST
+    else
+      Message.WindowPos.hwndInsertAfter := HWND_NOTOPMOST;
+  end;
+
+  inherited;
 end;
 
 { TUiLibMainForm }
